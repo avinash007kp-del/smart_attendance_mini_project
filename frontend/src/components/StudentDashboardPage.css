@@ -67,7 +67,7 @@
 .sd-sidebar-name {
   font-size: 1rem;
   font-weight: 700;
-  background: linear-gradient(90deg, #fff, var(--theme-accent));
+  background: #001B3B;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -215,7 +215,7 @@
   justify-content: space-between;
   padding: 1rem 1.75rem;
   border-bottom: 1px solid var(--theme-border);
-  background: rgba(6, 13, 24, 0.88);
+  background: rgb(255, 255, 255);
   backdrop-filter: blur(12px);
   flex-shrink: 0;
 }

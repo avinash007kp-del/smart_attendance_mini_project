@@ -130,7 +130,7 @@ export default function LoginPage() {
       <main className="login-main">
         <div className={`login-card ${loginSuccess ? 'success' : ''}`}>
           <div className="card-header">
-            <div className="card-logo">SA</div>
+            <div className="card-logo">A</div>
             <h2 className="card-title">{isRegister ? 'Create Account' : 'Welcome back'}</h2>
             <p className="card-description">{isRegister ? 'Join the Attentify community' : 'Sign in to your Attentify account'}</p>
           </div>
