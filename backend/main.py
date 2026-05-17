@@ -5,6 +5,10 @@ from routes import auth, attendance
 
 app = FastAPI(title="Smart Attendance API", description="Native MongoDB Backend")
 
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "Smart Attendance API is running"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
