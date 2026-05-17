@@ -280,7 +280,7 @@ function TabQR() {
 
   const startSession = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr/generate`, {
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ course_id: course, duration_minutes: duration / 60.0 })
@@ -463,7 +463,7 @@ function TabQR() {
                   const originalText = btn.innerHTML;
                   btn.innerHTML = '<span class="sd-spinner"></span> Sending...';
                   try {
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr/send`, {
+                    const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr/send`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ course_id: course, token: tokenPayload })

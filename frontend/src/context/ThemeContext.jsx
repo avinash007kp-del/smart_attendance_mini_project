@@ -19,7 +19,7 @@ export function ThemeProvider({ children }) {
   // preference can be 'dark' | 'light' | 'system'
   const [preference, setPreference] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('sa-theme') || 'light'
+      return localStorage.getItem('attentify-theme') || 'light'
     }
     return 'light'
   })
@@ -27,7 +27,7 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     const resolved = resolveTheme(preference)
     document.documentElement.setAttribute('data-theme', resolved)
-    localStorage.setItem('sa-theme', preference)
+    localStorage.setItem('attentify-theme', preference)
   }, [preference])
 
   // Also listen to OS changes when set to 'system'

@@ -379,7 +379,7 @@ function TabUsers({ users, setUsers }) {
         return
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/users/${email}`, {
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/users/${email}`, {
         method: "DELETE"
       });
       if (!res.ok) {
@@ -543,7 +543,7 @@ function TabUsers({ users, setUsers }) {
                         fd.append('file', blob, 'face.jpg')
                         fd.append('student_id', newUser.email)
                         try {
-                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
+                          const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
                           const d = await res.json()
                           if(!res.ok) throw new Error(d.detail)
                           alert("✅ Face Registered Successfully!")
@@ -571,7 +571,7 @@ function TabUsers({ users, setUsers }) {
                         fd.append('file', file, 'face.jpg');
                         fd.append('student_id', newUser.email);
                         try {
-                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
+                          const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
                           const d = await res.json()
                           if(!res.ok) throw new Error(d.detail)
                           alert("✅ Face Registered Successfully from Upload!")
@@ -669,7 +669,7 @@ function TabUsers({ users, setUsers }) {
                         fd.append('file', blob, 'face.jpg')
                         fd.append('student_id', editingUser.email)
                         try {
-                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
+                          const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
                           const d = await res.json()
                           if(!res.ok) throw new Error(d.detail)
                           alert("✅ Face Registered Successfully!")
@@ -696,7 +696,7 @@ function TabUsers({ users, setUsers }) {
                         fd.append('file', file, 'face.jpg');
                         fd.append('student_id', editingUser.email);
                         try {
-                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
+                          const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
                           const d = await res.json()
                           if(!res.ok) throw new Error(d.detail)
                           alert("✅ Face Registered Successfully from Upload!")
@@ -1030,7 +1030,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/users`);
+        const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/users`);
         if (res.ok) {
           const data = await res.json();
           const mapped = data.map(u => ({

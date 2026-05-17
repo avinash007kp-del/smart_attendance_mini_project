@@ -347,7 +347,7 @@ function ScannerQRContent({ user }) {
       formData.append("token", code);
       formData.append("student_id", user?.email || "mock_student@smartattend.com");
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr`, {
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr`, {
         method: "POST",
         body: formData
       });
@@ -584,7 +584,7 @@ function ScannerFaceContent({ user, onVerified }) {
       formData.append("file", file, "face.jpg")
       formData.append("student_id", user?.email || "mock_student@smartattend.com")
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
         method: "POST",
         body: formData
       })
@@ -636,7 +636,7 @@ function ScannerFaceContent({ user, onVerified }) {
           formData.append("file", blob, "face.jpg");
           formData.append("student_id", user?.email || "mock_student@smartattend.com");
           
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
+          const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
             method: "POST",
             body: formData
           });
