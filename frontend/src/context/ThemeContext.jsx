@@ -19,9 +19,9 @@ export function ThemeProvider({ children }) {
   // preference can be 'dark' | 'light' | 'system'
   const [preference, setPreference] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('sa-theme') || 'dark'
+      return localStorage.getItem('sa-theme') || 'light'
     }
-    return 'dark'
+    return 'light'
   })
 
   useEffect(() => {
