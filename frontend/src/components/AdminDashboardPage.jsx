@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from '../hooks/useRouter'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import './AdminDashboardPage.css'
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -801,6 +802,7 @@ function TabUsers({ users, setUsers }) {
 //  TAB: SETTINGS
 // ═══════════════════════════════════════════════════════════
 function TabSettings({ user }) {
+  const { theme, setTheme } = useTheme()
   const [profile, setProfile] = useState({
     name:  user?.name  || '',
     email: user?.email || '',
@@ -909,7 +911,23 @@ function TabSettings({ user }) {
               </div>
             </div>
 
-            <div className="ad-toggle-list" style={{ marginTop: '1rem' }}>
+            <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--ad-border)', paddingTop: '1.5rem' }}>
+              <h4 style={{ marginBottom: '1rem' }}>🎨 Appearance</h4>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {['dark', 'light', 'system'].map(t => (
+                  <button
+                    key={t}
+                    className={`ad-outline-btn ${theme === t ? 'active' : ''}`}
+                    style={{ flex: 1, textTransform: 'capitalize', background: theme === t ? 'var(--ad-primary)' : 'transparent', color: theme === t ? '#fff' : 'var(--ad-text)' }}
+                    onClick={() => setTheme(t)}
+                  >
+                    {t === 'dark' ? '🌙' : t === 'light' ? '☀️' : '💻'} {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="ad-toggle-list" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--ad-border)', paddingTop: '1.5rem' }}>
               {[
                 { id: 'sys-autonotif', key: 'autoNotif',   label: 'Auto Notifications',  desc: 'Send automated alerts to users'            },
                 { id: 'sys-face',      key: 'faceEnable',  label: 'Face Recognition',     desc: 'Enable AI face recognition attendance'     },

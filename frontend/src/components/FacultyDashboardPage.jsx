@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from '../hooks/useRouter'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import './FacultyDashboardPage.css'
 
 // ─── Static mock data ───────────────────────────────────────────────────────
@@ -539,7 +540,7 @@ function TabSettings({ user }) {
     lateAlert:   false,
     reportWeekly: true,
   })
-  const [theme, setTheme]   = useState('dark')
+  const { theme, setTheme } = useTheme()
   const [saved, setSaved]   = useState(false)
 
   const handleSave = () => {
