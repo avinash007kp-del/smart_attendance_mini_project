@@ -7,6 +7,11 @@ from datetime import timedelta
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+@router.get("/has_admin")
+def has_admin(db: Database = Depends(get_db)):
+    count = db["users"].count_documents({"role": "admin"})
+    return {"has_admin": count > 0}
+
 @router.post("/login", response_model=schemas.Token)
 def login(request: schemas.UserLogin, db: Database = Depends(get_db)):
     user = db["users"].find_one({"email": request.email})
@@ -32,6 +37,11 @@ def login(request: schemas.UserLogin, db: Database = Depends(get_db)):
 
 @router.post("/register", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, db: Database = Depends(get_db)):
+    if user.role == "admin":
+        admin_count = db["users"].count_documents({"role": "admin"})
+        if admin_count > 0:
+            raise HTTPException(status_code=403, detail="An admin account already exists. Only one admin is allowed.")
+
     db_user = db["users"].find_one({"email": user.email})
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")

@@ -20,6 +20,23 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [mounted, setMounted] = useState(false)
   const [loginSuccess, setLoginSuccess] = useState(false)
+  const [hasAdmin, setHasAdmin] = useState(true) // assume true initially
+  const [isSetupMode, setIsSetupMode] = useState(false)
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/has_admin`);
+        if (res.ok) {
+          const data = await res.json();
+          setHasAdmin(data.has_admin);
+        }
+      } catch (e) {
+        console.error("Failed to check admin status", e);
+      }
+    };
+    checkAdmin();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -55,13 +72,25 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const errs = validate()
+    
+    // Add name validation for setup mode
+    if (isSetupMode && !form.name.trim()) errs.name = 'Name is required'
+    
     if (Object.keys(errs).length) { setFieldErrors(errs); return }
 
     try {
-      const userData = await login(form.email, form.password, form.role)
-      setLoginSuccess(true)
-      const dest = userData?.role === 'teacher' ? '/faculty' : userData?.role === 'student' ? '/student' : '/dashboard'
-      setTimeout(() => router.push(dest), 800)
+      if (isSetupMode) {
+        await register(form.email, form.password, 'admin', form.name, null, null)
+        alert('Admin account created! Please sign in.')
+        setIsSetupMode(false)
+        setHasAdmin(true)
+        setForm(prev => ({ ...prev, password: '' }))
+      } else {
+        const userData = await login(form.email, form.password, 'admin') // The backend ignores the role param for login
+        setLoginSuccess(true)
+        const dest = userData?.role === 'teacher' ? '/faculty' : userData?.role === 'student' ? '/student' : '/dashboard'
+        setTimeout(() => router.push(dest), 800)
+      }
     } catch {
       // error is handled by context
     }
@@ -125,8 +154,8 @@ export default function LoginPage() {
         <div className={`login-card ${loginSuccess ? 'success' : ''}`}>
           <div className="card-header">
             <div className="card-logo">A</div>
-            <h2 className="card-title">Welcome back</h2>
-            <p className="card-description">Sign in to your Attentify account</p>
+            <h2 className="card-title">{isSetupMode ? "Setup Attentify" : "Welcome back"}</h2>
+            <p className="card-description">{isSetupMode ? "Create the primary administrator account" : "Sign in to your Attentify account"}</p>
           </div>
 
 
@@ -136,6 +165,37 @@ export default function LoginPage() {
               <div className="alert alert-error" role="alert">
                 <span className="alert-icon">⚠️</span>
                 <span>{error}</span>
+              </div>
+            )}
+            
+            {!hasAdmin && !isSetupMode && (
+              <div className="alert" style={{ background: '#fef3c7', color: '#92400e', borderColor: '#f59e0b', padding: '12px 16px', borderRadius: 'var(--radius-md)', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <strong>Welcome to Attentify!</strong>
+                  <span style={{ fontSize: '0.85rem' }}>No administrator account exists yet.</span>
+                  <button type="button" onClick={() => setIsSetupMode(true)} style={{ background: '#d97706', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Setup First Admin
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {isSetupMode && (
+              <div className={`field ${fieldErrors.name ? 'field-error' : ''}`}>
+                <label className="field-label" htmlFor="name">Full Name</label>
+                <div className="field-input-wrap">
+                  <span className="field-prefix-icon">👤</span>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter your name"
+                    value={form.name}
+                    onChange={handleChange}
+                  />
+                </div>
+                {fieldErrors.name && <span className="field-error-msg">{fieldErrors.name}</span>}
               </div>
             )}
 
@@ -191,10 +251,22 @@ export default function LoginPage() {
                 <>Redirecting…</>
               ) : loading ? (
                 <>Processing…</>
+              ) : isSetupMode ? (
+                <>Create Admin Account</>
               ) : (
                 <>Sign In</>
               )}
             </button>
+            
+            {isSetupMode && (
+              <button
+                type="button"
+                onClick={() => setIsSetupMode(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--surface-500)', cursor: 'pointer', marginTop: '10px', fontSize: '0.9rem' }}
+              >
+                Cancel Setup
+              </button>
+            )}
           </form>
 
           <p className="card-footer" style={{ textAlign: 'center', opacity: 0.7, fontSize: '0.85rem' }}>
