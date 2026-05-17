@@ -10,3 +10,4 @@ deepface
 qrcode
 pyzbar
 Pillow
+tf-keras
