@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import auth, attendance
+from routes import auth, attendance
 
 app = FastAPI(title="Smart Attendance API", description="Native MongoDB Backend")
 

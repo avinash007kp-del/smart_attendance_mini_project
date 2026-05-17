@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
     setError(null)
 
     try {
-      const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role })
@@ -53,15 +53,15 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const register = useCallback(async (email, password, role, name) => {
+  const register = useCallback(async (email, password, role, name, dept, subject) => {
     setLoading(true)
     setError(null)
 
     try {
-      const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/auth/register`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role, name })
+        body: JSON.stringify({ email, password, role, name, dept, subject })
       })
 
       const data = await res.json()

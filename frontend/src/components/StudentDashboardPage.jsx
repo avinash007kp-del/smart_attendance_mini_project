@@ -40,6 +40,7 @@ const NAV_ITEMS = [
   { id: 'attendance',  icon: '📊', label: 'Attendance'  },
   { id: 'scanner',     icon: '📷', label: 'Scanner'     },
   { id: 'classes',     icon: '📚', label: 'Classes'     },
+  { id: 'timetable',   icon: '📅', label: 'Timetable'   },
   { id: 'logs',        icon: '🗒️',  label: 'Logs'       },
   { id: 'settings',    icon: '⚙️',  label: 'Settings'   },
 ]
@@ -346,7 +347,7 @@ function ScannerQRContent({ user }) {
       formData.append("token", code);
       formData.append("student_id", user?.email || "mock_student@smartattend.com");
       
-      const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/attendance/qr`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr`, {
         method: "POST",
         body: formData
       });
@@ -372,16 +373,36 @@ function ScannerQRContent({ user }) {
     }
   }
 
-  const startScan = () => {
+  const startScan = useCallback(() => {
     setScanning(true)
     setResult(null)
     setMsg('')
-    // Simulate camera detecting a QR. In a real app we'd plug in a react-qr-reader component here...
+    
+    // Simulate real QR detection logic
     timerRef.current = setTimeout(() => {
-      alert("Simulated scanner engaged! (Requires real camera dependency). For now, manually type the Faculty token below to test Backend Integration.");
-      setScanning(false);
+      // In a real environment with html5-qrcode, this would be a real scan event.
+      // For now, we simulate the "Detecting..." phase and then ask for the token.
+      const code = prompt("📸 [SIMULATION] QR Code Detected!\n\nPlease enter the Faculty Token displayed on the teacher's screen:");
+      if (code) {
+        submitTokenToBackend(code.trim());
+      } else {
+        setScanning(false);
+        setResult('error');
+        setMsg("Scan cancelled or timed out.");
+      }
     }, 2000)
-  }
+  }, [user])
+
+  useEffect(() => {
+    // Automatically start scanning when the student reaches this step
+    const autoStart = setTimeout(() => {
+      startScan();
+    }, 1500);
+    return () => {
+      clearTimeout(autoStart);
+      clearTimeout(timerRef.current);
+    }
+  }, [startScan])
 
   const handleManualSubmit = (e) => {
     e.preventDefault()
@@ -563,7 +584,7 @@ function ScannerFaceContent({ user, onVerified }) {
       formData.append("file", file, "face.jpg")
       formData.append("student_id", user?.email || "mock_student@smartattend.com")
       
-      const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/attendance/face/verify-only`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
         method: "POST",
         body: formData
       })
@@ -615,7 +636,7 @@ function ScannerFaceContent({ user, onVerified }) {
           formData.append("file", blob, "face.jpg");
           formData.append("student_id", user?.email || "mock_student@smartattend.com");
           
-          const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/attendance/face/verify-only`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
             method: "POST",
             body: formData
           });
@@ -630,9 +651,12 @@ function ScannerFaceContent({ user, onVerified }) {
           setResult('success');
           setMsg(data.detail || 'Identity verified successfully! Moving to QR Step...');
           
+          // Stop camera before moving to next step
+          stopCamera();
+
           setTimeout(() => {
             if (onVerified) onVerified();
-          }, 2000);
+          }, 1500);
         } catch(err) {
           setResult('error');
           setMsg(err.message);
@@ -832,6 +856,67 @@ function TabClasses() {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  TAB: TIMETABLE
+// ═══════════════════════════════════════════════════════════
+function TabTimetable() {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const times = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM'];
+  
+  const schedule = {
+    'Monday': { '9:00 AM': 'CS101', '2:00 PM': 'CS312' },
+    'Tuesday': { '11:00 AM': 'CS205' },
+    'Wednesday': { '9:00 AM': 'CS101', '2:00 PM': 'CS312' },
+    'Thursday': { '10:00 AM': 'CS510', '11:00 AM': 'CS205' },
+    'Friday': { '9:00 AM': 'CS101', '3:00 PM': 'CS420' },
+  };
+
+  return (
+    <div className="sd-tab-content">
+      <div className="sd-section-header">
+        <div>
+          <h2 className="sd-section-title">📅 Weekly Timetable</h2>
+          <p className="sd-section-sub">Your class schedule for the semester</p>
+        </div>
+      </div>
+      <div className="sd-card sd-table-wrap" style={{ overflowX: 'auto' }}>
+        <table className="sd-table">
+          <thead>
+            <tr>
+              <th style={{ width: '100px' }}>Time</th>
+              {days.map(d => <th key={d}>{d}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {times.map(t => (
+              <tr key={t}>
+                <td style={{ fontWeight: '600', color: 'var(--sd-muted)', whiteSpace: 'nowrap' }}>{t}</td>
+                {days.map(d => {
+                  const courseId = schedule[d]?.[t];
+                  const course = COURSES.find(c => c.id === courseId);
+                  return (
+                    <td key={d + t} style={{ padding: course ? '8px' : '1rem', textAlign: course ? 'left' : 'center' }}>
+                      {course ? (
+                        <div style={{ background: `${course.color}15`, borderLeft: `3px solid ${course.color}`, padding: '0.75rem', borderRadius: '4px' }}>
+                          <div style={{ color: course.color, fontWeight: '700', fontSize: '0.8rem', marginBottom: '4px' }}>{course.id}</div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: '500', marginBottom: '2px', lineHeight: '1.2' }}>{course.name}</div>
+                          <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px' }}>📍 {course.room}</div>
+                        </div>
+                      ) : (
+                        <span style={{ opacity: 0.2 }}>—</span>
+                      )}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
 //  TAB: LOGS
 // ═══════════════════════════════════════════════════════════
 function TabLogs() {
@@ -992,92 +1077,13 @@ function TabSettings({ user }) {
                   className="sd-input"
                   type={f.type}
                   value={profile[f.key]}
-                  onChange={e => setProfile(p => ({ ...p, [f.key]: e.target.value }))}
+                  readOnly
                 />
               </div>
             ))}
           </div>
 
-          <div className="sd-card" style={{ marginTop: '1.25rem' }}>
-            <h3 className="sd-card-title">📸 Register Face Profile</h3>
-            <p className="sd-section-sub" style={{ marginBottom: '1rem' }}>Take a clear snapshot of your face to register it with the facial recognition system.</p>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-               <div style={{ width: '200px', height: '200px', background: '#000', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-                 <video id="register-video" autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }}></video>
-               </div>
-               <div style={{ flex: 1, minWidth: '200px' }}>
-                 <button 
-                  className="sd-outline-btn sd-btn-full" 
-                  onClick={() => {
-                    navigator.mediaDevices.getUserMedia({ video: true })
-                      .then(s => {
-                        const v = document.getElementById('register-video')
-                        v.srcObject = s
-                        v.play()
-                        v.setAttribute('data-active', 'true')
-                        window._registerStream = s;
-                      })
-                      .catch(e => alert('Camera error: ' + e.message))
-                  }}>
-                   1. Turn On Camera
-                 </button>
-                 <button 
-                  className="sd-primary-btn sd-btn-full" 
-                  style={{ marginTop: '0.5rem' }}
-                  onClick={() => {
-                    const v = document.getElementById('register-video')
-                    if (!v || v.getAttribute('data-active') !== 'true') return;
-                    const c = document.createElement('canvas')
-                    c.width = v.videoWidth; c.height = v.videoHeight;
-                    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height)
-                    const btn = document.activeElement;
-                    if(btn) btn.innerHTML = '<span class="sd-spinner"></span> Uploading...';
-                    c.toBlob(async blob => {
-                      const fd = new FormData();
-                      fd.append('file', blob, 'face.jpg')
-                      fd.append('student_id', profile.email || 'mock_student@smartattend.com')
-                      try {
-                        const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/attendance/face/register`, { method: "POST", body: fd })
-                        const d = await res.json()
-                        if(!res.ok) throw new Error(d.detail)
-                        alert("✅ Face Registered Successfully!")
-                      } catch(e) { 
-                        alert("❌ Registration failed: " + e.message) 
-                      } finally {
-                        if(btn) btn.innerHTML = '2. Register Face Profiles';
-                        if (window._registerStream) {
-                          window._registerStream.getTracks().forEach(t => t.stop());
-                          v.removeAttribute('data-active');
-                        }
-                      }
-                    }, 'image/jpeg')
-                  }}>
-                   2. Register Face Profile
-                 </button>
-                 <div style={{ marginTop: '0.5rem', textAlign: 'center' }}>
-                   <span style={{ fontSize: '0.8rem', opacity: 0.6, marginRight: '0.5rem' }}>Camera not working?</span>
-                   <label className="sd-outline-btn" style={{ fontSize: '0.8rem', padding: '0.2rem 0.6rem', cursor: 'pointer' }}>
-                     Upload Image
-                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                       const file = e.target.files[0];
-                       if (!file) return;
-                       const fd = new FormData();
-                       fd.append('file', file, 'face.jpg');
-                       fd.append('student_id', profile.email || 'mock_student@smartattend.com');
-                       try {
-                         const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/attendance/face/register`, { method: "POST", body: fd })
-                         const d = await res.json()
-                         if(!res.ok) throw new Error(d.detail)
-                         alert("✅ Face Registered Successfully from Upload!")
-                       } catch(err) {
-                         alert("❌ Registration failed: " + err.message)
-                       }
-                     }} />
-                   </label>
-                 </div>
-               </div>
-             </div>
-          </div>
+
         </div>
 
         <div>
@@ -1248,6 +1254,7 @@ export default function StudentDashboardPage() {
           {activeTab === 'attendance' && <TabAttendance />}
           {activeTab === 'scanner'    && <TabScanner user={user} />}
           {activeTab === 'classes'    && <TabClasses />}
+          {activeTab === 'timetable'  && <TabTimetable />}
           {activeTab === 'logs'       && <TabLogs />}
           {activeTab === 'settings'   && <TabSettings user={user} />}
         </main>

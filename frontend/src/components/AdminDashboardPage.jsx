@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from '../hooks/useRouter'
 import { useAuth } from '../context/AuthContext'
 import './AdminDashboardPage.css'
@@ -15,18 +15,16 @@ const DEPARTMENTS = [
   { id: 'MBA',  name: 'Business Administration', hod: 'Prof. Kiran Das',   faculty: 6,  students: 150, avgAttend: 76, color: '#fb923c' },
 ]
 
-const USERS = [
-  { id: 'U001', name: 'Admin User',     email: 'admin@smartattend.com',   role: 'admin',   dept: '—',  status: 'active',   joined: 'Jan 2024' },
-  { id: 'U002', name: 'Prof. Sharma',   email: 'teacher@smartattend.com', role: 'teacher', dept: 'CS', status: 'active',   joined: 'Mar 2024' },
-  { id: 'U003', name: 'Avinash K.',     email: 'student@smartattend.com', role: 'student', dept: 'CS', status: 'active',   joined: 'Jul 2024' },
-  { id: 'U004', name: 'Dr. Rajan',      email: 'rajan@smartattend.com',   role: 'teacher', dept: 'EC', status: 'active',   joined: 'Feb 2024' },
-  { id: 'U005', name: 'Rahul Verma',    email: 'rahul@smartattend.com',   role: 'student', dept: 'CS', status: 'active',   joined: 'Jul 2024' },
-  { id: 'U006', name: 'Priya Singh',    email: 'priya@smartattend.com',   role: 'student', dept: 'EC', status: 'inactive', joined: 'Jul 2024' },
-  { id: 'U007', name: 'Prof. Meera',    email: 'meera@smartattend.com',   role: 'teacher', dept: 'ME', status: 'active',   joined: 'Apr 2024' },
-  { id: 'U008', name: 'Karan Mehta',    email: 'karan@smartattend.com',   role: 'student', dept: 'ME', status: 'active',   joined: 'Jul 2024' },
-  { id: 'U009', name: 'Ananya Gupta',   email: 'ananya@smartattend.com',  role: 'student', dept: 'CS', status: 'inactive', joined: 'Aug 2024' },
-  { id: 'U010', name: 'Dr. Anand V.',   email: 'anand@smartattend.com',   role: 'teacher', dept: 'CV', status: 'active',   joined: 'Jan 2024' },
-]
+const SUBJECTS = {
+  'CS': ['Data Structures', 'Operating Systems', 'Database Systems', 'Computer Networks', 'Machine Learning'],
+  'EC': ['Signals & Systems', 'Microprocessors', 'Digital Logic', 'VLSI Design'],
+  'ME': ['Thermodynamics', 'Fluid Mechanics', 'Machine Design', 'Robotics'],
+  'CV': ['Structural Analysis', 'Fluid Mechanics', 'Geotechnical Engg', 'Transportation'],
+  'BT': ['Genetics', 'Bioinformatics', 'Cell Biology', 'Immunology'],
+  'MBA': ['Marketing Management', 'Financial Accounting', 'Business Ethics', 'HR Management']
+}
+
+
 
 const ACTIVITY_LOG = [
   { time: '2 min ago',   msg: 'Rahul Verma marked present via QR — CS101',        type: 'success' },
@@ -74,12 +72,12 @@ function StatCard({ icon, label, value, sub, color, trend }) {
 // ═══════════════════════════════════════════════════════════
 //  TAB: OVERVIEW
 // ═══════════════════════════════════════════════════════════
-function TabOverview({ user, onNav }) {
+function TabOverview({ user, users, onNav }) {
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
-  const activeUsers   = USERS.filter(u => u.status === 'active').length
-  const inactiveUsers = USERS.filter(u => u.status === 'inactive').length
+  const activeUsers   = users.filter(u => u.status === 'active').length
+  const inactiveUsers = users.filter(u => u.status === 'inactive').length
 
   return (
     <div className="ad-tab-content">
@@ -162,16 +160,16 @@ function TabOverview({ user, onNav }) {
           <h3 className="ad-card-title">👥 User Breakdown</h3>
           <div className="ad-user-breakdown">
             {[
-              { role: 'Admin',   count: USERS.filter(u=>u.role==='admin').length,   color: '#a78bfa', icon: '🛡️' },
-              { role: 'Faculty', count: USERS.filter(u=>u.role==='teacher').length, color: '#38bdf8', icon: '👨‍🏫' },
-              { role: 'Student', count: USERS.filter(u=>u.role==='student').length, color: '#34d399', icon: '🎓' },
+              { role: 'Admin',   count: users.filter(u=>u.role==='admin').length,   color: '#a78bfa', icon: '🛡️' },
+              { role: 'Faculty', count: users.filter(u=>u.role==='teacher').length, color: '#38bdf8', icon: '👨‍🏫' },
+              { role: 'Student', count: users.filter(u=>u.role==='student').length, color: '#34d399', icon: '🎓' },
             ].map(u => (
               <div key={u.role} className="ad-user-type-row">
                 <div className="ad-user-type-icon">{u.icon}</div>
                 <div className="ad-user-type-body">
                   <span className="ad-user-type-name">{u.role}</span>
                   <div className="ad-bar-track ad-bar-sm">
-                    <div className="ad-bar-fill" style={{ width: `${u.count / USERS.length * 100}%`, background: u.color }} />
+                    <div className="ad-bar-fill" style={{ width: `${users.length ? (u.count / users.length * 100) : 0}%`, background: u.color }} />
                   </div>
                 </div>
                 <span className="ad-user-type-count" style={{ color: u.color }}>{u.count}</span>
@@ -341,13 +339,16 @@ function TabDepartments() {
 // ═══════════════════════════════════════════════════════════
 //  TAB: USER MANAGEMENT
 // ═══════════════════════════════════════════════════════════
-function TabUsers() {
-  const [users, setUsers]           = useState(USERS)
+function TabUsers({ users, setUsers }) {
   const [searchQ, setSearch]        = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [deptFilter, setDeptFilter] = useState('all')
   const [showForm, setShowForm]     = useState(false)
-  const [newUser, setNewUser]       = useState({ name: '', email: '', role: 'student', dept: 'CS' })
+  const { register } = useAuth()
+  const [newUser, setNewUser]       = useState({ name: '', email: '', password: '', confirmPassword: '', role: 'student', dept: 'CS', subject: '' })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
   const [toast, setToast]           = useState('')
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2500) }
@@ -366,22 +367,59 @@ function TabUsers() {
     ))
   }
 
-  const deleteUser = (id) => {
-    setUsers(prev => prev.filter(u => u.id !== id))
-    showToast('🗑️ User removed')
+  const deleteUser = async (id, email) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    
+    try {
+      if (email.endsWith('@smartattend.com')) {
+        // Just mock deletion for mock users that don't exist in DB
+        setUsers(prev => prev.filter(u => u.id !== id))
+        showToast('🗑️ User removed (Mock Data)')
+        return
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/users/${email}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Failed to delete user");
+      }
+      setUsers(prev => prev.filter(u => u.id !== id))
+      showToast('🗑️ User removed from database')
+    } catch (err) {
+      showToast(`❌ Error: ${err.message}`)
+    }
   }
 
-  const addUser = (e) => {
+  const addUser = async (e) => {
     e.preventDefault()
-    const u = {
-      ...newUser,
-      id: `U${String(users.length + 1).padStart(3, '0')}`,
-      status: 'active', joined: 'Just now',
+    if (newUser.password !== newUser.confirmPassword) { showToast('❌ Passwords do not match'); return }
+    if (newUser.password.length < 8) { showToast('❌ Password must be at least 8 chars'); return }
+    if (!/(?=.*[A-Z])/.test(newUser.password)) { showToast('❌ Password needs an uppercase letter'); return }
+    if (!/(?=.*\d)/.test(newUser.password)) { showToast('❌ Password needs a number'); return }
+    if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};\':"\\\\|,.<>\\/?])/.test(newUser.password)) { showToast('❌ Password needs a special symbol'); return }
+    
+    const btn = document.getElementById('save-user-btn')
+    if(btn) btn.disabled = true;
+
+    try {
+      await register(newUser.email, newUser.password, newUser.role, newUser.name, newUser.dept, newUser.role === 'teacher' ? newUser.subject : '')
+      
+      const u = {
+        ...newUser,
+        id: `U${String(users.length + 1).padStart(3, '0')}`,
+        status: 'active', joined: 'Just now',
+      }
+      setUsers(prev => [u, ...prev])
+      setNewUser({ name: '', email: '', password: '', confirmPassword: '', role: 'student', dept: 'CS', subject: '' })
+      setShowForm(false)
+      showToast('✅ User added to database successfully')
+    } catch (err) {
+      showToast(`❌ Failed: ${err.message}`)
+    } finally {
+      if(btn) btn.disabled = false;
     }
-    setUsers(prev => [u, ...prev])
-    setNewUser({ name: '', email: '', role: 'student', dept: 'CS' })
-    setShowForm(false)
-    showToast('✅ User added successfully')
   }
 
   const roleMeta = { admin: { color: '#a78bfa', icon: '🛡️' }, teacher: { color: '#38bdf8', icon: '👨‍🏫' }, student: { color: '#34d399', icon: '🎓' } }
@@ -414,6 +452,24 @@ function TabUsers() {
               <label htmlFor="u-email">Email</label>
               <input id="u-email" className="ad-input" type="email" placeholder="user@smartattend.com" value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} required />
             </div>
+            <div className="ad-form-group ad-fg-wide">
+              <label htmlFor="u-password">Password</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input id="u-password" className="ad-input" type={showPassword ? "text" : "password"} placeholder="••••••••" value={newUser.password} onChange={e => setNewUser(p => ({ ...p, password: e.target.value }))} required style={{ flex: 1, paddingRight: '2.5rem' }} />
+                <button type="button" onClick={() => setShowPassword(p => !p)} style={{ position: 'absolute', right: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', opacity: 0.7 }}>
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
+            <div className="ad-form-group ad-fg-wide">
+              <label htmlFor="u-confirm-password">Confirm Password</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input id="u-confirm-password" className="ad-input" type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" value={newUser.confirmPassword} onChange={e => setNewUser(p => ({ ...p, confirmPassword: e.target.value }))} required style={{ flex: 1, paddingRight: '2.5rem' }} />
+                <button type="button" onClick={() => setShowConfirmPassword(p => !p)} style={{ position: 'absolute', right: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', opacity: 0.7 }}>
+                  {showConfirmPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
             <div className="ad-form-group">
               <label htmlFor="u-role">Role</label>
               <select id="u-role" className="ad-select" value={newUser.role} onChange={e => setNewUser(p => ({ ...p, role: e.target.value }))}>
@@ -424,12 +480,235 @@ function TabUsers() {
             </div>
             <div className="ad-form-group">
               <label htmlFor="u-dept">Department</label>
-              <select id="u-dept" className="ad-select" value={newUser.dept} onChange={e => setNewUser(p => ({ ...p, dept: e.target.value }))}>
+              <select id="u-dept" className="ad-select" value={newUser.dept} onChange={e => {
+                const newDept = e.target.value;
+                setNewUser(p => ({ ...p, dept: newDept, subject: SUBJECTS[newDept]?.[0] || '' }))
+              }}>
+                {DEPARTMENTS.map(d => <option key={d.id} value={d.id}>{d.name} ({d.id})</option>)}
+              </select>
+            </div>
+            {newUser.role === 'teacher' && (
+              <div className="ad-form-group ad-fg-wide">
+                <label htmlFor="u-subject">Subject</label>
+                <select id="u-subject" className="ad-select" value={newUser.subject || (SUBJECTS[newUser.dept]?.[0] || '')} onChange={e => setNewUser(p => ({ ...p, subject: e.target.value }))}>
+                  {SUBJECTS[newUser.dept]?.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            )}
+            <button type="submit" id="save-user-btn" className="ad-primary-btn" style={{ alignSelf: 'flex-end' }}>Add User</button>
+          </form>
+
+          {newUser.role === 'student' && (
+            <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginTop: '1.5rem' }}>
+              <h4 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: '600' }}>📸 Manage Face Profile</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--ad-muted)', marginBottom: '1rem' }}>Register the student's face profile for attendance. <strong style={{color:'var(--ad-primary)'}}>Make sure to enter their Email above first.</strong></p>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                <div style={{ width: '160px', height: '160px', background: '#000', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                  <video id="add-register-video" autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }}></video>
+                </div>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <button 
+                    type="button"
+                    className="ad-outline-btn ad-btn-full" 
+                    onClick={() => {
+                      navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(s => {
+                          const v = document.getElementById('add-register-video')
+                          v.srcObject = s
+                          v.play()
+                          v.setAttribute('data-active', 'true')
+                          window._addRegisterStream = s;
+                        })
+                        .catch(e => alert('Camera error: ' + e.message))
+                    }}>
+                    1. Turn On Camera
+                  </button>
+                  <button 
+                    type="button"
+                    className="ad-primary-btn ad-btn-full" 
+                    style={{ marginTop: '0.5rem' }}
+                    onClick={() => {
+                      if (!newUser.email.trim()) { alert("Please enter the student's Email in the form above first!"); return; }
+                      const v = document.getElementById('add-register-video')
+                      if (!v || v.getAttribute('data-active') !== 'true') return;
+                      const c = document.createElement('canvas')
+                      c.width = v.videoWidth; c.height = v.videoHeight;
+                      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height)
+                      const btn = document.activeElement;
+                      const originalHtml = btn.innerHTML;
+                      btn.innerHTML = '<span class="ad-spinner"></span> Uploading...';
+                      c.toBlob(async blob => {
+                        const fd = new FormData();
+                        fd.append('file', blob, 'face.jpg')
+                        fd.append('student_id', newUser.email)
+                        try {
+                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
+                          const d = await res.json()
+                          if(!res.ok) throw new Error(d.detail)
+                          alert("✅ Face Registered Successfully!")
+                        } catch(e) { 
+                          alert("❌ Registration failed: " + e.message) 
+                        } finally {
+                          btn.innerHTML = originalHtml;
+                          if (window._addRegisterStream) {
+                            window._addRegisterStream.getTracks().forEach(t => t.stop());
+                            v.removeAttribute('data-active');
+                          }
+                        }
+                      }, 'image/jpeg')
+                    }}>
+                    2. Capture & Register Face
+                  </button>
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <label className="ad-outline-btn ad-btn-full" style={{ cursor: 'pointer', textAlign: 'center', display: 'block' }}>
+                      Upload Photo Instead
+                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                        if (!newUser.email.trim()) { alert("Please enter the student's Email in the form above first!"); e.target.value = ''; return; }
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const fd = new FormData();
+                        fd.append('file', file, 'face.jpg');
+                        fd.append('student_id', newUser.email);
+                        try {
+                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
+                          const d = await res.json()
+                          if(!res.ok) throw new Error(d.detail)
+                          alert("✅ Face Registered Successfully from Upload!")
+                        } catch(err) {
+                          alert("❌ Registration failed: " + err.message)
+                        }
+                      }} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Edit user form & Face registration */}
+      {editingUser && (
+        <div className="ad-card ad-form-card" style={{ border: '1px solid var(--ad-primary)', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 className="ad-card-title" style={{ margin: 0 }}>✏️ Edit User: {editingUser.name}</h3>
+            <button className="ad-text-btn" onClick={() => {
+              setEditingUser(null)
+              if (window._registerStream) window._registerStream.getTracks().forEach(t => t.stop())
+            }}>✕ Close</button>
+          </div>
+          <form className="ad-inline-form" style={{ marginBottom: '1.5rem' }}>
+            <div className="ad-form-group ad-fg-wide">
+              <label>Full Name</label>
+              <input className="ad-input" value={editingUser.name} onChange={e => setEditingUser(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div className="ad-form-group ad-fg-wide">
+              <label>Email</label>
+              <input className="ad-input" value={editingUser.email} onChange={e => setEditingUser(p => ({ ...p, email: e.target.value }))} />
+            </div>
+            <div className="ad-form-group">
+              <label>Role</label>
+              <select className="ad-select" value={editingUser.role} onChange={e => setEditingUser(p => ({ ...p, role: e.target.value }))}>
+                <option value="student">Student</option>
+                <option value="teacher">Faculty</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="ad-form-group">
+              <label>Department</label>
+              <select className="ad-select" value={editingUser.dept} onChange={e => setEditingUser(p => ({ ...p, dept: e.target.value }))}>
+                <option value="—">—</option>
                 {DEPARTMENTS.map(d => <option key={d.id} value={d.id}>{d.id}</option>)}
               </select>
             </div>
-            <button type="submit" id="save-user-btn" className="ad-primary-btn" style={{ alignSelf: 'flex-end' }}>Add User</button>
+            <button type="button" className="ad-primary-btn" style={{ alignSelf: 'flex-end' }} onClick={() => {
+              setUsers(prev => prev.map(u => u.id === editingUser.id ? editingUser : u));
+              setEditingUser(null);
+              showToast('✅ User updated successfully');
+            }}>Save Changes</button>
           </form>
+
+          {editingUser.role === 'student' && (
+            <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+              <h4 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: '600' }}>📸 Manage Face Profile</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--ad-muted)', marginBottom: '1rem' }}>Register or update the student's face profile for attendance.</p>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                <div style={{ width: '160px', height: '160px', background: '#000', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                  <video id="admin-register-video" autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }}></video>
+                </div>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <button 
+                    className="ad-outline-btn ad-btn-full" 
+                    onClick={() => {
+                      navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(s => {
+                          const v = document.getElementById('admin-register-video')
+                          v.srcObject = s
+                          v.play()
+                          v.setAttribute('data-active', 'true')
+                          window._registerStream = s;
+                        })
+                        .catch(e => alert('Camera error: ' + e.message))
+                    }}>
+                    1. Turn On Camera
+                  </button>
+                  <button 
+                    className="ad-primary-btn ad-btn-full" 
+                    style={{ marginTop: '0.5rem' }}
+                    onClick={() => {
+                      const v = document.getElementById('admin-register-video')
+                      if (!v || v.getAttribute('data-active') !== 'true') return;
+                      const c = document.createElement('canvas')
+                      c.width = v.videoWidth; c.height = v.videoHeight;
+                      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height)
+                      const btn = document.activeElement;
+                      if(btn) btn.innerHTML = '<span class="ad-spinner"></span> Uploading...';
+                      c.toBlob(async blob => {
+                        const fd = new FormData();
+                        fd.append('file', blob, 'face.jpg')
+                        fd.append('student_id', editingUser.email)
+                        try {
+                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
+                          const d = await res.json()
+                          if(!res.ok) throw new Error(d.detail)
+                          alert("✅ Face Registered Successfully!")
+                        } catch(e) { 
+                          alert("❌ Registration failed: " + e.message) 
+                        } finally {
+                          if(btn) btn.innerHTML = '2. Capture & Register Face';
+                          if (window._registerStream) {
+                            window._registerStream.getTracks().forEach(t => t.stop());
+                            v.removeAttribute('data-active');
+                          }
+                        }
+                      }, 'image/jpeg')
+                    }}>
+                    2. Capture & Register Face
+                  </button>
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <label className="ad-outline-btn ad-btn-full" style={{ cursor: 'pointer', textAlign: 'center', display: 'block' }}>
+                      Upload Photo Instead
+                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const fd = new FormData();
+                        fd.append('file', file, 'face.jpg');
+                        fd.append('student_id', editingUser.email);
+                        try {
+                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, { method: "POST", body: fd })
+                          const d = await res.json()
+                          if(!res.ok) throw new Error(d.detail)
+                          alert("✅ Face Registered Successfully from Upload!")
+                        } catch(err) {
+                          alert("❌ Registration failed: " + err.message)
+                        }
+                      }} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -504,8 +783,8 @@ function TabUsers() {
                   <td>
                     <div className="ad-row-actions">
                       <button id={`toggle-${u.id}`} className="ad-icon-btn" title="Toggle status" onClick={() => toggleStatus(u.id)}>⇄</button>
-                      <button id={`edit-${u.id}`}   className="ad-icon-btn" title="Edit user">✏️</button>
-                      <button id={`del-${u.id}`}    className="ad-icon-btn ad-icon-danger" title="Delete user" onClick={() => deleteUser(u.id)}>🗑️</button>
+                      <button id={`edit-${u.id}`}   className="ad-icon-btn" title="Edit user" onClick={() => setEditingUser({ ...u })}>✏️</button>
+                      <button id={`del-${u.id}`}    className="ad-icon-btn ad-icon-danger" title="Delete user" onClick={() => deleteUser(u.id, u.email)}>🗑️</button>
                     </div>
                   </td>
                 </tr>
@@ -728,6 +1007,29 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab]     = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [users, setUsers] = useState([])
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/auth/users`);
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(u => ({
+            ...u,
+            id: u._id.slice(-6).toUpperCase(), // Use part of Mongo ID as display ID
+            status: 'active',
+            joined: 'Just now',
+            dept: u.dept || 'CS'
+          }));
+          setUsers(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch users", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const handleLogout = () => { logout(); router.replace('/login') }
   const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'AD'
@@ -792,9 +1094,9 @@ export default function AdminDashboardPage() {
         </header>
 
         <main className="ad-content">
-          {activeTab === 'overview'    && <TabOverview     user={user} onNav={setActiveTab} />}
+          {activeTab === 'overview'    && <TabOverview     user={user} users={users} onNav={setActiveTab} />}
           {activeTab === 'departments' && <TabDepartments  />}
-          {activeTab === 'users'       && <TabUsers />}
+          {activeTab === 'users'       && <TabUsers        users={users} setUsers={setUsers} />}
           {activeTab === 'settings'    && <TabSettings     user={user} />}
         </main>
       </div>

@@ -28,6 +28,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     role: str = "student"
+    dept: Optional[str] = None
+    subject: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: str
@@ -71,12 +73,12 @@ class AttendanceResponse(AttendanceBase):
 # ---- QR Generation ----
 class QRGenerateRequest(BaseModel):
     course_id: str
-    duration_minutes: int = 10
+    duration_minutes: float = 10.0
 
 class QRGenerateResponse(BaseModel):
     token: str
     course_id: str
-    duration_minutes: int
+    duration_minutes: float
 
 class QRSendRequest(BaseModel):
     course_id: str

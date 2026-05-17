@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, B
 from pymongo.database import Database
 from jose import JWTError
 from deepface import DeepFace
-from .. import schemas
-from ..database import get_db
-from ..services.qr import generate_secure_qr_session, verify_qr_token
+import schemas
+from database import get_db
+from services.qr import generate_secure_qr_session, verify_qr_token
 import datetime
 
 # We keep this just in case, but no longer use it for active storage

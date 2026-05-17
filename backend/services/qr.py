@@ -5,7 +5,7 @@ import os
 SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-attendance-key")
 ALGORITHM = "HS256"
 
-def generate_secure_qr_session(course_id: str, duration_minutes: int = 5) -> str:
+def generate_secure_qr_session(course_id: str, duration_minutes: float = 5.0) -> str:
     """
     Generates a secure QR payload carrying a signed JWT encapsulating expiration logic.
     Instead of generating a PNG file here natively, we just return the string payload 

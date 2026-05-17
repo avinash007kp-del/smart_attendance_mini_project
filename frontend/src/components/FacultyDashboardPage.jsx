@@ -18,7 +18,7 @@ const STUDENTS = [
   { id: 'S003', name: 'Aditya Kumar',   roll: '21CS003', course: 'CS101', status: 'absent',  time: '—'      },
   { id: 'S004', name: 'Sneha Reddy',    roll: '21CS004', course: 'CS101', status: 'present', time: '9:02 AM' },
   { id: 'S005', name: 'Karan Mehta',    roll: '21CS005', course: 'CS205', status: 'present', time: '11:03 AM'},
-  { id: 'S006', name: 'Ananya Gupta',   roll: '21CS006', course: 'CS205', status: 'late',    time: '11:18 AM'},
+  { id: 'S006', name: 'Ananya Gupta',   roll: '21CS006', course: 'CS205', status: 'present', time: '11:18 AM'},
   { id: 'S007', name: 'Vikram Nair',    roll: '21CS007', course: 'CS205', status: 'absent',  time: '—'      },
   { id: 'S008', name: 'Divya Patel',    roll: '21CS008', course: 'CS312', status: 'present', time: '2:01 AM' },
   { id: 'S009', name: 'Arjun Sharma',   roll: '21CS009', course: 'CS312', status: 'present', time: '2:05 AM' },
@@ -59,7 +59,7 @@ function TabDashboard({ user, onNav }) {
   })
   const present = STUDENTS.filter(s => s.status === 'present').length
   const absent  = STUDENTS.filter(s => s.status === 'absent').length
-  const late    = STUDENTS.filter(s => s.status === 'late').length
+
 
   return (
     <div className="fd-tab-content">
@@ -77,7 +77,7 @@ function TabDashboard({ user, onNav }) {
         <StatCard icon="📚" label="Today's Classes"  value={COURSES.length}           trend="Scheduled"         color="#a78bfa" />
         <StatCard icon="✅" label="Present"           value={present}                  trend={`${Math.round(present/STUDENTS.length*100)}% rate`} color="#34d399" />
         <StatCard icon="❌" label="Absent"            value={absent}                   trend="Notified via email" color="#f87171" />
-        <StatCard icon="⏰" label="Late"              value={late}                     trend="Marked late"        color="#fbbf24" />
+
       </div>
 
       <div className="fd-section-grid">
@@ -121,7 +121,7 @@ function TabDashboard({ user, onNav }) {
           {[
             { t: 'Just now',    msg: 'QR session started for CS101 — Data Structures', type: 'info'    },
             { t: '9:05 AM',     msg: 'Rahul Verma marked present via Face Recognition',type: 'success' },
-            { t: '11:18 AM',    msg: 'Ananya Gupta marked late for CS205',             type: 'warn'    },
+
             { t: 'Yesterday',   msg: 'Attendance report exported for CS312',            type: 'neutral' },
             { t: '2 days ago',  msg: 'New QR session created for all courses',          type: 'info'    },
           ].map((a, i) => (
@@ -206,7 +206,7 @@ function TabAttendance() {
         <div className="fd-attend-summary-text">
           <span><strong>{present}</strong> Present</span>
           <span><strong>{filtered.filter(s=>s.status==='absent').length}</strong> Absent</span>
-          <span><strong>{filtered.filter(s=>s.status==='late').length}</strong> Late</span>
+
         </div>
         <div className="fd-progress-bar">
           <div className="fd-progress-fill" style={{ width: `${pct}%` }} />
@@ -241,7 +241,7 @@ function TabAttendance() {
                 <td className="fd-td-time">{s.time}</td>
                 <td>
                   <span className={`fd-status-badge fd-status-${s.status}`}>
-                    {s.status === 'present' ? '✅' : s.status === 'late' ? '⏰' : '❌'} {s.status}
+                    {s.status === 'present' ? '✅' : '❌'} {s.status}
                   </span>
                 </td>
                 <td>
@@ -266,7 +266,7 @@ function TabAttendance() {
 // ─── Tab: QR Code Generator ──────────────────────────────────────────────────
 function TabQR() {
   const [course, setCourse]       = useState(COURSES[0].id)
-  const [duration, setDuration]   = useState(10)
+  const [duration, setDuration]   = useState(30)
   const [sessionNote, setNote]    = useState('')
   const [active, setActive]       = useState(false)
   const [timeLeft, setTimeLeft]   = useState(0)
@@ -279,10 +279,10 @@ function TabQR() {
 
   const startSession = async () => {
     try {
-      const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/attendance/qr/generate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ course_id: course, duration_minutes: duration })
+        body: JSON.stringify({ course_id: course, duration_minutes: duration / 60.0 })
       })
       if (!res.ok) throw new Error("Backend generation failed")
       const data = await res.json()
@@ -294,7 +294,7 @@ function TabQR() {
       localStorage.setItem('active_qr_session', JSON.stringify({ course_id: course, timestamp: Date.now() }))
       
       setActive(true)
-      setTimeLeft(duration * 60)
+      setTimeLeft(duration)
       setScanCount(0)
 
       // Simulate students scanning
@@ -315,7 +315,7 @@ function TabQR() {
         })
       }, 1000)
     } catch (e) {
-      alert("Failed to generate QR on Backend. Ensure FastAPI is running on port 8000!")
+      alert("Failed to generate QR on Backend. Ensure your backend is running and the URL is configured properly!")
       console.error(e)
     }
   }
@@ -368,7 +368,7 @@ function TabQR() {
           <div className="fd-form-group">
             <label htmlFor="qr-duration">Session Duration</label>
             <div className="fd-duration-row">
-              {[5, 10, 15, 20, 30].map(d => (
+              {[30, 45, 60].map(d => (
                 <button
                   key={d}
                   id={`dur-${d}`}
@@ -376,7 +376,7 @@ function TabQR() {
                   onClick={() => setDuration(d)}
                   disabled={active}
                 >
-                  {d}m
+                  {d === 60 ? '1m' : `${d}s`}
                 </button>
               ))}
             </div>
@@ -436,7 +436,7 @@ function TabQR() {
             <>
               <div className="fd-session-info">
                 <span className="fd-session-id">Session: <code>{sessionId}</code></span>
-                <span className="fd-session-dur">Duration: {duration} min</span>
+                <span className="fd-session-dur">Duration: {duration === 60 ? '1 min' : `${duration} sec`}</span>
               </div>
 
               <div className="fd-scan-progress">
@@ -462,7 +462,7 @@ function TabQR() {
                   const originalText = btn.innerHTML;
                   btn.innerHTML = '<span class="sd-spinner"></span> Sending...';
                   try {
-                    const res = await fetch(`http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:8000/attendance/qr/send`, {
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr/send`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ course_id: course, token: tokenPayload })
@@ -604,7 +604,7 @@ function TabSettings({ user }) {
                 { id: 'notif-sms',     key: 'sms',          label: 'SMS Notifications',        desc: 'Receive alerts via SMS'               },
                 { id: 'notif-browser', key: 'browser',      label: 'Browser Notifications',    desc: 'Push alerts in browser'               },
                 { id: 'notif-absent',  key: 'absentAlert',  label: 'Absent Student Alert',     desc: 'Alert when a student is absent'       },
-                { id: 'notif-late',    key: 'lateAlert',    label: 'Late Arrival Alert',       desc: 'Alert when a student arrives late'    },
+
                 { id: 'notif-weekly',  key: 'reportWeekly', label: 'Weekly Report Digest',     desc: 'Automated weekly attendance report'   },
               ].map(n => (
                 <div key={n.id} className="fd-toggle-row">
@@ -646,10 +646,9 @@ function TabSettings({ user }) {
               <div className="fd-form-group">
                 <label htmlFor="default-dur">Default Session Duration</label>
                 <select id="default-dur" className="fd-select fd-select-full">
-                  <option>5 minutes</option>
-                  <option selected>10 minutes</option>
-                  <option>15 minutes</option>
-                  <option>20 minutes</option>
+                  <option>30 seconds</option>
+                  <option>45 seconds</option>
+                  <option>1 minute</option>
                 </select>
               </div>
             </div>
