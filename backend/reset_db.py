@@ -1,6 +1,7 @@
 import os
 import sys
 from pymongo import MongoClient
+import certifi
 
 # Add the current directory to sys.path so we can import local modules
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -9,7 +10,7 @@ from services.auth_utils import get_password_hash
 def main():
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017")
     try:
-        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
         db = client["attendance_db"]
         
         # 1. Delete all existing user accounts, face profiles, and attendances
