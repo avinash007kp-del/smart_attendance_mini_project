@@ -577,33 +577,42 @@ function ScannerFaceContent({ user, onVerified }) {
 
     setScanning(true)
     setResult(null)
-    setMsg('')
+    setMsg('🔄 Connecting to server... (may take up to 30s on first use)')
 
     try {
       const formData = new FormData()
       formData.append("file", file, "face.jpg")
       formData.append("student_id", user?.email || "mock_student@smartattend.com")
-      
+
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 90000)
+
       const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
         method: "POST",
-        body: formData
+        body: formData,
+        signal: controller.signal
       })
-      
+      clearTimeout(timeoutId)
+
       if (!res.ok) {
         const err = await res.json()
         throw new Error(err.detail || "Face not recognized")
       }
-      
+
       const data = await res.json()
       setResult('success')
       setMsg(data.detail || 'Identity verified successfully! Moving to QR Step...')
-      
+
       setTimeout(() => {
         if (onVerified) onVerified()
       }, 2000)
     } catch(err) {
       setResult('error')
-      setMsg(err.message)
+      if (err.name === 'AbortError') {
+        setMsg('⏱️ Server took too long to respond. The server may be starting up — please wait 30 seconds and try again.')
+      } else {
+        setMsg(err.message)
+      }
     } finally {
       setScanning(false)
     }
@@ -635,23 +644,29 @@ function ScannerFaceContent({ user, onVerified }) {
           const formData = new FormData();
           formData.append("file", blob, "face.jpg");
           formData.append("student_id", user?.email || "mock_student@smartattend.com");
-          
+
+          setMsg('🔄 Analyzing face... (may take up to 30s on first use)')
+
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 90000)
+
           const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
             method: "POST",
-            body: formData
+            body: formData,
+            signal: controller.signal
           });
-          
+          clearTimeout(timeoutId)
+
           if (!res.ok) {
             const err = await res.json();
             throw new Error(err.detail || "Face not recognized");
           }
-          
+
           const data = await res.json();
-          
+
           setResult('success');
           setMsg(data.detail || 'Identity verified successfully! Moving to QR Step...');
-          
-          // Stop camera before moving to next step
+
           stopCamera();
 
           setTimeout(() => {
@@ -659,7 +674,11 @@ function ScannerFaceContent({ user, onVerified }) {
           }, 1500);
         } catch(err) {
           setResult('error');
-          setMsg(err.message);
+          if (err.name === 'AbortError') {
+            setMsg('⏱️ Server took too long. It may be starting up — please wait 30 seconds and try again.');
+          } else {
+            setMsg(err.message);
+          }
         } finally {
           setScanning(false);
         }
