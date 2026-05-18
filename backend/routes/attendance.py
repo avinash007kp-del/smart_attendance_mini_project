@@ -114,7 +114,7 @@ def verify_face_only(file: UploadFile = File(...), student_id: str = Form(...), 
         tmp_registered_path = tmp_registered.name
 
     try:
-        result = DeepFace.verify(img1_path=tmp_uploaded_path, img2_path=tmp_registered_path, model_name="Facenet", enforce_detection=True)
+        result = DeepFace.verify(img1_path=tmp_uploaded_path, img2_path=tmp_registered_path, model_name="SFace", detector_backend="opencv", enforce_detection=False)
         if not result.get("verified"):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Face verification failed. Faces do not match.")
         return {"verified": True, "detail": "Identity verified successfully. Proceed to QR scan."}
@@ -146,7 +146,7 @@ def log_face_attendance(file: UploadFile = File(...), student_id: str = Form(...
         tmp_registered_path = tmp_registered.name
 
     try:
-        result = DeepFace.verify(img1_path=tmp_uploaded_path, img2_path=tmp_registered_path, model_name="Facenet", enforce_detection=True)
+        result = DeepFace.verify(img1_path=tmp_uploaded_path, img2_path=tmp_registered_path, model_name="SFace", detector_backend="opencv", enforce_detection=False)
         if not result.get("verified"):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Face verification failed. Faces do not match.")
     except ValueError as e:

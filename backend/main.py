@@ -1,9 +1,32 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from routes import auth, attendance
+import tempfile, os, numpy as np
 
-app = FastAPI(title="Smart Attendance API", description="Native MongoDB Backend")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-warm the SFace model on startup so the first student scan is fast
+    try:
+        from deepface import DeepFace
+        import cv2
+        blank = np.zeros((112, 112, 3), dtype=np.uint8)
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as f:
+            cv2.imwrite(f.name, blank)
+            path = f.name
+        try:
+            DeepFace.represent(img_path=path, model_name="SFace", enforce_detection=False)
+        except Exception:
+            pass
+        finally:
+            os.remove(path)
+        print("✅ SFace model pre-warmed successfully")
+    except Exception as e:
+        print(f"⚠️ Model pre-warm failed (non-critical): {e}")
+    yield
+
+app = FastAPI(title="Smart Attendance API", description="Native MongoDB Backend", lifespan=lifespan)
 
 @app.get("/")
 def read_root():
@@ -33,6 +56,3 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(auth.router)
 app.include_router(attendance.router)
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Native MongoDB Smart Attendance API!"}
