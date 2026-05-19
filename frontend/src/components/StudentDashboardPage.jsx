@@ -17,6 +17,22 @@ const NAV_ITEMS = [
   { id: 'settings',    icon: '⚙️',  label: 'Settings'   },
 ]
 
+// ─── Static fallback data (used by Classes / Timetable / Logs tabs) ─────────
+const COURSES = [
+  { id: 'CS101', name: 'Data Structures',   faculty: 'Prof. Sharma', schedule: 'Mon/Wed/Fri 9:00 AM', room: 'Lab 3',   attended: 0, total: 0, color: '#a78bfa' },
+  { id: 'CS205', name: 'Operating Systems', faculty: 'Dr. Rajan',    schedule: 'Tue/Thu 11:00 AM',    room: 'Room 12', attended: 0, total: 0, color: '#60a5fa' },
+  { id: 'CS312', name: 'Database Systems',  faculty: 'Prof. Meera',  schedule: 'Mon/Wed 2:00 PM',     room: 'Room 7',  attended: 0, total: 0, color: '#34d399' },
+]
+
+const LOGS = []
+
+const TODAY_SCHEDULE = [
+  { time: '9:00 AM',  course: 'CS101', name: 'Data Structures',   room: 'Lab 3',   status: 'upcoming' },
+  { time: '11:00 AM', course: 'CS205', name: 'Operating Systems', room: 'Room 12', status: 'upcoming' },
+  { time: '2:00 PM',  course: 'CS312', name: 'Database Systems',  room: 'Room 7',  status: 'upcoming' },
+]
+
+
 // ─── Live attendance hook ─────────────────────────────────────────────────────
 function useAttendanceData(email) {
   const [logs, setLogs]       = useState([])
