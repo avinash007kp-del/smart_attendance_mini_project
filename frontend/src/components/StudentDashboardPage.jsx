@@ -8,13 +8,14 @@ import './StudentDashboardPage.css'
 
 // ─── Nav items ─────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: 'overview',    icon: '🏠', label: 'Overview'    },
-  { id: 'attendance',  icon: '📊', label: 'Attendance'  },
-  { id: 'scanner',     icon: '📷', label: 'Scanner'     },
-  { id: 'classes',     icon: '📚', label: 'Classes'     },
-  { id: 'timetable',   icon: '📅', label: 'Timetable'   },
-  { id: 'logs',        icon: '🗒️',  label: 'Logs'       },
-  { id: 'settings',    icon: '⚙️',  label: 'Settings'   },
+  { id: 'overview',     icon: '🏠', label: 'Overview'    },
+  { id: 'attendance',   icon: '📊', label: 'Attendance'  },
+  { id: 'scanner',      icon: '📷', label: 'Scanner'     },
+  { id: 'classes',      icon: '📚', label: 'Classes'     },
+  { id: 'timetable',    icon: '📅', label: 'Timetable'   },
+  { id: 'assignments',  icon: '📝', label: 'Assignments' },
+  { id: 'logs',         icon: '🗒️',  label: 'Logs'       },
+  { id: 'settings',     icon: '⚙️',  label: 'Settings'   },
 ]
 
 // ─── Static fallback data (used by Classes / Timetable / Logs tabs) ─────────
@@ -1135,6 +1136,115 @@ function TabTimetable() {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  TAB: ASSIGNMENTS (read-only — posted by faculty)
+// ═══════════════════════════════════════════════════════════
+function TabStudentAssignments() {
+  const API = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'
+  const [assignments, setAssignments] = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [filter, setFilter]           = useState('all')
+
+  useEffect(() => {
+    fetch(`${API}/assignments/`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setAssignments(data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const now = new Date()
+  const filtered = assignments.filter(a => {
+    const due = a.due_date || a.dueDate
+    if (filter === 'active') return !due || new Date(due) >= now
+    if (filter === 'past')   return due && new Date(due) < now
+    return true
+  })
+  const isOverdue = (a) => { const d = a.due_date || a.dueDate; return d && new Date(d) < now }
+
+  return (
+    <div className="sd-tab-content">
+      <div className="sd-section-header">
+        <div>
+          <h2 className="sd-section-title">📝 Assignments</h2>
+          <p className="sd-section-sub">Assignments posted by your faculty</p>
+        </div>
+        <div className="sd-filter-pills">
+          {['all','active','past'].map(f => (
+            <button key={f} id={`asgn-filter-${f}`}
+              className={`sd-pill ${filter === f ? 'active' : ''}`}
+              onClick={() => setFilter(f)}>
+              {f === 'all' ? 'All' : f === 'active' ? '✅ Active' : '⏰ Past Due'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading && <p style={{color:'var(--sd-muted)', padding:'1rem 0'}}>Loading assignments…</p>}
+
+      {!loading && assignments.length === 0 && (
+        <div className="sd-card" style={{textAlign:'center', padding:'3rem'}}>
+          <div style={{fontSize:'3rem', marginBottom:'0.75rem'}}>📭</div>
+          <p style={{color:'var(--sd-muted)'}}>No assignments yet. Your faculty hasn't posted any.</p>
+        </div>
+      )}
+
+      {!loading && filtered.length === 0 && assignments.length > 0 && (
+        <div className="sd-card" style={{textAlign:'center', padding:'2rem', color:'var(--sd-muted)'}}>
+          No assignments match this filter.
+        </div>
+      )}
+
+      <div style={{display:'grid', gap:'1rem'}}>
+        {filtered.map(a => {
+          const due    = a.due_date || a.dueDate
+          const posted = a.created_at || a.createdAt
+          const overdue = isOverdue(a)
+          return (
+            <div key={a._id} className="sd-card" style={{
+              borderLeft: `4px solid ${overdue ? '#f87171' : '#34d399'}`,
+              padding: '1.25rem'
+            }}>
+              <div style={{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'0.5rem', marginBottom:'0.5rem'}}>
+                <div style={{display:'flex', gap:'0.5rem', alignItems:'center', flexWrap:'wrap'}}>
+                  <span style={{background:'rgba(167,139,250,0.15)', color:'#a78bfa', borderRadius:6, padding:'2px 10px', fontSize:'0.8rem', fontWeight:700}}>{a.course}</span>
+                  {overdue
+                    ? <span style={{background:'rgba(248,113,113,0.15)', color:'#f87171', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>⏰ PAST DUE</span>
+                    : due
+                      ? <span style={{background:'rgba(52,211,153,0.15)', color:'#34d399', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>✅ ACTIVE</span>
+                      : <span style={{background:'rgba(96,165,250,0.15)', color:'#60a5fa', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>📌 ONGOING</span>
+                  }
+                </div>
+                {a.marks && (
+                  <span style={{fontWeight:700, color:'#fbbf24'}}>🏆 {a.marks} Marks</span>
+                )}
+              </div>
+
+              <h3 style={{margin:'0 0 0.4rem', fontSize:'1.05rem', fontWeight:700}}>{a.title}</h3>
+
+              {a.description && (
+                <p style={{fontSize:'0.88rem', color:'var(--sd-muted)', margin:'0 0 0.75rem', lineHeight:1.5}}>
+                  {a.description}
+                </p>
+              )}
+
+              <div style={{display:'flex', gap:'1.5rem', fontSize:'0.82rem', color:'var(--sd-muted)', flexWrap:'wrap'}}>
+                {due && (
+                  <span style={{color: overdue ? '#f87171' : 'inherit'}}>
+                    📅 Due: <strong>{new Date(due).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong>
+                  </span>
+                )}
+                {a.faculty && <span>👨‍🏫 By: <strong>{a.faculty}</strong></span>}
+                {posted && <span>🕒 Posted: {new Date(posted).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
 //  TAB: LOGS
 // ═══════════════════════════════════════════════════════════
 function TabLogs() {
@@ -1505,9 +1615,10 @@ export default function StudentDashboardPage() {
           {activeTab === 'attendance' && <TabAttendance attData={attData} />}
           {activeTab === 'scanner'    && <TabScanner user={user} />}
           {activeTab === 'classes'    && <TabClasses />}
-          {activeTab === 'timetable'  && <TabTimetable />}
-          {activeTab === 'logs'       && <TabLogs />}
-          {activeTab === 'settings'   && <TabSettings user={user} />}
+          {activeTab === 'timetable'   && <TabTimetable />}
+          {activeTab === 'assignments'  && <TabStudentAssignments />}
+          {activeTab === 'logs'         && <TabLogs />}
+          {activeTab === 'settings'     && <TabSettings user={user} />}
         </main>
       </div>
     </div>

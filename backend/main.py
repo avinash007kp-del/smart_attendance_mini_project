@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routes import auth, attendance
+from routes import auth, attendance, assignments
 import tempfile, os, numpy as np
 
 @asynccontextmanager
@@ -55,4 +55,5 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 app.include_router(auth.router)
 app.include_router(attendance.router)
+app.include_router(assignments.router)
 

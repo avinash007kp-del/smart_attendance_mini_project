@@ -644,55 +644,68 @@ function TabTimetable() {
   )
 }
 
-// ─── Tab: Assignments ───────────────────────────────────────────────────────────────
-function TabAssignments() {
-  const STORE_KEY = 'fd_assignments'
-  const [assignments, setAssignments] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]') } catch { return [] }
-  })
-  const [form, setForm] = useState({ title: '', course: '', dueDate: '', description: '', marks: '' })
-  const [editId, setEditId] = useState(null)
+// ─── Tab: Assignments ──────────────────────────────────────────────────────────
+function TabAssignments({ user }) {
+  const API = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'
+  const [assignments, setAssignments] = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [saving, setSaving]           = useState(false)
+  const [form, setForm]   = useState({ title: '', course: '', dueDate: '', description: '', marks: '' })
   const [filter, setFilter] = useState('all')
+  const [msg, setMsg]     = useState('')
 
-  const save = (list) => {
-    setAssignments(list)
-    localStorage.setItem(STORE_KEY, JSON.stringify(list))
-  }
+  const fetchAll = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/assignments/`)
+      if (res.ok) setAssignments(await res.json())
+    } catch(e) { console.error(e) }
+    finally { setLoading(false) }
+  }, [])
 
-  const handleSubmit = (e) => {
+  useEffect(() => { fetchAll() }, [fetchAll])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.title.trim() || !form.course.trim()) return
-    if (editId !== null) {
-      save(assignments.map(a => a.id === editId ? { ...form, id: editId, createdAt: a.createdAt } : a))
-      setEditId(null)
-    } else {
-      save([{ ...form, id: Date.now(), createdAt: new Date().toISOString() }, ...assignments])
-    }
-    setForm({ title: '', course: '', dueDate: '', description: '', marks: '' })
+    setSaving(true)
+    try {
+      const res = await fetch(`${API}/assignments/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, due_date: form.dueDate, faculty: user?.name || user?.email || '' })
+      })
+      if (res.ok) {
+        setForm({ title: '', course: '', dueDate: '', description: '', marks: '' })
+        setMsg('✅ Assignment posted!')
+        fetchAll()
+        setTimeout(() => setMsg(''), 3000)
+      }
+    } catch(e) { setMsg('❌ Failed to post') }
+    finally { setSaving(false) }
   }
 
-  const handleEdit = (a) => {
-    setForm({ title: a.title, course: a.course, dueDate: a.dueDate, description: a.description, marks: a.marks })
-    setEditId(a.id)
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this assignment?')) return
+    await fetch(`${API}/assignments/${id}`, { method: 'DELETE' })
+    fetchAll()
   }
-
-  const handleDelete = (id) => save(assignments.filter(a => a.id !== id))
 
   const now = new Date()
   const filtered = assignments.filter(a => {
-    if (filter === 'active') return !a.dueDate || new Date(a.dueDate) >= now
-    if (filter === 'past')   return a.dueDate && new Date(a.dueDate) < now
+    const due = a.due_date || a.dueDate
+    if (filter === 'active') return !due || new Date(due) >= now
+    if (filter === 'past')   return due && new Date(due) < now
     return true
   })
-
-  const isOverdue = (a) => a.dueDate && new Date(a.dueDate) < now
+  const isOverdue = (a) => { const d = a.due_date || a.dueDate; return d && new Date(d) < now }
 
   return (
     <div className="fd-tab-content">
       <div className="fd-section-header">
         <div>
           <h2 className="fd-section-title">📝 Assignments</h2>
-          <p className="fd-section-sub">Create and manage assignments for your students</p>
+          <p className="fd-section-sub">Post and manage assignments — students see them in their dashboard</p>
         </div>
         <div className="fd-filter-pills" style={{display:'flex', gap:'0.5rem'}}>
           {['all','active','past'].map(f => (
@@ -705,9 +718,10 @@ function TabAssignments() {
         </div>
       </div>
 
-      {/* Form */}
+      {/* Post form */}
       <div className="fd-card" style={{marginBottom:'1.5rem'}}>
-        <h3 className="fd-card-title">{editId ? '✏️ Edit Assignment' : '➕ New Assignment'}</h3>
+        <h3 className="fd-card-title">➕ Post New Assignment</h3>
+        {msg && <div style={{color: msg.startsWith('✅') ? '#34d399' : '#f87171', marginBottom:'0.5rem', fontWeight:600}}>{msg}</div>}
         <form onSubmit={handleSubmit}>
           <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:'0.75rem', marginTop:'0.75rem'}}>
             <div>
@@ -729,47 +743,50 @@ function TabAssignments() {
           </div>
           <div style={{marginTop:'0.75rem'}}>
             <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Description / Instructions</label>
-            <textarea className="fd-input" rows={3} placeholder="Describe the assignment, submission guidelines, topics…" value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} style={{resize:'vertical', width:'100%', fontFamily:'inherit'}} />
+            <textarea className="fd-input" rows={3} placeholder="Describe the assignment, topics, submission guidelines…" value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} style={{resize:'vertical', width:'100%', fontFamily:'inherit'}} />
           </div>
           <div style={{display:'flex', gap:'0.5rem', marginTop:'0.75rem'}}>
-            <button type="submit" className="fd-primary-btn">{editId ? '✅ Update' : '📎 Post Assignment'}</button>
-            {editId && <button type="button" className="fd-sm-btn" onClick={() => { setEditId(null); setForm({ title:'', course:'', dueDate:'', description:'', marks:'' }) }}>Cancel</button>}
+            <button type="submit" className="fd-primary-btn" disabled={saving}>{saving ? '⏳ Posting…' : '📎 Post Assignment'}</button>
           </div>
         </form>
       </div>
 
       {/* Assignment cards */}
-      {filtered.length === 0 ? (
+      {loading && <p style={{color:'var(--fd-muted,#888)'}}>Loading…</p>}
+      {!loading && filtered.length === 0 && (
         <div className="fd-card" style={{textAlign:'center', padding:'3rem', color:'var(--fd-muted,#888)'}}>
           📝 No assignments yet. Create one using the form above!
         </div>
-      ) : (
+      )}
+      {!loading && (
         <div style={{display:'grid', gap:'1rem'}}>
-          {filtered.map(a => (
-            <div key={a.id} className="fd-card" style={{
-              borderLeft: `4px solid ${isOverdue(a) ? '#f87171' : '#34d399'}`,
-              opacity: isOverdue(a) ? 0.85 : 1
-            }}>
-              <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'0.5rem'}}>
-                <div>
-                  <span className="fd-course-tag" style={{marginRight:'0.5rem'}}>{a.course}</span>
-                  {isOverdue(a) && <span style={{background:'#f871711a', color:'#f87171', borderRadius:4, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>PAST DUE</span>}
-                  {!isOverdue(a) && a.dueDate && <span style={{background:'#34d3991a', color:'#34d399', borderRadius:4, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>ACTIVE</span>}
+          {filtered.map(a => {
+            const due = a.due_date || a.dueDate
+            const posted = a.created_at || a.createdAt
+            return (
+              <div key={a._id || a.id} className="fd-card" style={{
+                borderLeft: `4px solid ${isOverdue(a) ? '#f87171' : '#34d399'}`,
+              }}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'0.5rem'}}>
+                  <div>
+                    <span className="fd-course-tag" style={{marginRight:'0.5rem'}}>{a.course}</span>
+                    {isOverdue(a) && <span style={{background:'#f871711a', color:'#f87171', borderRadius:4, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>PAST DUE</span>}
+                    {!isOverdue(a) && due && <span style={{background:'#34d3991a', color:'#34d399', borderRadius:4, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>ACTIVE</span>}
+                    {!due && <span style={{background:'rgba(167,139,250,0.1)', color:'#a78bfa', borderRadius:4, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>NO DUE DATE</span>}
+                  </div>
+                  <button className="fd-toggle-btn" style={{color:'#f87171'}} onClick={() => handleDelete(a._id || a.id)}>🗑️ Delete</button>
                 </div>
-                <div style={{display:'flex', gap:'0.4rem'}}>
-                  <button className="fd-sm-btn" onClick={() => handleEdit(a)}>✏️ Edit</button>
-                  <button className="fd-toggle-btn" style={{color:'#f87171'}} onClick={() => handleDelete(a.id)}>🗑️</button>
+                <h3 style={{margin:'0.5rem 0 0.25rem', fontSize:'1.05rem'}}>{a.title}</h3>
+                {a.description && <p style={{fontSize:'0.88rem', color:'var(--fd-muted,#888)', margin:'0 0 0.5rem'}}>{a.description}</p>}
+                <div style={{display:'flex', gap:'1.5rem', fontSize:'0.82rem', color:'var(--fd-muted,#888)', flexWrap:'wrap'}}>
+                  {due && <span>📅 Due: <strong>{new Date(due).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong></span>}
+                  {a.marks && <span>🏆 Marks: <strong>{a.marks}</strong></span>}
+                  {a.faculty && <span>👨‍🏫 By: <strong>{a.faculty}</strong></span>}
+                  {posted && <span>🕒 Posted: {new Date(posted).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>}
                 </div>
               </div>
-              <h3 style={{margin:'0.5rem 0 0.25rem', fontSize:'1.05rem'}}>{a.title}</h3>
-              {a.description && <p style={{fontSize:'0.88rem', color:'var(--fd-muted,#888)', margin:'0 0 0.5rem'}}>{a.description}</p>}
-              <div style={{display:'flex', gap:'1.5rem', fontSize:'0.82rem', color:'var(--fd-muted,#888)', flexWrap:'wrap'}}>
-                {a.dueDate && <span>📅 Due: <strong>{new Date(a.dueDate).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong></span>}
-                {a.marks && <span>🏆 Marks: <strong>{a.marks}</strong></span>}
-                <span>🕒 Posted: {new Date(a.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -1021,7 +1038,7 @@ export default function FacultyDashboardPage() {
           {activeTab === 'attendance'  && <TabAttendance liveData={liveData} />}
           {activeTab === 'qr'          && <TabQR />}
           {activeTab === 'timetable'   && <TabTimetable />}
-          {activeTab === 'assignments' && <TabAssignments />}
+          {activeTab === 'assignments' && <TabAssignments user={user} />}
           {activeTab === 'settings'    && <TabSettings user={user} />}
         </main>
       </div>
