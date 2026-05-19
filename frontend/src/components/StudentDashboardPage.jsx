@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import './StudentDashboardPage.css'
 
-// ─── Nav items ─────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
   { id: 'overview',     icon: '🏠', label: 'Overview'    },
   { id: 'attendance',   icon: '📊', label: 'Attendance'  },
@@ -14,6 +13,7 @@ const NAV_ITEMS = [
   { id: 'classes',      icon: '📚', label: 'Classes'     },
   { id: 'timetable',    icon: '📅', label: 'Timetable'   },
   { id: 'assignments',  icon: '📝', label: 'Assignments' },
+  { id: 'bills',        icon: '💳', label: 'Bills & Fees' },
   { id: 'logs',         icon: '🗒️',  label: 'Logs'       },
   { id: 'settings',     icon: '⚙️',  label: 'Settings'   },
 ]
@@ -1245,6 +1245,292 @@ function TabStudentAssignments() {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  TAB: BILLS & PAYMENTS
+// ═══════════════════════════════════════════════════════════
+function TabBills() {
+  const [bills, setBills] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sd_student_bills')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {}
+    
+    // Default seeded bills
+    return [
+      { id: 'tuition_2026', title: 'Tuition Fee (Spring Semester 2026)', category: 'Academic', amount: 75000, status: 'unpaid', icon: '🎓', dueDate: '2026-06-15', description: 'Regular academic tuition fees for computer science courses.' },
+      { id: 'hostel_2026', title: 'Hostel Rent & Mess Charges', category: 'Hostel', amount: 32000, status: 'unpaid', icon: '🏢', dueDate: '2026-06-01', description: 'Accommodation charges including high-speed internet & mess meal plans.' },
+      { id: 'exam_2026', title: 'Semester Examination Registration Fee', category: 'Exams', amount: 4500, status: 'unpaid', icon: '📝', dueDate: '2026-05-25', description: 'Registration fees for final end-semester theoretical & lab examinations.' },
+      { id: 'lib_fine_2026', title: 'Library Late Book Return Fine', category: 'Library', amount: 350, status: 'paid', icon: '📚', dueDate: '2026-05-10', description: 'Overdue charges for "Introduction to Algorithms" book kept for 14 extra days.', paidOn: '2026-05-12T14:32:00Z', method: 'UPI' }
+    ]
+  })
+
+  const [activeBill, setActiveBill] = useState(null)
+  const [payMethod, setPayMethod]   = useState('card') // 'card' | 'upi' | 'net'
+  const [paymentState, setPaymentState] = useState('idle') // 'idle' | 'processing' | 'success'
+
+  // Card form fields
+  const [cardNum, setCardNum] = useState('')
+  const [cardName, setCardName] = useState('')
+  const [cardExpiry, setCardExpiry] = useState('')
+  const [cardCvv, setCardCvv] = useState('')
+
+  // UPI fields
+  const [upiId, setUpiId] = useState('')
+
+  // Net Banking fields
+  const [bank, setBank] = useState('HDFC Bank')
+
+  useEffect(() => {
+    localStorage.setItem('sd_student_bills', JSON.stringify(bills))
+  }, [bills])
+
+  const openPayment = (bill) => {
+    setActiveBill(bill)
+    setPaymentState('idle')
+    setCardNum('')
+    setCardName('')
+    setCardExpiry('')
+    setCardCvv('')
+    setUpiId('')
+  }
+
+  const closePayment = () => {
+    if (paymentState !== 'processing') {
+      setActiveBill(null)
+    }
+  }
+
+  const handlePaySubmit = (e) => {
+    e.preventDefault()
+    setPaymentState('processing')
+
+    // Simulate secure mock bank transaction processing
+    setTimeout(() => {
+      setPaymentState('success')
+      setTimeout(() => {
+        setBills(prev => prev.map(b => b.id === activeBill.id ? {
+          ...b,
+          status: 'paid',
+          paidOn: new Date().toISOString(),
+          method: payMethod.toUpperCase()
+        } : b))
+        setPaymentState('idle')
+        setActiveBill(null)
+      }, 1800)
+    }, 2200)
+  }
+
+  const formatCardNum = (val) => {
+    const clear = val.replace(/\D/g, '')
+    const parts = clear.match(/.{1,4}/g)
+    return parts ? parts.slice(0, 4).join(' ') : clear
+  }
+
+  const formatExpiry = (val) => {
+    const clear = val.replace(/\D/g, '')
+    if (clear.length >= 2) {
+      return `${clear.slice(0,2)}/${clear.slice(2,4)}`
+    }
+    return clear
+  }
+
+  return (
+    <div className="sd-tab-content">
+      <div className="sd-section-header">
+        <div>
+          <h2 className="sd-section-title">💳 Fees, Bills & Payments</h2>
+          <p className="sd-section-sub">Pay tuition fees, exam fees, hostel charges, and clear fines securely</p>
+        </div>
+      </div>
+
+      <div className="sd-bill-grid">
+        {bills.map(b => (
+          <div key={b.id} className="sd-bill-card">
+            <div className="sd-bill-header">
+              <span className="sd-bill-icon">{b.icon}</span>
+              <span className={`sd-bill-badge ${b.status}`}>{b.status}</span>
+            </div>
+            
+            <div>
+              <div style={{fontSize:'0.75rem', fontWeight:600, color:'var(--sd-accent,#a78bfa)', textTransform:'uppercase', letterSpacing:'1px'}}>{b.category}</div>
+              <h3 className="sd-bill-title">{b.title}</h3>
+              <p className="sd-bill-description">{b.description}</p>
+            </div>
+
+            <div className="sd-bill-amount-row">
+              <div>
+                <div style={{fontSize:'0.72rem', color:'var(--sd-muted,#888)'}}>Amount Due</div>
+                <div className="sd-bill-amount">₹{b.amount.toLocaleString('en-IN')}</div>
+              </div>
+              
+              {b.status === 'unpaid' ? (
+                <button className="sd-primary-btn" onClick={() => openPayment(b)}>💳 Pay Now</button>
+              ) : (
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:'0.75rem', color:'#34d399', fontWeight:700}}>✅ Paid via {b.method}</div>
+                  <div style={{fontSize:'0.68rem', color:'var(--sd-muted)'}}>{new Date(b.paidOn).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Payment Gateway Modal */}
+      {activeBill && (
+        <div className="sd-pay-overlay">
+          <div className="sd-pay-modal">
+            {paymentState !== 'processing' && paymentState !== 'success' && (
+              <button className="sd-pay-close" onClick={closePayment}>✕</button>
+            )}
+
+            {paymentState === 'idle' && (
+              <>
+                <div>
+                  <h2 style={{fontFamily:'var(--font-serif)', fontSize:'1.25rem', fontWeight:700}}>Secure Payment Checkout</h2>
+                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted,#888)', marginTop:'0.25rem'}}>
+                    Paying for: <strong>{activeBill.title}</strong>
+                  </p>
+                </div>
+
+                <div style={{background:'rgba(255,255,255,0.03)', padding:'0.85rem', borderRadius:12, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <span style={{fontSize:'0.85rem', fontWeight:600}}>Total Outstanding Amount:</span>
+                  <span style={{fontSize:'1.3rem', fontWeight:850, color:'var(--theme-accent,#a78bfa)', fontFamily:'monospace'}}>₹{activeBill.amount.toLocaleString('en-IN')}</span>
+                </div>
+
+                {/* Tab select payment method */}
+                <div className="pay-methods">
+                  <button className={`pay-method-btn ${payMethod === 'card' ? 'active' : ''}`} onClick={() => setPayMethod('card')}>💳 Card</button>
+                  <button className={`pay-method-btn ${payMethod === 'upi' ? 'active' : ''}`} onClick={() => setPayMethod('upi')}>📱 UPI</button>
+                  <button className={`pay-method-btn ${payMethod === 'net' ? 'active' : ''}`} onClick={() => setPayMethod('net')}>🏦 NetBanking</button>
+                </div>
+
+                <form onSubmit={handlePaySubmit} style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
+                  {/* CARD METHOD */}
+                  {payMethod === 'card' && (
+                    <div style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
+                      {/* Glass Card preview */}
+                      <div className="glass-card-wrapper">
+                        <div className="glass-credit-card">
+                          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                            <div className="card-chip"></div>
+                            <span style={{fontSize:'1.1rem', fontWeight:900, fontStyle:'italic', opacity:0.8}}>VISA</span>
+                          </div>
+                          <div className="card-num">{cardNum || '•••• •••• •••• ••••'}</div>
+                          <div className="card-bottom">
+                            <div className="card-holder">{cardName || 'CARDHOLDER NAME'}</div>
+                            <div className="card-expiry-wrap">
+                              <div className="card-expiry-lbl">VALID THRU</div>
+                              <div className="card-expiry-val">{cardExpiry || 'MM/YY'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Inputs */}
+                      <div style={{display:'grid', gridTemplateColumns:'1fr', gap:'0.75rem'}}>
+                        <input className="sd-input" placeholder="Card Number (16-Digit)" value={cardNum} onChange={e => setCardNum(formatCardNum(e.target.value))} maxLength={19} required />
+                        <input className="sd-input" placeholder="Cardholder Name" value={cardName} onChange={e => setCardName(e.target.value.toUpperCase())} maxLength={26} required />
+                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem'}}>
+                          <input className="sd-input" placeholder="MM/YY" value={cardExpiry} onChange={e => setCardExpiry(formatExpiry(e.target.value))} maxLength={5} required />
+                          <input className="sd-input" type="password" placeholder="CVV" value={cardCvv} onChange={e => setCardCvv(e.target.value.replace(/\D/g, ''))} maxLength={3} required />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* UPI METHOD */}
+                  {payMethod === 'upi' && (
+                    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'1rem', padding:'0.5rem 0'}}>
+                      <div style={{
+                        width: '140px', height: '140px',
+                        background: '#fff', padding: '10px',
+                        borderRadius: '12px', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        position: 'relative', overflow: 'hidden',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+                      }}>
+                        {/* Mock QR Code graphic */}
+                        <div style={{width:'100%', height:'100%', border:'2px dashed #000', display:'flex', flexWrap:'wrap', opacity:0.85}}>
+                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
+                          <div style={{flex:1}}></div>
+                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
+                          <div style={{width:'100%', flex:1, display:'flex', justifyContent:'center', alignItems:'center', fontSize:'1.4rem'}}>📱</div>
+                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
+                        </div>
+                        {/* Dynamic rotating scanner laser bar */}
+                        <div style={{
+                          position: 'absolute', left: 0, right: 0,
+                          height: '2px', background: 'var(--theme-accent,#34d399)',
+                          animation: 'slideUp 1.5s ease-in-out infinite alternate',
+                          boxShadow: '0 0 8px var(--theme-accent)'
+                        }}></div>
+                      </div>
+                      <p style={{fontSize:'0.78rem', color:'var(--theme-muted)', textAlign:'center'}}>
+                        Scan the dynamic QR code above with any UPI app (GPay, PhonePe, Paytm, BHIM) to make a secure direct transfer.
+                      </p>
+
+                      <div style={{width:'100%', height:'1px', background:'rgba(255,255,255,0.08)'}}></div>
+
+                      <div style={{width:'100%', display:'flex', flexDirection:'column', gap:'0.4rem'}}>
+                        <label style={{fontSize:'0.75rem', fontWeight:600, color:'var(--theme-muted)'}}>OR ENTER YOUR UPI ID</label>
+                        <input className="sd-input" placeholder="e.g. username@upi" value={upiId} onChange={e => setUpiId(e.target.value)} required={payMethod === 'upi'} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NET BANKING */}
+                  {payMethod === 'net' && (
+                    <div style={{display:'flex', flexDirection:'column', gap:'0.5rem', padding:'1rem 0'}}>
+                      <label style={{fontSize:'0.78rem', fontWeight:600, color:'var(--theme-muted)'}}>Select Your Bank</label>
+                      <select className="sd-select" value={bank} onChange={e => setBank(e.target.value)}>
+                        <option value="HDFC Bank">HDFC Bank</option>
+                        <option value="State Bank of India">State Bank of India (SBI)</option>
+                        <option value="ICICI Bank">ICICI Bank</option>
+                        <option value="Axis Bank">Axis Bank</option>
+                        <option value="Punjab National Bank">Punjab National Bank</option>
+                      </select>
+                      <p style={{fontSize:'0.75rem', color:'var(--theme-muted)', marginTop:'0.5rem'}}>
+                        You will be redirected to your bank's secure page to complete the transaction authorization.
+                      </p>
+                    </div>
+                  )}
+
+                  <button type="submit" className="sd-primary-btn sd-btn-full" style={{marginTop:'0.5rem'}}>
+                    🔒 Authorize & Pay ₹{activeBill.amount.toLocaleString('en-IN')}
+                  </button>
+                </form>
+              </>
+            )}
+
+            {paymentState === 'processing' && (
+              <div className="pay-loader">
+                <div className="pay-spinner"></div>
+                <div>
+                  <h3 style={{fontSize:'1.1rem', fontWeight:700}}>Processing Secure Payment</h3>
+                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted)', marginTop:4}}>Do not close this window or reload the page.</p>
+                </div>
+              </div>
+            )}
+
+            {paymentState === 'success' && (
+              <div className="pay-loader">
+                <div className="pay-success-tick">✓</div>
+                <div>
+                  <h3 style={{fontSize:'1.25rem', fontWeight:700, color:'#34d399'}}>Payment Successful!</h3>
+                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted)', marginTop:4}}>
+                    Transaction ref: <code style={{fontFamily:'monospace', color:'var(--theme-accent,#a78bfa)'}}>TXN-{Math.random().toString(36).substr(2, 9).toUpperCase()}</code>
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
 //  TAB: LOGS
 // ═══════════════════════════════════════════════════════════
 function TabLogs() {
@@ -1617,6 +1903,7 @@ export default function StudentDashboardPage() {
           {activeTab === 'classes'    && <TabClasses />}
           {activeTab === 'timetable'   && <TabTimetable />}
           {activeTab === 'assignments'  && <TabStudentAssignments />}
+          {activeTab === 'bills'        && <TabBills />}
           {activeTab === 'logs'         && <TabLogs />}
           {activeTab === 'settings'     && <TabSettings user={user} />}
         </main>

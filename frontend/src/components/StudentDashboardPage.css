@@ -1826,3 +1826,318 @@
 
 
 /* ── Scrollbar ── */
+
+
+/* ══════════════════════════════════════════════════
+   BILLS & PAYMENTS TAB STYLES
+   ══════════════════════════════════════════════════ */
+.sd-bill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.sd-bill-card {
+  background: var(--theme-card);
+  border: 1px solid var(--theme-card-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.sd-bill-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.sd-bill-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.sd-bill-icon {
+  font-size: 1.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem;
+  border-radius: 12px;
+  line-height: 1;
+}
+
+.sd-bill-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.sd-bill-badge.unpaid {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.sd-bill-badge.paid {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.sd-bill-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.sd-bill-description {
+  font-size: 0.82rem;
+  color: var(--theme-muted);
+  line-height: 1.4;
+  margin-top: 0.25rem;
+}
+
+.sd-bill-amount-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-top: 1px solid var(--theme-border);
+  padding-top: 1rem;
+}
+
+.sd-bill-amount {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--theme-text);
+  font-family: monospace;
+}
+
+/* Payment Modal Overlay */
+.sd-pay-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 18, 32, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.sd-pay-modal {
+  background: linear-gradient(145deg, #071220, #0a1b2d);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.sd-pay-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--theme-text);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.sd-pay-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* Glass Credit Card */
+.glass-card-wrapper {
+  perspective: 1000px;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.glass-credit-card {
+  width: 100%;
+  height: 190px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+}
+
+.glass-credit-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.card-chip {
+  width: 42px;
+  height: 32px;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.4);
+}
+
+.card-num {
+  font-size: 1.35rem;
+  letter-spacing: 2px;
+  word-spacing: 4px;
+  margin: 1.25rem 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.card-holder {
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-expiry-wrap {
+  text-align: right;
+}
+
+.card-expiry-lbl {
+  font-size: 0.55rem;
+  opacity: 0.6;
+}
+
+.card-expiry-val {
+  font-size: 0.85rem;
+}
+
+/* Pay options tabs */
+.pay-methods {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.35rem;
+  border-radius: 12px;
+  border: 1px solid var(--theme-border);
+}
+
+.pay-method-btn {
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--theme-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pay-method-btn.active {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--theme-accent);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+/* Processing & Success States */
+.pay-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.pay-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(16, 185, 129, 0.15);
+  border-top-color: var(--theme-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.pay-success-tick {
+  width: 64px;
+  height: 64px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 2px solid var(--theme-accent);
+  color: var(--theme-accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes popScale {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
