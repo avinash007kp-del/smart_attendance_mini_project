@@ -278,7 +278,11 @@ function TabQR() {
       setSessionId("A-" + data.token.slice(-8).toUpperCase()) 
       setTokenPayload(data.token)
       
-      localStorage.setItem('active_qr_session', JSON.stringify({ course_id: course, timestamp: Date.now() }))
+      localStorage.setItem('active_qr_session', JSON.stringify({
+        course_id: course,
+        timestamp: Date.now(),
+        expiresAt: Date.now() + (duration * 1000)
+      }))
       
       setActive(true)
       setTimeLeft(duration)

@@ -355,7 +355,66 @@ function TabScanner({ user }) {
           <span className={`sd-step-badge ${step === 2 ? 'active' : ''}`}>2. QR Code</span>
         </div>
       </div>
+      {/* Session lock banner — shown when QR session is active */}
+      <SessionLockBanner />
       {step === 1 ? <ScannerFaceContent user={user} onVerified={() => setStep(2)} /> : <ScannerQRContent user={user} />}
+    </div>
+  )
+}
+
+// ─── Session Lock Banner ──────────────────────────────────────────────────────
+function SessionLockBanner() {
+  const [session, setSession] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('active_qr_session') || 'null') } catch { return null }
+  })
+  const [timeLeft, setTimeLeft] = useState(null)
+
+  useEffect(() => {
+    const check = () => {
+      try {
+        const s = JSON.parse(localStorage.getItem('active_qr_session') || 'null')
+        setSession(s)
+        if (s?.expiresAt) {
+          const left = Math.max(0, Math.ceil((s.expiresAt - Date.now()) / 1000))
+          setTimeLeft(left)
+        }
+      } catch { setSession(null) }
+    }
+    check()
+    const id = setInterval(check, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  if (!session) return null
+
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg,rgba(239,68,68,0.15),rgba(251,191,36,0.1))',
+      border: '1px solid rgba(239,68,68,0.4)',
+      borderRadius: 12, padding: '0.75rem 1.25rem',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem'
+    }}>
+      <div style={{display:'flex', alignItems:'center', gap:'0.75rem'}}>
+        <span style={{fontSize:'1.4rem', animation:'pulse 1s infinite'}}>🔴</span>
+        <div>
+          <div style={{fontWeight:700, color:'#fbbf24', fontSize:'0.95rem'}}>🔒 QR Session Active — You are LOCKED IN</div>
+          <div style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.6)'}}>
+            Course: <strong>{session.course_id || '—'}</strong> · Do NOT leave this page!
+          </div>
+        </div>
+      </div>
+      {timeLeft !== null && (
+        <div style={{
+          background:'rgba(239,68,68,0.2)', border:'1px solid rgba(239,68,68,0.5)',
+          borderRadius:8, padding:'0.4rem 0.9rem', fontWeight:700,
+          color: timeLeft < 10 ? '#f87171' : '#fbbf24', fontFamily:'monospace', fontSize:'1.1rem'
+        }}>
+          ⏱ {fmt(timeLeft)}
+        </div>
+      )}
     </div>
   )
 }
@@ -1331,19 +1390,51 @@ export default function StudentDashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const attData = useAttendanceData(user?.email)
 
+  const isSessionActive = () => !!localStorage.getItem('active_qr_session')
+
   const handleNav = (id) => {
-    if (id === 'scanner') {
-      const activeSession = localStorage.getItem('active_qr_session')
-      if (activeSession) {
-        alert("🚨 Access Denied\n\nYou must be in the Scanner dashboard BEFORE the QR session generates. You cannot enter now because a session is already active.")
-        return
-      }
+    // If student is currently on scanner tab AND a QR session is active, block navigation away
+    if (activeTab === 'scanner' && id !== 'scanner' && isSessionActive()) {
+      alert('🚨 You cannot leave the Scanner!\n\nA QR session is currently active. You must stay here and scan the QR code to mark your attendance.\n\nLeaving will result in your attendance being marked ABSENT.')
+      setSidebarOpen(false)
+      return
     }
     setActiveTab(id)
     setSidebarOpen(false)
   }
 
-  const handleLogout = () => { logout(); router.replace('/login') }
+  // Block logout during active session
+  const handleLogout = () => {
+    if (isSessionActive()) {
+      alert('\ud83d\udea8 Cannot log out!\n\nA QR session is active. Scan the QR code to mark attendance first.')
+      return
+    }
+    logout(); router.replace('/login')
+  }
+
+  // Warn on browser close/refresh during active scanner session
+  useEffect(() => {
+    const blockClose = (e) => {
+      if (activeTab === 'scanner' && isSessionActive()) {
+        e.preventDefault()
+        e.returnValue = '\ud83d\udea8 QR session is active! Leaving will mark you ABSENT.'
+        return e.returnValue
+      }
+    }
+    window.addEventListener('beforeunload', blockClose)
+    return () => window.removeEventListener('beforeunload', blockClose)
+  }, [activeTab])
+
+  // Auto-navigate to scanner when a QR session appears (polls every 2s)
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (localStorage.getItem('active_qr_session') && activeTab !== 'scanner') {
+        setActiveTab('scanner')
+      }
+    }, 2000)
+    return () => clearInterval(id)
+  }, [activeTab])
+
   const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'ST'
 
   return (
