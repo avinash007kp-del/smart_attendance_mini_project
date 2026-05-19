@@ -8,10 +8,12 @@ import './FacultyDashboardPage.css'
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: 'dashboard',  icon: '🏠', label: 'Dashboard'  },
-  { id: 'attendance', icon: '📋', label: 'Attendance'  },
-  { id: 'qr',         icon: '🔲', label: 'QR Code'     },
-  { id: 'settings',   icon: '⚙️',  label: 'Settings'   },
+  { id: 'dashboard',   icon: '🏠', label: 'Dashboard'   },
+  { id: 'attendance',  icon: '📋', label: 'Attendance'  },
+  { id: 'qr',          icon: '🔲', label: 'QR Code'     },
+  { id: 'timetable',   icon: '📅', label: 'Timetable'   },
+  { id: 'assignments', icon: '📝', label: 'Assignments'  },
+  { id: 'settings',    icon: '⚙️',  label: 'Settings'   },
 ]
 
 // ─── Live data hook ────────────────────────────────────────────────────────────
@@ -507,7 +509,270 @@ function TabQR() {
   )
 }
 
-// ─── Tab: Settings ───────────────────────────────────────────────────────────
+// ─── Tab: Timetable ───────────────────────────────────────────────────────────────
+const DAYS  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+const SLOTS = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM']
+
+function TabTimetable() {
+  const STORE_KEY = 'fd_timetable'
+  const [entries, setEntries] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]') } catch { return [] }
+  })
+  const [form, setForm] = useState({ day: 'Monday', slot: '8:00 AM', course: '', room: '' })
+  const [editId, setEditId] = useState(null)
+  const [saved, setSaved] = useState(false)
+
+  const save = (list) => {
+    setEntries(list)
+    localStorage.setItem(STORE_KEY, JSON.stringify(list))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
+  }
+
+  const handleAdd = () => {
+    if (!form.course.trim()) return
+    if (editId !== null) {
+      save(entries.map(e => e.id === editId ? { ...form, id: editId } : e))
+      setEditId(null)
+    } else {
+      save([...entries, { ...form, id: Date.now() }])
+    }
+    setForm(f => ({ ...f, course: '', room: '' }))
+  }
+
+  const handleEdit = (e) => {
+    setForm({ day: e.day, slot: e.slot, course: e.course, room: e.room })
+    setEditId(e.id)
+  }
+
+  const handleDelete = (id) => save(entries.filter(e => e.id !== id))
+
+  // Build grid: day -> slot -> entry
+  const grid = {}
+  DAYS.forEach(d => { grid[d] = {} })
+  entries.forEach(e => { if (grid[e.day]) grid[e.day][e.slot] = e })
+
+  return (
+    <div className="fd-tab-content">
+      <div className="fd-section-header">
+        <div>
+          <h2 className="fd-section-title">📅 Manage Timetable</h2>
+          <p className="fd-section-sub">Add and manage your weekly class schedule</p>
+        </div>
+        {saved && <span style={{color:'#34d399', fontWeight:600}}>✅ Saved!</span>}
+      </div>
+
+      {/* Add / Edit form */}
+      <div className="fd-card" style={{marginBottom:'1.5rem'}}>
+        <h3 className="fd-card-title">{editId ? '✏️ Edit Entry' : '➕ Add Class'}</h3>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:'0.75rem', marginTop:'0.75rem'}}>
+          <div>
+            <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Day</label>
+            <select className="fd-select" value={form.day} onChange={e => setForm(f => ({...f, day: e.target.value}))}>
+              {DAYS.map(d => <option key={d}>{d}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Time Slot</label>
+            <select className="fd-select" value={form.slot} onChange={e => setForm(f => ({...f, slot: e.target.value}))}>
+              {SLOTS.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Course ID</label>
+            <input className="fd-input" placeholder="e.g. CS101" value={form.course} onChange={e => setForm(f => ({...f, course: e.target.value}))} />
+          </div>
+          <div>
+            <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Room</label>
+            <input className="fd-input" placeholder="e.g. Lab 3" value={form.room} onChange={e => setForm(f => ({...f, room: e.target.value}))} />
+          </div>
+        </div>
+        <div style={{display:'flex', gap:'0.5rem', marginTop:'0.75rem'}}>
+          <button className="fd-primary-btn" onClick={handleAdd}>{editId ? 'Update Entry' : '➕ Add to Timetable'}</button>
+          {editId && <button className="fd-sm-btn" onClick={() => { setEditId(null); setForm(f => ({...f, course:'', room:''})) }}>Cancel</button>}
+        </div>
+      </div>
+
+      {/* Timetable grid */}
+      {entries.length === 0 ? (
+        <div className="fd-card" style={{textAlign:'center', padding:'3rem', color:'var(--fd-muted,#888)'}}>
+          📅 No classes added yet. Use the form above to build your timetable!
+        </div>
+      ) : (
+        <div className="fd-card fd-table-wrap">
+          <table className="fd-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Time</th>
+                <th>Course</th>
+                <th>Room</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {DAYS.flatMap(day =>
+                SLOTS
+                  .filter(slot => grid[day][slot])
+                  .map(slot => {
+                    const e = grid[day][slot]
+                    return (
+                      <tr key={e.id}>
+                        <td><strong>{e.day}</strong></td>
+                        <td><span className="fd-course-tag">{e.slot}</span></td>
+                        <td className="fd-td-name">{e.course}</td>
+                        <td>{e.room || '—'}</td>
+                        <td>
+                          <div style={{display:'flex', gap:'0.4rem'}}>
+                            <button className="fd-sm-btn" onClick={() => handleEdit(e)}>✏️</button>
+                            <button className="fd-toggle-btn" style={{color:'#f87171'}} onClick={() => handleDelete(e.id)}>🗑️</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Tab: Assignments ───────────────────────────────────────────────────────────────
+function TabAssignments() {
+  const STORE_KEY = 'fd_assignments'
+  const [assignments, setAssignments] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]') } catch { return [] }
+  })
+  const [form, setForm] = useState({ title: '', course: '', dueDate: '', description: '', marks: '' })
+  const [editId, setEditId] = useState(null)
+  const [filter, setFilter] = useState('all')
+
+  const save = (list) => {
+    setAssignments(list)
+    localStorage.setItem(STORE_KEY, JSON.stringify(list))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!form.title.trim() || !form.course.trim()) return
+    if (editId !== null) {
+      save(assignments.map(a => a.id === editId ? { ...form, id: editId, createdAt: a.createdAt } : a))
+      setEditId(null)
+    } else {
+      save([{ ...form, id: Date.now(), createdAt: new Date().toISOString() }, ...assignments])
+    }
+    setForm({ title: '', course: '', dueDate: '', description: '', marks: '' })
+  }
+
+  const handleEdit = (a) => {
+    setForm({ title: a.title, course: a.course, dueDate: a.dueDate, description: a.description, marks: a.marks })
+    setEditId(a.id)
+  }
+
+  const handleDelete = (id) => save(assignments.filter(a => a.id !== id))
+
+  const now = new Date()
+  const filtered = assignments.filter(a => {
+    if (filter === 'active') return !a.dueDate || new Date(a.dueDate) >= now
+    if (filter === 'past')   return a.dueDate && new Date(a.dueDate) < now
+    return true
+  })
+
+  const isOverdue = (a) => a.dueDate && new Date(a.dueDate) < now
+
+  return (
+    <div className="fd-tab-content">
+      <div className="fd-section-header">
+        <div>
+          <h2 className="fd-section-title">📝 Assignments</h2>
+          <p className="fd-section-sub">Create and manage assignments for your students</p>
+        </div>
+        <div className="fd-filter-pills" style={{display:'flex', gap:'0.5rem'}}>
+          {['all','active','past'].map(f => (
+            <button key={f} className={`fd-sm-btn ${filter === f ? 'active' : ''}`}
+              style={filter === f ? {background:'var(--fd-accent,#a78bfa)', color:'#fff', border:'none'} : {}}
+              onClick={() => setFilter(f)}>
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Form */}
+      <div className="fd-card" style={{marginBottom:'1.5rem'}}>
+        <h3 className="fd-card-title">{editId ? '✏️ Edit Assignment' : '➕ New Assignment'}</h3>
+        <form onSubmit={handleSubmit}>
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:'0.75rem', marginTop:'0.75rem'}}>
+            <div>
+              <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Title *</label>
+              <input className="fd-input" placeholder="e.g. Mini Project Report" value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} required />
+            </div>
+            <div>
+              <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Course ID *</label>
+              <input className="fd-input" placeholder="e.g. CS101" value={form.course} onChange={e => setForm(f => ({...f, course: e.target.value}))} required />
+            </div>
+            <div>
+              <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Due Date</label>
+              <input className="fd-input" type="date" value={form.dueDate} onChange={e => setForm(f => ({...f, dueDate: e.target.value}))} />
+            </div>
+            <div>
+              <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Max Marks</label>
+              <input className="fd-input" type="number" placeholder="e.g. 100" value={form.marks} onChange={e => setForm(f => ({...f, marks: e.target.value}))} />
+            </div>
+          </div>
+          <div style={{marginTop:'0.75rem'}}>
+            <label style={{fontSize:'0.8rem', color:'var(--fd-muted,#888)', display:'block', marginBottom:4}}>Description / Instructions</label>
+            <textarea className="fd-input" rows={3} placeholder="Describe the assignment, submission guidelines, topics…" value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} style={{resize:'vertical', width:'100%', fontFamily:'inherit'}} />
+          </div>
+          <div style={{display:'flex', gap:'0.5rem', marginTop:'0.75rem'}}>
+            <button type="submit" className="fd-primary-btn">{editId ? '✅ Update' : '📎 Post Assignment'}</button>
+            {editId && <button type="button" className="fd-sm-btn" onClick={() => { setEditId(null); setForm({ title:'', course:'', dueDate:'', description:'', marks:'' }) }}>Cancel</button>}
+          </div>
+        </form>
+      </div>
+
+      {/* Assignment cards */}
+      {filtered.length === 0 ? (
+        <div className="fd-card" style={{textAlign:'center', padding:'3rem', color:'var(--fd-muted,#888)'}}>
+          📝 No assignments yet. Create one using the form above!
+        </div>
+      ) : (
+        <div style={{display:'grid', gap:'1rem'}}>
+          {filtered.map(a => (
+            <div key={a.id} className="fd-card" style={{
+              borderLeft: `4px solid ${isOverdue(a) ? '#f87171' : '#34d399'}`,
+              opacity: isOverdue(a) ? 0.85 : 1
+            }}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'0.5rem'}}>
+                <div>
+                  <span className="fd-course-tag" style={{marginRight:'0.5rem'}}>{a.course}</span>
+                  {isOverdue(a) && <span style={{background:'#f871711a', color:'#f87171', borderRadius:4, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>PAST DUE</span>}
+                  {!isOverdue(a) && a.dueDate && <span style={{background:'#34d3991a', color:'#34d399', borderRadius:4, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>ACTIVE</span>}
+                </div>
+                <div style={{display:'flex', gap:'0.4rem'}}>
+                  <button className="fd-sm-btn" onClick={() => handleEdit(a)}>✏️ Edit</button>
+                  <button className="fd-toggle-btn" style={{color:'#f87171'}} onClick={() => handleDelete(a.id)}>🗑️</button>
+                </div>
+              </div>
+              <h3 style={{margin:'0.5rem 0 0.25rem', fontSize:'1.05rem'}}>{a.title}</h3>
+              {a.description && <p style={{fontSize:'0.88rem', color:'var(--fd-muted,#888)', margin:'0 0 0.5rem'}}>{a.description}</p>}
+              <div style={{display:'flex', gap:'1.5rem', fontSize:'0.82rem', color:'var(--fd-muted,#888)', flexWrap:'wrap'}}>
+                {a.dueDate && <span>📅 Due: <strong>{new Date(a.dueDate).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong></span>}
+                {a.marks && <span>🏆 Marks: <strong>{a.marks}</strong></span>}
+                <span>🕒 Posted: {new Date(a.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Tab: Settings ───────────────────────────────────────────────────────────────
 function TabSettings({ user }) {
   const [profile, setProfile] = useState({
     name:       user?.name || '',
@@ -748,10 +1013,12 @@ export default function FacultyDashboardPage() {
 
         {/* Tab content */}
         <main className="fd-content">
-          {activeTab === 'dashboard'  && <TabDashboard user={user} onNav={setActiveTab} liveData={liveData} />}
-          {activeTab === 'attendance' && <TabAttendance liveData={liveData} />}
-          {activeTab === 'qr'         && <TabQR />}
-          {activeTab === 'settings'   && <TabSettings user={user} />}
+          {activeTab === 'dashboard'   && <TabDashboard user={user} onNav={setActiveTab} liveData={liveData} />}
+          {activeTab === 'attendance'  && <TabAttendance liveData={liveData} />}
+          {activeTab === 'qr'          && <TabQR />}
+          {activeTab === 'timetable'   && <TabTimetable />}
+          {activeTab === 'assignments' && <TabAssignments />}
+          {activeTab === 'settings'    && <TabSettings user={user} />}
         </main>
       </div>
     </div>
