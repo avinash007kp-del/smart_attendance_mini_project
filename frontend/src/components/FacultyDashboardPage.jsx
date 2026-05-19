@@ -6,32 +6,43 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import './FacultyDashboardPage.css'
 
-// ─── Static mock data ───────────────────────────────────────────────────────
-const COURSES = [
-  { id: 'CS101', name: 'Data Structures', room: 'Lab 3', time: '9:00 AM', students: 42 },
-  { id: 'CS205', name: 'Operating Systems', room: 'Room 12', time: '11:00 AM', students: 38 },
-  { id: 'CS312', name: 'Database Systems', room: 'Room 7', time: '2:00 PM', students: 35 },
-]
-
-const STUDENTS = [
-  { id: 'S001', name: 'Rahul Verma',    roll: '21CS001', course: 'CS101', status: 'present', time: '9:04 AM' },
-  { id: 'S002', name: 'Priya Singh',    roll: '21CS002', course: 'CS101', status: 'present', time: '9:07 AM' },
-  { id: 'S003', name: 'Aditya Kumar',   roll: '21CS003', course: 'CS101', status: 'absent',  time: '—'      },
-  { id: 'S004', name: 'Sneha Reddy',    roll: '21CS004', course: 'CS101', status: 'present', time: '9:02 AM' },
-  { id: 'S005', name: 'Karan Mehta',    roll: '21CS005', course: 'CS205', status: 'present', time: '11:03 AM'},
-  { id: 'S006', name: 'Ananya Gupta',   roll: '21CS006', course: 'CS205', status: 'present', time: '11:18 AM'},
-  { id: 'S007', name: 'Vikram Nair',    roll: '21CS007', course: 'CS205', status: 'absent',  time: '—'      },
-  { id: 'S008', name: 'Divya Patel',    roll: '21CS008', course: 'CS312', status: 'present', time: '2:01 AM' },
-  { id: 'S009', name: 'Arjun Sharma',   roll: '21CS009', course: 'CS312', status: 'present', time: '2:05 AM' },
-  { id: 'S010', name: 'Meera Iyer',     roll: '21CS010', course: 'CS312', status: 'absent',  time: '—'      },
-]
-
+// ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
   { id: 'dashboard',  icon: '🏠', label: 'Dashboard'  },
   { id: 'attendance', icon: '📋', label: 'Attendance'  },
   { id: 'qr',         icon: '🔲', label: 'QR Code'     },
   { id: 'settings',   icon: '⚙️',  label: 'Settings'   },
 ]
+
+// ─── Live data hook ────────────────────────────────────────────────────────────
+function useFacultyData() {
+  const [records, setRecords] = useState([])
+  const [users,   setUsers]   = useState([])
+  const [loading, setLoading] = useState(true)
+  const API = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [attRes, usersRes] = await Promise.all([
+        fetch(`${API}/attendance/`),
+        fetch(`${API}/auth/users`),
+      ])
+      if (attRes.ok)   setRecords(await attRes.json())
+      if (usersRes.ok) setUsers(await usersRes.json())
+    } catch(e) { console.error('Faculty data fetch error:', e) }
+    finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { fetchAll() }, [fetchAll])
+
+  const students   = users.filter(u => u.role === 'student')
+  const present    = records.filter(r => r.status === 'present').length
+  const courseIds  = [...new Set(records.map(r => r.course_id).filter(Boolean))]
+
+  return { records, students, present, courseIds, loading, refresh: fetchAll }
+}
+
 
 // ─── QR via Google Charts (no library needed) ────────────────────────────────
 function buildQrUrl(data, size = 280) {
@@ -54,13 +65,12 @@ function StatCard({ icon, label, value, trend, color }) {
 }
 
 // ─── Tab: Dashboard ──────────────────────────────────────────────────────────
-function TabDashboard({ user, onNav }) {
+function TabDashboard({ user, onNav, liveData }) {
+  const { present, absent, students, courseIds, records, loading } = liveData
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
-  const present = STUDENTS.filter(s => s.status === 'present').length
-  const absent  = STUDENTS.filter(s => s.status === 'absent').length
-
+  const rate = students.length > 0 ? Math.round(present / Math.max(records.length, 1) * 100) : 0
 
   return (
     <div className="fd-tab-content">
@@ -75,26 +85,35 @@ function TabDashboard({ user, onNav }) {
       </div>
 
       <div className="fd-stats-row">
-        <StatCard icon="📚" label="Today's Classes"  value={COURSES.length}           trend="Scheduled"         color="#a78bfa" />
-        <StatCard icon="✅" label="Present"           value={present}                  trend={`${Math.round(present/STUDENTS.length*100)}% rate`} color="#34d399" />
-        <StatCard icon="❌" label="Absent"            value={absent}                   trend="Notified via email" color="#f87171" />
-
+        <StatCard icon="📚" label="Active Courses"  value={loading ? '…' : courseIds.length || 0}  trend="From scans"               color="#a78bfa" />
+        <StatCard icon="✅" label="Total Present"  value={loading ? '…' : present}               trend={`${rate}% rate`}          color="#34d399" />
+        <StatCard icon="👥" label="Students"       value={loading ? '…' : students.length}         trend="Registered"               color="#60a5fa" />
+        <StatCard icon="📋" label="Total Scans"    value={loading ? '…' : records.length}          trend="All time"                  color="#fbbf24" />
       </div>
 
       <div className="fd-section-grid">
         <div className="fd-card">
-          <h3 className="fd-card-title">📅 Today's Classes</h3>
+          <h3 className="fd-card-title">📈 Active Course Sessions</h3>
+          {loading && <p style={{color:'var(--fd-muted,#888)', fontSize:'0.85rem'}}>Loading…</p>}
+          {!loading && courseIds.length === 0 && (
+            <p style={{color:'var(--fd-muted,#888)', fontSize:'0.85rem', padding:'1rem 0'}}>
+              💭 No QR scans yet. Generate a QR code and ask students to scan it!
+            </p>
+          )}
           <div className="fd-course-list">
-            {COURSES.map(c => (
-              <div key={c.id} className="fd-course-item">
-                <div className="fd-course-dot" />
-                <div className="fd-course-info">
-                  <span className="fd-course-name">{c.name}</span>
-                  <span className="fd-course-meta">{c.id} · {c.room} · {c.time}</span>
+            {courseIds.map(id => {
+              const count = records.filter(r => r.course_id === id && r.status === 'present').length
+              return (
+                <div key={id} className="fd-course-item">
+                  <div className="fd-course-dot" />
+                  <div className="fd-course-info">
+                    <span className="fd-course-name">{id}</span>
+                    <span className="fd-course-meta">{count} present scans recorded</span>
+                  </div>
+                  <button className="fd-sm-btn" onClick={() => onNav('qr')}>QR</button>
                 </div>
-                <button className="fd-sm-btn" onClick={() => onNav('qr')}>QR</button>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
@@ -104,7 +123,6 @@ function TabDashboard({ user, onNav }) {
             {[
               { icon: '🔲', label: 'Generate QR',    id: 'qa-qr',       nav: 'qr'         },
               { icon: '📋', label: 'View Attendance', id: 'qa-attend',   nav: 'attendance' },
-              { icon: '📤', label: 'Export Report',   id: 'qa-export',   nav: null         },
               { icon: '⚙️',  label: 'Settings',        id: 'qa-settings', nav: 'settings'  },
             ].map(a => (
               <button key={a.id} id={a.id} className="fd-qa-btn" onClick={() => a.nav && onNav(a.nav)}>
@@ -117,18 +135,16 @@ function TabDashboard({ user, onNav }) {
       </div>
 
       <div className="fd-card">
-        <h3 className="fd-card-title">🕒 Recent Activity</h3>
+        <h3 className="fd-card-title">🕒 Recent Scans</h3>
         <div className="fd-activity-list">
-          {[
-            { t: 'Just now',    msg: 'QR session started for CS101 — Data Structures', type: 'info'    },
-            { t: '9:05 AM',     msg: 'Rahul Verma marked present via Face Recognition',type: 'success' },
-
-            { t: 'Yesterday',   msg: 'Attendance report exported for CS312',            type: 'neutral' },
-            { t: '2 days ago',  msg: 'New QR session created for all courses',          type: 'info'    },
-          ].map((a, i) => (
-            <div key={i} className={`fd-activity-item fd-activity-${a.type}`}>
-              <span className="fd-activity-time">{a.t}</span>
-              <span className="fd-activity-msg">{a.msg}</span>
+          {loading && <p style={{color:'var(--fd-muted,#888)', fontSize:'0.85rem'}}>Loading…</p>}
+          {!loading && records.length === 0 && (
+            <p style={{color:'var(--fd-muted,#888)', fontSize:'0.85rem'}}>No attendance records yet.</p>
+          )}
+          {records.slice(0, 5).map((r, i) => (
+            <div key={r._id || i} className="fd-activity-item fd-activity-success">
+              <span className="fd-activity-time">{r.timestamp ? new Date(r.timestamp).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}) : '—'}</span>
+              <span className="fd-activity-msg">{r.student_id} — {r.course_id || '—'} — {r.method || 'scan'} ({r.status})</span>
             </div>
           ))}
         </div>
@@ -138,34 +154,19 @@ function TabDashboard({ user, onNav }) {
 }
 
 // ─── Tab: Attendance ─────────────────────────────────────────────────────────
-function TabAttendance() {
+function TabAttendance({ liveData }) {
+  const { records, students, courseIds, loading } = liveData
   const [selectedCourse, setSelectedCourse] = useState('all')
   const [searchQ, setSearchQ]               = useState('')
-  const [students, setStudents]             = useState(STUDENTS)
-  const [sortField, setSortField]           = useState('name')
-  const [exported, setExported]             = useState(false)
 
-  const filtered = students.filter(s => {
-    const matchCourse = selectedCourse === 'all' || s.course === selectedCourse
+  const filtered = records.filter(r => {
+    const matchCourse = selectedCourse === 'all' || r.course_id === selectedCourse
     const q = searchQ.toLowerCase()
-    const matchSearch = s.name.toLowerCase().includes(q) || s.roll.toLowerCase().includes(q)
+    const matchSearch = (r.student_id || '').toLowerCase().includes(q) || (r.course_id || '').toLowerCase().includes(q)
     return matchCourse && matchSearch
-  }).sort((a, b) => a[sortField]?.localeCompare(b[sortField]))
+  })
 
-  const toggleStatus = (id) => {
-    setStudents(prev => prev.map(s =>
-      s.id === id
-        ? { ...s, status: s.status === 'present' ? 'absent' : 'present', time: s.status === 'absent' ? new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—' }
-        : s
-    ))
-  }
-
-  const handleExport = () => {
-    setExported(true)
-    setTimeout(() => setExported(false), 2000)
-  }
-
-  const present = filtered.filter(s => s.status === 'present').length
+  const present = filtered.filter(r => r.status === 'present').length
   const total   = filtered.length
   const pct     = total ? Math.round(present / total * 100) : 0
 
@@ -174,11 +175,8 @@ function TabAttendance() {
       <div className="fd-section-header">
         <div>
           <h2 className="fd-section-title">📋 Attendance Register</h2>
-          <p className="fd-section-sub">Manage and review student attendance</p>
+          <p className="fd-section-sub">Live attendance records from the database</p>
         </div>
-        <button id="export-btn" className={`fd-primary-btn ${exported ? 'fd-btn-success' : ''}`} onClick={handleExport}>
-          {exported ? '✅ Exported!' : '📤 Export CSV'}
-        </button>
       </div>
 
       {/* Filters */}
@@ -187,18 +185,13 @@ function TabAttendance() {
           id="attendance-search"
           className="fd-search"
           type="text"
-          placeholder="🔍  Search by name or roll no…"
+          placeholder="🔍  Search by student email or course…"
           value={searchQ}
           onChange={e => setSearchQ(e.target.value)}
         />
         <select id="course-filter" className="fd-select" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
           <option value="all">All Courses</option>
-          {COURSES.map(c => <option key={c.id} value={c.id}>{c.id} — {c.name}</option>)}
-        </select>
-        <select id="sort-filter" className="fd-select" value={sortField} onChange={e => setSortField(e.target.value)}>
-          <option value="name">Sort: Name</option>
-          <option value="roll">Sort: Roll No</option>
-          <option value="status">Sort: Status</option>
+          {courseIds.map(id => <option key={id} value={id}>{id}</option>)}
         </select>
       </div>
 
@@ -206,54 +199,44 @@ function TabAttendance() {
       <div className="fd-attend-summary">
         <div className="fd-attend-summary-text">
           <span><strong>{present}</strong> Present</span>
-          <span><strong>{filtered.filter(s=>s.status==='absent').length}</strong> Absent</span>
-
+          <span><strong>{filtered.filter(r => r.status === 'absent').length}</strong> Absent</span>
+          <span><strong>{total}</strong> Total Records</span>
         </div>
         <div className="fd-progress-bar">
           <div className="fd-progress-fill" style={{ width: `${pct}%` }} />
-          <span className="fd-progress-label">{pct}% Attendance</span>
+          <span className="fd-progress-label">{pct}% Present Rate</span>
         </div>
       </div>
 
       {/* Table */}
       <div className="fd-card fd-table-wrap">
+        {loading && <p style={{color:'var(--fd-muted,#888)', padding:'1rem', fontSize:'0.9rem'}}>Loading records…</p>}
         <table className="fd-table">
           <thead>
             <tr>
               <th>#</th>
               <th>Student</th>
-              <th>Roll No</th>
               <th>Course</th>
+              <th>Method</th>
               <th>Time</th>
               <th>Status</th>
-              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', opacity: 0.4 }}>No records found</td></tr>
+            {filtered.length === 0 && !loading && (
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', opacity: 0.4 }}>No records found. Students need to scan a QR code first.</td></tr>
             )}
-            {filtered.map((s, i) => (
-              <tr key={s.id} className={`fd-tr-${s.status}`}>
+            {filtered.map((r, i) => (
+              <tr key={r._id || i} className={`fd-tr-${r.status}`}>
                 <td className="fd-td-num">{i + 1}</td>
-                <td className="fd-td-name">{s.name}</td>
-                <td><code className="fd-roll">{s.roll}</code></td>
-                <td><span className="fd-course-tag">{s.course}</span></td>
-                <td className="fd-td-time">{s.time}</td>
+                <td className="fd-td-name">{r.student_id}</td>
+                <td><span className="fd-course-tag">{r.course_id || '—'}</span></td>
+                <td>{r.method || '—'}</td>
+                <td className="fd-td-time">{r.timestamp ? new Date(r.timestamp).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}) : '—'}</td>
                 <td>
-                  <span className={`fd-status-badge fd-status-${s.status}`}>
-                    {s.status === 'present' ? '✅' : '❌'} {s.status}
+                  <span className={`fd-status-badge fd-status-${r.status}`}>
+                    {r.status === 'present' ? '✅' : '❌'} {r.status}
                   </span>
-                </td>
-                <td>
-                  <button
-                    id={`toggle-${s.id}`}
-                    className="fd-toggle-btn"
-                    onClick={() => toggleStatus(s.id)}
-                    title="Toggle present/absent"
-                  >
-                    ⇄
-                  </button>
                 </td>
               </tr>
             ))}
@@ -264,9 +247,10 @@ function TabAttendance() {
   )
 }
 
+
 // ─── Tab: QR Code Generator ──────────────────────────────────────────────────
 function TabQR() {
-  const [course, setCourse]       = useState(COURSES[0].id)
+  const [course, setCourse]       = useState('')
   const [duration, setDuration]   = useState(30)
   const [sessionNote, setNote]    = useState('')
   const [active, setActive]       = useState(false)
@@ -276,7 +260,7 @@ function TabQR() {
   const [tokenPayload, setTokenPayload] = useState('')
   const timerRef = useRef(null)
 
-  const selectedCourse = COURSES.find(c => c.id === course) || COURSES[0]
+  const selectedCourse = { name: course || 'Course', room: '—', time: '—', students: 0 }
 
   const startSession = async () => {
     try {
@@ -298,10 +282,7 @@ function TabQR() {
       setTimeLeft(duration)
       setScanCount(0)
 
-      // Simulate students scanning
-      const scanInterval = setInterval(() => {
-        setScanCount(p => p < selectedCourse.students ? p + Math.floor(Math.random() * 3 + 1) : p)
-      }, 4000)
+      // No simulated scan count
 
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
@@ -336,7 +317,8 @@ function TabQR() {
     ? tokenPayload
     : `SMARTATTEND::course=${course}::preview`
 
-  const pct = active ? Math.round(scanCount / selectedCourse.students * 100) : 0
+  const pct = 0
+
 
   return (
     <div className="fd-tab-content">
@@ -358,12 +340,16 @@ function TabQR() {
           <h3 className="fd-card-title">⚙️ Session Configuration</h3>
 
           <div className="fd-form-group">
-            <label htmlFor="qr-course">Select Course</label>
-            <select id="qr-course" className="fd-select fd-select-full" value={course} onChange={e => setCourse(e.target.value)} disabled={active}>
-              {COURSES.map(c => (
-                <option key={c.id} value={c.id}>{c.id} — {c.name}</option>
-              ))}
-            </select>
+            <label htmlFor="qr-course">Course ID</label>
+            <input
+              id="qr-course"
+              className="fd-input"
+              type="text"
+              placeholder="e.g. CS101, MATH201…"
+              value={course}
+              onChange={e => setCourse(e.target.value)}
+              disabled={active}
+            />
           </div>
 
           <div className="fd-form-group">
@@ -397,10 +383,8 @@ function TabQR() {
           </div>
 
           <div className="fd-course-info-card">
-            <div className="fd-ci-row"><span>📚 Course</span><strong>{selectedCourse.name}</strong></div>
-            <div className="fd-ci-row"><span>🏫 Room</span><strong>{selectedCourse.room}</strong></div>
-            <div className="fd-ci-row"><span>🕐 Time</span><strong>{selectedCourse.time}</strong></div>
-            <div className="fd-ci-row"><span>🎓 Students</span><strong>{selectedCourse.students}</strong></div>
+            <div className="fd-ci-row"><span>📚 Course ID</span><strong>{course || '—'}</strong></div>
+            <div className="fd-ci-row"><span>⏱ Duration</span><strong>{duration}s</strong></div>
           </div>
 
           {!active ? (
@@ -689,6 +673,7 @@ export default function FacultyDashboardPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const liveData = useFacultyData()
 
   const handleLogout = () => {
     logout()
@@ -763,8 +748,8 @@ export default function FacultyDashboardPage() {
 
         {/* Tab content */}
         <main className="fd-content">
-          {activeTab === 'dashboard'  && <TabDashboard user={user} onNav={setActiveTab} />}
-          {activeTab === 'attendance' && <TabAttendance />}
+          {activeTab === 'dashboard'  && <TabDashboard user={user} onNav={setActiveTab} liveData={liveData} />}
+          {activeTab === 'attendance' && <TabAttendance liveData={liveData} />}
           {activeTab === 'qr'         && <TabQR />}
           {activeTab === 'settings'   && <TabSettings user={user} />}
         </main>
