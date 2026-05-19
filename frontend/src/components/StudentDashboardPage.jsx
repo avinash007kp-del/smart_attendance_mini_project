@@ -330,79 +330,148 @@ function TabScanner({ user }) {
 
 function ScannerQRContent({ user }) {
   const [scanning, setScanning]   = useState(false)
-  const [sessionCode, setCode]    = useState('')
-  const [result, setResult]       = useState(null) // 'success' | 'error' | null
+  const [result, setResult]       = useState(null)
   const [resultMsg, setMsg]       = useState('')
   const [manualCode, setManual]   = useState('')
-  const [history, setHistory]     = useState([
-    { id: 1, course: 'CS101', time: 'Today, 9:04 AM',    status: 'success' },
-    { id: 2, course: 'CS205', time: 'Today, 11:02 AM',   status: 'success' },
-    { id: 3, course: 'CS101', time: 'Yesterday, 9:10 AM',status: 'success' },
-  ])
-  const timerRef = useRef(null)
+  const [history, setHistory]     = useState([])
+  const [cameraActive, setCameraActive] = useState(false)
+  const videoRef   = useRef(null)
+  const canvasRef  = useRef(null)
+  const streamRef  = useRef(null)
+  const rafRef     = useRef(null)
+  const jsQRRef    = useRef(null)
+
+  // Load jsQR from CDN as fallback
+  useEffect(() => {
+    if (!window.jsQR) {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'
+      script.onload = () => { jsQRRef.current = window.jsQR }
+      document.head.appendChild(script)
+    } else {
+      jsQRRef.current = window.jsQR
+    }
+  }, [])
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop())
+      streamRef.current = null
+    }
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    setCameraActive(false)
+    setScanning(false)
+  }
+
+  useEffect(() => () => stopCamera(), [])
 
   const submitTokenToBackend = async (code) => {
+    stopCamera()
+    setScanning(true)
+    setResult(null)
+    setMsg('⏳ Submitting attendance...')
     try {
-      const formData = new FormData();
-      formData.append("token", code);
-      formData.append("student_id", user?.email || "mock_student@smartattend.com");
-      
+      const formData = new FormData()
+      formData.append("token", code)
+      formData.append("student_id", user?.email || "mock_student@smartattend.com")
+
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
+
       const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr`, {
         method: "POST",
-        body: formData
-      });
-      
+        body: formData,
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Invalid QR Code");
+        const err = await res.json()
+        throw new Error(err.detail || "Invalid QR Code")
       }
-      
-      const data = await res.json();
-      
-      setResult('success');
-      setMsg(`Attendance marked successfully for ${data.course_id || 'Class'}!`);
+
+      const data = await res.json()
+      setResult('success')
+      setMsg(`✅ Attendance marked successfully for ${data.course_id || 'Class'}!`)
       setHistory(prev => [
         { id: Date.now(), course: data.course_id || '—', time: 'Just now', status: 'success' },
         ...prev,
       ])
     } catch(err) {
-      setResult('error');
-      setMsg(err.message);
+      setResult('error')
+      if (err.name === 'AbortError') {
+        setMsg('⏱️ Request timed out. Please try again.')
+      } else {
+        setMsg(err.message)
+      }
     } finally {
-      setScanning(false);
+      setScanning(false)
     }
   }
 
-  const startScan = useCallback(() => {
-    setScanning(true)
-    setResult(null)
-    setMsg('')
-    
-    // Simulate real QR detection logic
-    timerRef.current = setTimeout(() => {
-      // In a real environment with html5-qrcode, this would be a real scan event.
-      // For now, we simulate the "Detecting..." phase and then ask for the token.
-      const code = prompt("📸 [SIMULATION] QR Code Detected!\n\nPlease enter the Faculty Token displayed on the teacher's screen:");
-      if (code) {
-        submitTokenToBackend(code.trim());
-      } else {
-        setScanning(false);
-        setResult('error');
-        setMsg("Scan cancelled or timed out.");
+  const tickScan = useCallback(() => {
+    const video  = videoRef.current
+    const canvas = canvasRef.current
+    if (!video || !canvas || video.readyState < 2) {
+      rafRef.current = requestAnimationFrame(tickScan)
+      return
+    }
+    canvas.width  = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    ctx.drawImage(video, 0, 0)
+
+    let decoded = null
+
+    // Try BarcodeDetector first (fast, native on Android Chrome)
+    if ('BarcodeDetector' in window) {
+      new window.BarcodeDetector({ formats: ['qr_code'] })
+        .detect(canvas)
+        .then(codes => {
+          if (codes.length > 0 && codes[0].rawValue) {
+            submitTokenToBackend(codes[0].rawValue)
+          } else {
+            rafRef.current = requestAnimationFrame(tickScan)
+          }
+        })
+        .catch(() => {
+          rafRef.current = requestAnimationFrame(tickScan)
+        })
+      return
+    }
+
+    // Fallback: jsQR
+    if (jsQRRef.current) {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      decoded = jsQRRef.current(imageData.data, canvas.width, canvas.height)
+      if (decoded?.data) {
+        submitTokenToBackend(decoded.data)
+        return
       }
-    }, 2000)
+    }
+
+    rafRef.current = requestAnimationFrame(tickScan)
   }, [user])
 
-  useEffect(() => {
-    // Automatically start scanning when the student reaches this step
-    const autoStart = setTimeout(() => {
-      startScan();
-    }, 1500);
-    return () => {
-      clearTimeout(autoStart);
-      clearTimeout(timerRef.current);
+  const startCamera = async () => {
+    setResult(null)
+    setMsg('')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play()
+      }
+      setCameraActive(true)
+      rafRef.current = requestAnimationFrame(tickScan)
+    } catch(err) {
+      setResult('error')
+      setMsg('❌ Camera access denied. Please allow camera access and try again.')
     }
-  }, [startScan])
+  }
 
   const handleManualSubmit = (e) => {
     e.preventDefault()
@@ -411,77 +480,116 @@ function ScannerQRContent({ user }) {
     setManual('')
   }
 
-  useEffect(() => () => clearTimeout(timerRef.current), [])
-
   return (
     <>
       <div className="sd-qr-layout">
         {/* Scanner area */}
         <div className="sd-card sd-scanner-card">
-          <h3 className="sd-card-title">📸 Camera Scanner</h3>
+          <h3 className="sd-card-title">📸 QR Code Scanner</h3>
           <div style={{ background: 'rgba(52, 211, 153, 0.15)', color: 'var(--sd-green-lt)', padding: '0.5rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
-            <span>✅</span> Identity Verified successfully! Please scan the QR code to finish.
+            <span>✅</span> Identity Verified! Point camera at the QR code on the teacher's screen.
           </div>
 
-          <div className={`sd-viewfinder ${scanning ? 'scanning' : ''} ${result === 'success' ? 'vf-success' : result === 'error' ? 'vf-error' : ''}`}>
-            {scanning ? (
-              <>
-                <div className="sd-scan-lines" />
-                <div className="sd-scan-corner sd-sc-tl" />
-                <div className="sd-scan-corner sd-sc-tr" />
-                <div className="sd-scan-corner sd-sc-bl" />
-                <div className="sd-scan-corner sd-sc-br" />
-                <div className="sd-scan-laser" />
-                <p className="sd-scanning-label">Scanning…</p>
-              </>
-            ) : result === 'success' ? (
-              <div className="sd-scan-result-icon">✅</div>
-            ) : result === 'error' ? (
-              <div className="sd-scan-result-icon">❌</div>
-            ) : (
-              <>
-                <div className="sd-scan-corner sd-sc-tl" />
-                <div className="sd-scan-corner sd-sc-tr" />
-                <div className="sd-scan-corner sd-sc-bl" />
-                <div className="sd-scan-corner sd-sc-br" />
-                <span className="sd-vf-hint">📷 Camera preview appears here</span>
-              </>
+          {/* Live camera viewfinder */}
+          <div style={{ position: 'relative', width: '100%', borderRadius: '12px', overflow: 'hidden', background: '#000', aspectRatio: '1', marginBottom: '1rem' }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: cameraActive ? 'block' : 'none' }}
+            />
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+            {/* Scanning overlay with corners */}
+            {cameraActive && !result && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                <div style={{ width: '65%', height: '65%', position: 'relative' }}>
+                  {['tl','tr','bl','br'].map(c => (
+                    <div key={c} style={{
+                      position: 'absolute',
+                      width: 28, height: 28,
+                      borderColor: '#34d399',
+                      borderStyle: 'solid',
+                      borderWidth: 0,
+                      ...(c === 'tl' ? { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderRadius: '4px 0 0 0' } :
+                          c === 'tr' ? { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderRadius: '0 4px 0 0' } :
+                          c === 'bl' ? { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderRadius: '0 0 0 4px' } :
+                                       { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderRadius: '0 0 4px 0' })
+                    }} />
+                  ))}
+                  <div style={{
+                    position: 'absolute', top: '50%', left: 0, right: 0,
+                    height: 2, background: 'rgba(52,211,153,0.8)',
+                    animation: 'sd-laser 2s linear infinite',
+                    boxShadow: '0 0 6px #34d399'
+                  }} />
+                </div>
+                <p style={{ position: 'absolute', bottom: 12, color: '#34d399', fontSize: '0.8rem', fontWeight: 600 }}>🔍 Scanning...</p>
+              </div>
+            )}
+
+            {/* Success / Error result overlays */}
+            {result === 'success' && (
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(16,185,129,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: '3rem' }}>✅</span>
+                <span style={{ color: '#fff', fontWeight: 700 }}>Attendance Marked!</span>
+              </div>
+            )}
+            {result === 'error' && !cameraActive && (
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: '3rem' }}>❌</span>
+              </div>
+            )}
+
+            {/* Idle state when camera not active */}
+            {!cameraActive && !result && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: '3rem' }}>📷</span>
+                <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Tap below to open camera</span>
+              </div>
             )}
           </div>
 
-          {result && (
+          {result && resultMsg && (
             <div className={`sd-result-banner ${result}`}>
-              <span>{result === 'success' ? '✅' : '❌'}</span>
               <span>{resultMsg}</span>
             </div>
           )}
 
           <div className="sd-scanner-actions">
-            <button
-              id="start-scan-btn"
-              className={`sd-primary-btn sd-btn-full ${scanning ? 'loading' : ''}`}
-              onClick={startScan}
-              disabled={scanning}
-            >
-              {scanning ? (
-                <><span className="sd-spinner" /> Scanning…</>
-              ) : (
-                <><span>📷</span> {result ? 'Scan Again' : 'Start Scanning'}</>
-              )}
-            </button>
+            {!cameraActive ? (
+              <button
+                id="start-scan-btn"
+                className="sd-primary-btn sd-btn-full"
+                onClick={startCamera}
+                disabled={scanning}
+              >
+                <span>📷</span> {result ? 'Scan Again' : 'Open Camera & Scan QR'}
+              </button>
+            ) : (
+              <button
+                id="stop-scan-btn"
+                className="sd-primary-btn sd-btn-full"
+                onClick={stopCamera}
+                style={{ background: 'var(--sd-red, #ef4444)' }}
+              >
+                ✖ Stop Camera
+              </button>
+            )}
           </div>
 
-          <div className="sd-divider"><span>or enter code manually</span></div>
+          <div className="sd-divider"><span>or enter token manually</span></div>
 
           <form id="manual-code-form" onSubmit={handleManualSubmit} className="sd-manual-form">
             <input
               id="manual-code-input"
               className="sd-input"
-              placeholder="Paste the raw encrypted JWT token here..."
+              placeholder="Paste the QR token here..."
               value={manualCode}
-              onChange={e => setManual(e.target.value.toUpperCase())}
+              onChange={e => setManual(e.target.value)}
             />
-            <button id="manual-submit-btn" type="submit" className="sd-primary-btn">Submit</button>
+            <button id="manual-submit-btn" type="submit" className="sd-primary-btn" disabled={scanning}>Submit</button>
           </form>
         </div>
 
