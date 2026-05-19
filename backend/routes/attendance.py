@@ -175,7 +175,16 @@ def log_face_attendance(file: UploadFile = File(...), student_id: str = Form(...
 
 @router.get("/", response_model=list[schemas.AttendanceResponse])
 def get_all_attendance(db: Database = Depends(get_db)):
-    docs = list(db["attendances"].find())
+    docs = list(db["attendances"].find().sort("timestamp", -1))
     for d in docs:
         d["_id"] = str(d["_id"])
+    return docs
+
+@router.get("/student/{student_id}")
+def get_student_attendance(student_id: str, db: Database = Depends(get_db)):
+    docs = list(db["attendances"].find({"student_id": student_id}).sort("timestamp", -1))
+    for d in docs:
+        d["_id"] = str(d["_id"])
+        if isinstance(d.get("timestamp"), datetime.datetime):
+            d["timestamp"] = d["timestamp"].isoformat()
     return docs

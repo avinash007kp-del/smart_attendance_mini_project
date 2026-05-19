@@ -6,35 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import './StudentDashboardPage.css'
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const COURSES = [
-  { id: 'CS101', name: 'Data Structures',     faculty: 'Prof. Sharma',   schedule: 'Mon / Wed / Fri  9:00 AM',  room: 'Lab 3',   attended: 18, total: 20, color: '#a78bfa' },
-  { id: 'CS205', name: 'Operating Systems',   faculty: 'Dr. Rajan',      schedule: 'Tue / Thu  11:00 AM',       room: 'Room 12', attended: 14, total: 18, color: '#60a5fa' },
-  { id: 'CS312', name: 'Database Systems',    faculty: 'Prof. Meera',    schedule: 'Mon / Wed  2:00 PM',        room: 'Room 7',  attended: 15, total: 16, color: '#34d399' },
-  { id: 'CS420', name: 'Computer Networks',   faculty: 'Dr. Anand',      schedule: 'Fri  3:00 PM',              room: 'Lab 1',   attended: 8,  total: 12, color: '#fbbf24' },
-  { id: 'CS510', name: 'Machine Learning',    faculty: 'Prof. Divya',    schedule: 'Thu  10:00 AM',             room: 'Lab 5',   attended: 6,  total: 10, color: '#f87171' },
-]
-
-const LOGS = [
-  { id: 1, date: 'Today, 9:04 AM',       course: 'CS101', method: 'QR Code',          status: 'present' },
-  { id: 2, date: 'Today, 11:02 AM',      course: 'CS205', method: 'Face Recognition', status: 'present' },
-  { id: 3, date: 'Yesterday, 9:10 AM',   course: 'CS101', method: 'QR Code',          status: 'late'    },
-  { id: 4, date: 'Yesterday, 12:00 PM',  course: 'CS312', method: 'Manual',           status: 'present' },
-  { id: 5, date: '14 Apr, 9:00 AM',      course: 'CS101', method: 'QR Code',          status: 'absent'  },
-  { id: 6, date: '14 Apr, 11:00 AM',     course: 'CS205', method: 'QR Code',          status: 'present' },
-  { id: 7, date: '13 Apr, 2:00 PM',      course: 'CS312', method: 'Face Recognition', status: 'present' },
-  { id: 8, date: '12 Apr, 3:00 PM',      course: 'CS420', method: 'QR Code',          status: 'absent'  },
-  { id: 9, date: '11 Apr, 9:00 AM',      course: 'CS101', method: 'QR Code',          status: 'present' },
-  { id:10, date: '11 Apr, 10:00 AM',     course: 'CS510', method: 'Manual',           status: 'present' },
-]
-
-const TODAY_SCHEDULE = [
-  { time: '9:00 AM',  course: 'CS101', name: 'Data Structures',   room: 'Lab 3',   status: 'done'     },
-  { time: '11:00 AM', course: 'CS205', name: 'Operating Systems', room: 'Room 12', status: 'done'     },
-  { time: '2:00 PM',  course: 'CS312', name: 'Database Systems',  room: 'Room 7',  status: 'upcoming' },
-  { time: '3:00 PM',  course: 'CS420', name: 'Computer Networks', room: 'Lab 1',   status: 'upcoming' },
-]
-
+// ─── Nav items ─────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
   { id: 'overview',    icon: '🏠', label: 'Overview'    },
   { id: 'attendance',  icon: '📊', label: 'Attendance'  },
@@ -45,12 +17,43 @@ const NAV_ITEMS = [
   { id: 'settings',    icon: '⚙️',  label: 'Settings'   },
 ]
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const totalAttended = COURSES.reduce((a, c) => a + c.attended, 0)
-const totalClasses  = COURSES.reduce((a, c) => a + c.total, 0)
-const overallPct    = Math.round(totalAttended / totalClasses * 100)
+// ─── Live attendance hook ─────────────────────────────────────────────────────
+function useAttendanceData(email) {
+  const [logs, setLogs]       = useState([])
+  const [loading, setLoading] = useState(true)
 
-function pct(c) { return Math.round(c.attended / c.total * 100) }
+  const fetchData = useCallback(async () => {
+    if (!email) return
+    try {
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/student/${encodeURIComponent(email)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setLogs(data)
+      }
+    } catch(e) { console.error('Attendance fetch error:', e) }
+    finally { setLoading(false) }
+  }, [email])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  // Aggregate per-course stats from real logs
+  const COLORS = ['#a78bfa','#60a5fa','#34d399','#fbbf24','#f87171','#fb923c','#e879f9']
+  const courseMap = {}
+  logs.forEach(l => {
+    if (!l.course_id) return
+    if (!courseMap[l.course_id]) courseMap[l.course_id] = { id: l.course_id, name: l.course_id, attended: 0, total: 0 }
+    courseMap[l.course_id].attended += 1
+    courseMap[l.course_id].total    += 1
+  })
+  const courses = Object.values(courseMap).map((c, i) => ({ ...c, color: COLORS[i % COLORS.length] }))
+  const totalAttended = logs.filter(l => l.status === 'present').length
+  const totalClasses  = logs.length
+  const overallPct    = totalClasses > 0 ? Math.round(totalAttended / totalClasses * 100) : 0
+
+  return { logs, courses, totalAttended, totalClasses, overallPct, loading, refresh: fetchData }
+}
+
+function pct(c) { return c.total > 0 ? Math.round(c.attended / c.total * 100) : 0 }
 function pctColor(p) {
   if (p >= 85) return '#34d399'
   if (p >= 75) return '#fbbf24'
@@ -74,12 +77,13 @@ function StatCard({ icon, label, value, sub, color }) {
 // ═══════════════════════════════════════════════════════════
 //  TAB: OVERVIEW
 // ═══════════════════════════════════════════════════════════
-function TabOverview({ user, onNav }) {
+function TabOverview({ user, onNav, attData }) {
+  const { logs, courses, totalAttended, totalClasses, overallPct, loading } = attData
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
-  const absent  = LOGS.filter(l => l.status === 'absent').length
-  const late    = LOGS.filter(l => l.status === 'late').length
+  const absent = logs.filter(l => l.status === 'absent').length
+  const late   = logs.filter(l => l.status === 'late').length
 
   return (
     <div className="sd-tab-content">
@@ -96,10 +100,10 @@ function TabOverview({ user, onNav }) {
 
       {/* Stat row */}
       <div className="sd-stats-row">
-        <StatCard icon="📊" label="Overall Attendance" value={`${overallPct}%`}          sub={`${totalAttended}/${totalClasses} classes`}  color="#a78bfa" />
-        <StatCard icon="📚" label="Enrolled Courses"   value={COURSES.length}             sub="This semester"                                color="#60a5fa" />
-        <StatCard icon="❌" label="Absences"           value={absent}                     sub="Total absences"                               color="#f87171" />
-        <StatCard icon="⏰" label="Late Entries"       value={late}                       sub="Marked late"                                  color="#fbbf24" />
+        <StatCard icon="📊" label="Overall Attendance" value={loading ? '…' : `${overallPct}%`}  sub={`${totalAttended}/${totalClasses} classes`}  color="#a78bfa" />
+        <StatCard icon="📚" label="Enrolled Courses"   value={courses.length}                     sub="This semester"                                color="#60a5fa" />
+        <StatCard icon="❌" label="Absences"           value={absent}                             sub="Total absences"                               color="#f87171" />
+        <StatCard icon="⏰" label="Late Entries"       value={late}                               sub="Marked late"                                  color="#fbbf24" />
       </div>
 
       {/* Overall ring + Today's schedule */}
@@ -121,9 +125,9 @@ function TabOverview({ user, onNav }) {
               />
             </svg>
             <div className="sd-gauge-val">
-              <span className="sd-gauge-pct" style={{ color: pctColor(overallPct) }}>{overallPct}%</span>
-              <span className="sd-gauge-sub">{totalAttended}/{totalClasses} classes</span>
-            </div>
+            <span className="sd-gauge-pct" style={{ color: pctColor(overallPct) }}>{loading ? '…' : `${overallPct}%`}</span>
+            <span className="sd-gauge-sub">{totalAttended}/{totalClasses} classes</span>
+          </div>
           </div>
           <div className="sd-gauge-legend">
             <span style={{ color: '#34d399' }}>● ≥85% Safe</span>
@@ -157,7 +161,9 @@ function TabOverview({ user, onNav }) {
       <div className="sd-card">
         <h3 className="sd-card-title">📈 Per-Course Attendance</h3>
         <div className="sd-mini-bars">
-          {COURSES.map(c => (
+          {courses.length === 0 && !loading && <p style={{color:'var(--sd-muted)', fontSize:'0.85rem'}}>No attendance records yet.</p>}
+          {loading && <p style={{color:'var(--sd-muted)', fontSize:'0.85rem'}}>Loading…</p>}
+          {courses.map(c => (
             <div key={c.id} className="sd-mini-bar-row">
               <span className="sd-mini-bar-name">{c.name}</span>
               <div className="sd-mini-bar-track">
@@ -176,16 +182,18 @@ function TabOverview({ user, onNav }) {
           <button className="sd-text-btn" onClick={() => onNav('logs')}>View all →</button>
         </div>
         <div className="sd-log-list">
-          {LOGS.slice(0, 5).map(l => (
-            <div key={l.id} className="sd-log-item">
+          {logs.length === 0 && !loading && <p style={{color:'var(--sd-muted)', fontSize:'0.85rem', padding: '1rem 0'}}>No attendance records yet. Scan a QR code to get started!</p>}
+          {loading && <p style={{color:'var(--sd-muted)', fontSize:'0.85rem'}}>Loading…</p>}
+          {logs.slice(0, 5).map(l => (
+            <div key={l._id} className="sd-log-item">
               <span className={`sd-log-dot sd-dot-${l.status}`} />
               <div className="sd-log-body">
-                <span className="sd-log-course">{l.course}</span>
-                <span className="sd-log-method">{l.method}</span>
+                <span className="sd-log-course">{l.course_id || '—'}</span>
+                <span className="sd-log-method">{l.method || '—'}</span>
               </div>
               <div className="sd-log-right">
                 <span className={`sd-badge sd-badge-${l.status}`}>{l.status}</span>
-                <span className="sd-log-date">{l.date}</span>
+                <span className="sd-log-date">{l.timestamp ? new Date(l.timestamp).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}) : '—'}</span>
               </div>
             </div>
           ))}
@@ -198,16 +206,24 @@ function TabOverview({ user, onNav }) {
 // ═══════════════════════════════════════════════════════════
 //  TAB: ATTENDANCE
 // ═══════════════════════════════════════════════════════════
-function TabAttendance() {
+function TabAttendance({ attData }) {
+  const { courses, totalAttended, totalClasses, overallPct, loading } = attData
   const [filter, setFilter] = useState('all')
 
-  const filtered = filter === 'all' ? COURSES : COURSES.filter(c => {
+  const filtered = filter === 'all' ? courses : courses.filter(c => {
     const p = pct(c)
     if (filter === 'safe')    return p >= 85
     if (filter === 'warning') return p >= 75 && p < 85
     if (filter === 'risk')    return p < 75
     return true
   })
+
+  if (loading) return <div className="sd-tab-content"><p style={{color:'var(--sd-muted)'}}>Loading attendance data…</p></div>
+  if (courses.length === 0) return (
+    <div className="sd-tab-content">
+      <p style={{color:'var(--sd-muted)', padding:'2rem 0', textAlign:'center'}}>📭 No attendance records yet.<br/>Mark your first attendance using the Scanner tab!</p>
+    </div>
+  )
 
   return (
     <div className="sd-tab-content">
@@ -239,9 +255,9 @@ function TabAttendance() {
       {/* Summary cards */}
       <div className="sd-attend-summary-row">
         <StatCard icon="📊" label="Overall" value={`${overallPct}%`} sub={`${totalAttended}/${totalClasses}`} color="#a78bfa" />
-        <StatCard icon="✅" label="Safe courses"    value={COURSES.filter(c => pct(c) >= 85).length} sub="≥ 85%"  color="#34d399" />
-        <StatCard icon="⚠️" label="Warning courses" value={COURSES.filter(c => pct(c) >= 75 && pct(c) < 85).length} sub="75–84%" color="#fbbf24" />
-        <StatCard icon="🚨" label="Risk courses"    value={COURSES.filter(c => pct(c) < 75).length} sub="< 75%"  color="#f87171" />
+        <StatCard icon="✅" label="Safe courses"    value={courses.filter(c => pct(c) >= 85).length} sub="≥ 85%"  color="#34d399" />
+        <StatCard icon="⚠️" label="Warning courses" value={courses.filter(c => pct(c) >= 75 && pct(c) < 85).length} sub="75–84%" color="#fbbf24" />
+        <StatCard icon="🚨" label="Risk courses"    value={courses.filter(c => pct(c) < 75).length} sub="< 75%"  color="#f87171" />
       </div>
 
       {/* Course cards */}
@@ -1297,6 +1313,7 @@ export default function StudentDashboardPage() {
   const [activeTab, setActiveTab]     = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const attData = useAttendanceData(user?.email)
 
   const handleNav = (id) => {
     if (id === 'scanner') {
@@ -1369,16 +1386,16 @@ export default function StudentDashboardPage() {
               {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
             </span>
             <span className="sd-role-badge">
-              {overallPct >= 75
-                ? <span style={{ color: '#34d399' }}>✅ {overallPct}%</span>
-                : <span style={{ color: '#f87171' }}>⚠️ {overallPct}%</span>}
+              {attData.overallPct >= 75
+                ? <span style={{ color: '#34d399' }}>✅ {attData.overallPct}%</span>
+                : <span style={{ color: '#f87171' }}>⚠️ {attData.overallPct}%</span>}
             </span>
           </div>
         </header>
 
         <main className="sd-content">
-          {activeTab === 'overview'   && <TabOverview   user={user} onNav={handleNav} />}
-          {activeTab === 'attendance' && <TabAttendance />}
+          {activeTab === 'overview'   && <TabOverview   user={user} onNav={handleNav} attData={attData} />}
+          {activeTab === 'attendance' && <TabAttendance attData={attData} />}
           {activeTab === 'scanner'    && <TabScanner user={user} />}
           {activeTab === 'classes'    && <TabClasses />}
           {activeTab === 'timetable'  && <TabTimetable />}
