@@ -5,6 +5,7 @@ pydantic
 python-jose[cryptography] # JWT parsing
 passlib[bcrypt] # Password hashing
 python-multipart # File uploading for OpenCV streams
+numpy<2.0.0
 opencv-python-headless==4.5.5.64
 deepface
 qrcode
