@@ -13,6 +13,8 @@ from services.auth_utils import get_password_hash
 
 def main():
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017")
+    if "cluster0.m6s4mcm.mongodb.net" in MONGO_URI:
+        MONGO_URI = MONGO_URI.replace("cluster0.m6s4mcm.mongodb.net", "cluster0.ftw6msj.mongodb.net")
     if "<" in MONGO_URI and ">" in MONGO_URI:
         MONGO_URI = re.sub(r':<([^>]+)>@', r':\1@', MONGO_URI)
     try:
