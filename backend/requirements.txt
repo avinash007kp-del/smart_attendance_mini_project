@@ -12,3 +12,4 @@ pyzbar
 Pillow
 tf-keras
 certifi
+python-dotenv

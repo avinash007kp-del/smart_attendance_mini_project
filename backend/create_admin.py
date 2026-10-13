@@ -1,7 +1,11 @@
 import os
+import re
 import sys
 from pymongo import MongoClient
 import certifi
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Add the current directory to sys.path so we can import local modules
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -9,6 +13,8 @@ from services.auth_utils import get_password_hash
 
 def main():
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017")
+    if "<" in MONGO_URI and ">" in MONGO_URI:
+        MONGO_URI = re.sub(r':<([^>]+)>@', r':\1@', MONGO_URI)
     try:
         client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
         db = client["attendance_db"]
