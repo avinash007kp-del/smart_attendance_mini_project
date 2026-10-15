@@ -1,27 +1,108 @@
 "use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from '../hooks/useRouter'
-import { useAuth } from '../context/AuthContext'
-import './LoginPage.css'
+import { useState, useEffect } from 'react';
+import { useRouter } from '../hooks/useRouter';
+import { useAuth } from '../context/AuthContext';
+import './LoginPage.css';
 
-const ROLES = [
-  { value: 'admin', label: 'Administrator', icon: '🛡️' },
-  { value: 'teacher', label: 'Teacher / Faculty', icon: '👨‍🏫' },
-  { value: 'student', label: 'Student', icon: '🎓' },
-]
+// ─────────────────────────────────────────────────────────────
+// 1. BRAND LOGO COMPONENT
+// Minimal geometric monogram logo resembling a thin-line, abstract letter A
+// ─────────────────────────────────────────────────────────────
+function BrandLogo() {
+  return (
+    <div className="att-brand">
+      <svg
+        className="att-logo-icon"
+        viewBox="0 0 36 36"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-label="Attentify Monogram"
+      >
+        {/* Geometric thin-line abstract letter A */}
+        <path
+          d="M18 3.5L5 32.5H10.5L18 15L25.5 32.5H31L18 3.5Z"
+          fill="#142E43"
+        />
+        <rect
+          x="11"
+          y="23"
+          width="14"
+          height="2"
+          fill="#142E43"
+          rx="0.5"
+        />
+      </svg>
+      <span className="att-brand-name">ATTENTIFY</span>
+    </div>
+  );
+}
 
+// ─────────────────────────────────────────────────────────────
+// 2. HERO SECTION COMPONENT (Left Column)
+// Editorial typography with high-contrast serif and custom organic ellipse
+// ─────────────────────────────────────────────────────────────
+function HeroSection() {
+  return (
+    <div className="att-left-col">
+      <h1 className="att-hero-headline">
+        Presence,<br />made simple.
+      </h1>
+
+      <p className="att-hero-subhead">
+        Next-generation attendance management,<br />
+        powered by QR codes &amp; face recognition.
+      </p>
+
+      {/* Subtle, organic abstract ellipse tilted at approx -30 degrees */}
+      <div className="att-decorative-ellipse" aria-hidden="true">
+        <svg
+          width="230"
+          height="105"
+          viewBox="0 0 250 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M 52,88 C 28,62 48,28 108,18 C 172,8 228,24 238,48 C 248,72 212,98 152,106 C 88,114 62,100 52,88 Z"
+            stroke="#9EAAB3"
+            strokeWidth="1.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            transform="rotate(-26, 125, 60)"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 3. PAGE FOOTER COMPONENT
+// Minimalist, quiet footer with uppercase tagline and copyright
+// ─────────────────────────────────────────────────────────────
+function PageFooter() {
+  return (
+    <footer className="att-footer">
+      <span className="att-footer-left">ATTENDANCE, SIMPLIFIED.</span>
+      <span className="att-footer-right">© 2026 Attentify</span>
+    </footer>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 4. MAIN LOGIN PAGE COMPONENT
+// ─────────────────────────────────────────────────────────────
 export default function LoginPage() {
-  const router = useRouter()
-  const { login, register, loading, error, clearError, user } = useAuth()
+  const router = useRouter();
+  const { login, register, loading, error, clearError, user } = useAuth();
 
-  const [form, setForm] = useState({ email: '', password: '', role: 'student', name: '' })
-  const [showPassword, setShowPassword] = useState(false)
-  const [fieldErrors, setFieldErrors] = useState({})
-  const [mounted, setMounted] = useState(false)
-  const [loginSuccess, setLoginSuccess] = useState(false)
-  const [hasAdmin, setHasAdmin] = useState(true) // assume true initially
-  const [isSetupMode, setIsSetupMode] = useState(false)
+  const [form, setForm] = useState({ email: '', password: '', role: 'student', name: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [hasAdmin, setHasAdmin] = useState(true);
+  const [isSetupMode, setIsSetupMode] = useState(false);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -40,240 +121,232 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      const dest = user.role === 'teacher' ? '/faculty' : user.role === 'student' ? '/student' : '/dashboard'
-      router.replace(dest)
+      const dest = user.role === 'teacher' ? '/faculty' : user.role === 'student' ? '/student' : '/dashboard';
+      router.replace(dest);
     }
-    setMounted(true)
-  }, [user, router])
+  }, [user, router]);
 
   const validate = () => {
-    const errs = {}
-    if (!form.email.trim()) errs.email = 'Email is required'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Enter a valid email'
-    
-    if (!form.password) {
-      errs.password = 'Password is required'
+    const errs = {};
+    if (!form.email.trim()) {
+      errs.email = 'Email Address is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errs.email = 'Please enter a valid email address';
     }
-    return errs
-  }
+
+    if (!form.password) {
+      errs.password = 'Password is required';
+    }
+
+    if (isSetupMode && !form.name.trim()) {
+      errs.name = 'Full name is required to initialize admin access';
+    }
+
+    return errs;
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
-    if (fieldErrors[name]) setFieldErrors(prev => ({ ...prev, [name]: '' }))
-    if (error) clearError()
-  }
-
-  const handleRoleChange = (role) => {
-    setForm(prev => ({ ...prev, role }))
-    if (error) clearError()
-  }
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) setFieldErrors(prev => ({ ...prev, [name]: '' }));
+    if (error) clearError();
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    const errs = validate()
-    
-    // Add name validation for setup mode
-    if (isSetupMode && !form.name.trim()) errs.name = 'Name is required'
-    
-    if (Object.keys(errs).length) { setFieldErrors(errs); return }
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setFieldErrors(errs);
+      return;
+    }
 
     try {
       if (isSetupMode) {
-        await register(form.email, form.password, 'admin', form.name, null, null)
-        alert('Admin account created! Please sign in.')
-        setIsSetupMode(false)
-        setHasAdmin(true)
-        setForm(prev => ({ ...prev, password: '' }))
+        await register(form.email, form.password, 'admin', form.name, null, null);
+        alert('Primary administrator account created! Please sign in.');
+        setIsSetupMode(false);
+        setHasAdmin(true);
+        setForm(prev => ({ ...prev, password: '' }));
       } else {
-        const userData = await login(form.email, form.password, 'admin') // The backend ignores the role param for login
-        setLoginSuccess(true)
-        const dest = userData?.role === 'teacher' ? '/faculty' : userData?.role === 'student' ? '/student' : '/dashboard'
-        setTimeout(() => router.push(dest), 800)
+        const userData = await login(form.email, form.password, 'student');
+        setLoginSuccess(true);
+        const dest = userData?.role === 'teacher' ? '/faculty' : userData?.role === 'student' ? '/student' : '/dashboard';
+        setTimeout(() => router.push(dest), 600);
       }
     } catch {
-      // error is handled by context
+      // Error handled by AuthContext
     }
-  }
+  };
 
   return (
-    <div className={`login-root ${mounted ? 'mounted' : ''}`}>
-      <div className="login-bg">
-        <div className="bg-orb bg-orb-1" />
-        <div className="bg-orb bg-orb-2" />
-        <div className="bg-orb bg-orb-3" />
-        <div className="bg-grid" />
-      </div>
+    <div className="att-page-root">
+      {/* A. Header / Brand */}
+      <header className="att-header">
+        <BrandLogo />
+      </header>
 
-      <aside className="login-aside">
-        <div className="aside-content">
-          <div className="brand-logo">
-            <div className="logo-ring">
-              <span className="logo-icon">A</span>
-            </div>
-          </div>
-          <h1 className="aside-title">ATTENTIFY</h1>
-          <p className="aside-subtitle">
-            Next-generation attendance management powered by QR codes &amp; face recognition.
-          </p>
+      {/* B. Main Content — Two-Column Layout */}
+      <main className="att-main-content">
+        {/* Left Column: Brand Statement */}
+        <HeroSection />
 
-          <div className="feature-list">
-            {[
-              { icon: '🔲', label: 'QR Code Scanning' },
-              { icon: '👁️', label: 'Face Recognition' },
-              { icon: '📊', label: 'Real-time Analytics' },
-              { icon: '🔔', label: 'Instant Notifications' },
-            ].map(f => (
-              <div key={f.label} className="feature-item">
-                <span className="feature-icon">{f.icon}</span>
-                <span className="feature-label">{f.label}</span>
-              </div>
-            ))}
-          </div>
+        {/* Right Column: Login Form */}
+        <div className="att-right-col">
+          <div className="att-form-container">
+            <h2 className="att-form-heading">
+              {isSetupMode ? "Setup Attentify" : "Welcome back"}
+            </h2>
+            <p className="att-form-subhead">
+              {isSetupMode ? "Create the primary administrator account" : "Sign in to your Attentify account"}
+            </p>
 
-          <div className="aside-stats">
-            <div className="stat">
-              <span className="stat-value">99.8%</span>
-              <span className="stat-label">Accuracy</span>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat">
-              <span className="stat-value">&lt;1s</span>
-              <span className="stat-label">Recognition</span>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat">
-              <span className="stat-value">10K+</span>
-              <span className="stat-label">Students</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <main className="login-main">
-        <div className={`login-card ${loginSuccess ? 'success' : ''}`}>
-          <div className="card-header">
-            <div className="card-logo">A</div>
-            <h2 className="card-title">{isSetupMode ? "Setup Attentify" : "Welcome back"}</h2>
-            <p className="card-description">{isSetupMode ? "Create the primary administrator account" : "Sign in to your Attentify account"}</p>
-          </div>
-
-
-
-          <form id="login-form" className="login-form" onSubmit={handleSubmit} noValidate>
+            {/* Error Message */}
             {error && (
-              <div className="alert alert-error" role="alert">
-                <span className="alert-icon">⚠️</span>
+              <div className="att-alert-error" role="alert">
                 <span>{error}</span>
               </div>
             )}
-            
+
+            {/* First-Time Setup Notification */}
             {!hasAdmin && !isSetupMode && (
-              <div className="alert" style={{ background: '#fef3c7', color: '#92400e', borderColor: '#f59e0b', padding: '12px 16px', borderRadius: 'var(--radius-md)', marginBottom: '10px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <strong>Welcome to Attentify!</strong>
-                  <span style={{ fontSize: '0.85rem' }}>No administrator account exists yet.</span>
-                  <button type="button" onClick={() => setIsSetupMode(true)} style={{ background: '#d97706', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    Setup First Admin
-                  </button>
+              <div className="att-setup-banner">
+                <div className="att-setup-banner-text">
+                  <strong>First-time setup:</strong> No admin account exists yet.
                 </div>
+                <button
+                  type="button"
+                  className="att-setup-banner-btn"
+                  onClick={() => setIsSetupMode(true)}
+                >
+                  Setup Admin
+                </button>
               </div>
             )}
 
-            {isSetupMode && (
-              <div className={`field ${fieldErrors.name ? 'field-error' : ''}`}>
-                <label className="field-label" htmlFor="name">Full Name</label>
-                <div className="field-input-wrap">
-                  <span className="field-prefix-icon">👤</span>
+            {/* Form */}
+            <form id="login-form" className="att-form" onSubmit={handleSubmit} noValidate>
+              {isSetupMode && (
+                <div className="att-form-group">
+                  <label className="att-label" htmlFor="name">Full Name</label>
                   <input
                     id="name"
                     name="name"
                     type="text"
-                    className="field-input"
+                    className={`att-input ${fieldErrors.name ? 'input-error' : ''}`}
                     placeholder="Enter your name"
                     value={form.name}
                     onChange={handleChange}
+                    autoComplete="name"
                   />
+                  {fieldErrors.name && <span className="att-field-error">{fieldErrors.name}</span>}
                 </div>
-                {fieldErrors.name && <span className="field-error-msg">{fieldErrors.name}</span>}
-              </div>
-            )}
+              )}
 
-
-
-            <div className={`field ${fieldErrors.email ? 'field-error' : ''}`}>
-              <label className="field-label" htmlFor="email">Email Address</label>
-              <div className="field-input-wrap">
-                <span className="field-prefix-icon">✉️</span>
+              {/* Email Address Field */}
+              <div className="att-form-group">
+                <label className="att-label" htmlFor="email">Email Address</label>
                 <input
                   id="email"
                   name="email"
                   type="email"
-                  className="field-input"
+                  className={`att-input ${fieldErrors.email ? 'input-error' : ''}`}
                   placeholder="you@example.com"
                   value={form.email}
                   onChange={handleChange}
+                  autoComplete="email"
                 />
+                {fieldErrors.email && <span className="att-field-error">{fieldErrors.email}</span>}
               </div>
-              {fieldErrors.email && <span className="field-error-msg">{fieldErrors.email}</span>}
-            </div>
 
-            <div className={`field ${fieldErrors.password ? 'field-error' : ''}`}>
-              <label className="field-label" htmlFor="password">Password</label>
-              <div className="field-input-wrap">
-                <span className="field-prefix-icon">🔑</span>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  className="field-input"
-                  placeholder="Enter your password"
-                  value={form.password}
-                  onChange={handleChange}
-                />
+              {/* Password Field */}
+              <div className="att-form-group">
+                <label className="att-label" htmlFor="password">Password</label>
+                <div className="att-password-wrap">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    className={`att-input ${fieldErrors.password ? 'input-error' : ''}`}
+                    placeholder="Enter your password"
+                    value={form.password}
+                    onChange={handleChange}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="att-password-toggle"
+                    onClick={() => setShowPassword(p => !p)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#707C85" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#707C85" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {fieldErrors.password && <span className="att-field-error">{fieldErrors.password}</span>}
+              </div>
+
+              {/* Sign-In Primary Button */}
+              <button
+                type="submit"
+                className="att-signin-btn"
+                disabled={loading || loginSuccess}
+              >
+                <span className="att-btn-text">
+                  {loginSuccess
+                    ? "Redirecting…"
+                    : loading
+                    ? "Signing In…"
+                    : isSetupMode
+                    ? "Create Admin Account"
+                    : "Sign In"}
+                </span>
+                <span className="att-btn-arrow">
+                  {loading ? (
+                    <span className="att-spinner" />
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  )}
+                </span>
+              </button>
+
+              {isSetupMode && (
                 <button
                   type="button"
-                  className="show-password-btn"
-                  onClick={() => setShowPassword(p => !p)}
+                  className="att-cancel-btn"
+                  onClick={() => setIsSetupMode(false)}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  Cancel Setup
                 </button>
-              </div>
-              {fieldErrors.password && <span className="field-error-msg">{fieldErrors.password}</span>}
-            </div>
-
-            <button
-              type="submit"
-              className={`login-btn ${loading ? 'loading' : ''} ${loginSuccess ? 'success' : ''}`}
-              disabled={loading || loginSuccess}
-            >
-              {loginSuccess ? (
-                <>Redirecting…</>
-              ) : loading ? (
-                <>Processing…</>
-              ) : isSetupMode ? (
-                <>Create Admin Account</>
-              ) : (
-                <>Sign In</>
               )}
-            </button>
-            
-            {isSetupMode && (
-              <button
-                type="button"
-                onClick={() => setIsSetupMode(false)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--surface-500)', cursor: 'pointer', marginTop: '10px', fontSize: '0.9rem' }}
-              >
-                Cancel Setup
-              </button>
-            )}
-          </form>
+            </form>
 
-          <p className="card-footer" style={{ textAlign: 'center', opacity: 0.7, fontSize: '0.85rem' }}>
-            Admin access is required to create new accounts.
-          </p>
+            {/* Divider and Account Notice */}
+            <div className="att-divider" />
+            <div className="att-account-notice">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#707C85" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span>Admin access is required to create new accounts.</span>
+            </div>
+          </div>
         </div>
       </main>
+
+      {/* C. Footer */}
+      <PageFooter />
     </div>
-  )
+  );
 }
