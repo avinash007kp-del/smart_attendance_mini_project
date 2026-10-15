@@ -2141,3 +2141,193 @@
   0% { transform: scale(0.6); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ANTI-SPOOFING & LIVENESS SHIELD UI
+   ═══════════════════════════════════════════════════════════ */
+
+.sd-liveness-shield-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.08));
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md, 12px);
+  padding: 0.65rem 1rem;
+  margin-bottom: 0.5rem;
+  backdrop-filter: blur(8px);
+}
+
+.sd-liveness-shield-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--theme-green, #10b981);
+}
+
+.sd-liveness-shield-tag {
+  font-size: 0.72rem;
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--theme-green, #10b981);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sd-challenge-card {
+  background: var(--theme-card-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--theme-card-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 12px);
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.sd-challenge-card.active-challenge {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(147, 51, 234, 0.06));
+}
+
+.sd-challenge-icon {
+  font-size: 1.8rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sd-challenge-info {
+  flex: 1;
+}
+
+.sd-challenge-prompt {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--theme-text, #f1f5f9);
+  margin-bottom: 2px;
+}
+
+.sd-challenge-hint {
+  font-size: 0.76rem;
+  color: var(--theme-muted, #94a3b8);
+}
+
+.sd-challenge-switch-btn {
+  background: transparent;
+  border: 1px solid var(--theme-card-border, rgba(255, 255, 255, 0.15));
+  color: var(--theme-muted, #94a3b8);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.sd-challenge-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--theme-text, #f1f5f9);
+  border-color: var(--theme-accent, #3b82f6);
+}
+
+/* Biometric oval guide on the camera */
+.sd-biometric-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68%;
+  height: 82%;
+  border-radius: 50% / 55%;
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 5;
+}
+
+.sd-biometric-reticle.active {
+  border: 2.5px solid var(--theme-accent, #38bdf8);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.35), inset 0 0 25px rgba(56, 189, 248, 0.2);
+  animation: pulseGuide 2s infinite ease-in-out;
+}
+
+.sd-biometric-reticle.success {
+  border: 2.5px solid var(--theme-green, #10b981);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.5), inset 0 0 30px rgba(16, 185, 129, 0.25);
+}
+
+.sd-biometric-reticle.error {
+  border: 2.5px solid var(--theme-red, #f87171);
+  box-shadow: 0 0 30px rgba(248, 113, 113, 0.5);
+}
+
+@keyframes pulseGuide {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
+  50% { transform: translate(-50%, -50%) scale(1.02); opacity: 1; }
+}
+
+/* Liveness Floating Pill */
+.sd-liveness-pill {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Liveness Meter Bar */
+.sd-liveness-progress-wrap {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.sd-liveness-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.76rem;
+  margin-bottom: 4px;
+  color: var(--theme-muted, #94a3b8);
+}
+
+.sd-liveness-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.sd-liveness-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #10b981);
+  border-radius: 999px;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}

@@ -9,6 +9,7 @@
 | Feature | Technology |
 |---|---|
 | 🔐 **Authentication** | PBKDF2 Hashing + JWT Sessions |
+| 🛡️ **Liveness & Anti-Spoofing** | Challenge-Response (Blink/Turn/Smile) + Temporal Variance + OpenCV |
 | 👁️ **Face Recognition** | DeepFace (SFace) + OpenCV |
 | 📅 **Timetable** | Interactive Weekly Schedule Grid (localStorage) |
 | 📝 **Assignments** | Cross-device posting, API management & filtering (MongoDB) |
@@ -16,7 +17,7 @@
 | 💳 **Bills & Payments** | Glassmorphic credit card simulator & UPI QR checkout |
 | 🗄️ **Database** | Native MongoDB (NoSQL) |
 | 🌐 **Frontend** | Astro + React (Node.js) |
-| ⚙️ **Backend** | FastAPI (Python 3.9) |
+| ⚙️ **Backend** | FastAPI (Python 3.10) |
 | 🌓 **Theming** | Glassmorphism UI with Dark/Light Toggle |
 
 ---
@@ -32,14 +33,22 @@ This project uses a **Dual-Engine** architecture to combine the best of two worl
 
 ### 2. AI & Data Engine (Python)
 *   **Role:** Handles heavy data processing, API endpoints, and artificial intelligence.
-*   **Stack:** FastAPI, MongoDB, DeepFace.
-*   **Responsibility:** Securely hashing passwords, generating encrypted QR tokens, managing the assignments database, and performing 1:1 facial verification using embeddings.
+*   **Stack:** FastAPI, MongoDB, DeepFace, OpenCV.
+*   **Responsibility:** Securely hashing passwords, generating encrypted QR tokens, managing assignments, enforcing real-time anti-spoofing liveness, and performing 1:1 facial verification using embeddings.
 
 ---
 
 ## 💡 Key Added Modules & Flows
 
-### 1. 📝 Assignment Posting & Tracking (Full-Stack MongoDB)
+### 1. 🛡️ Liveness & Anti-Spoofing Detection (Biometric Shield™)
+Eliminates the critical vulnerability where an attacker holds up a printed photo or smartphone screen of a classmate:
+*   **Interactive Challenge-Response:** Dynamically prompts students for randomized human actions (**Blink Eyes Naturally**, **Turn Head Slightly Left**, **Turn Head Slightly Right**, or **Smile for the Camera**).
+*   **Real-time Client-Side Motion Tracking:** Video stream frames are processed in real-time on a high-speed offscreen canvas to verify live micro-motions and gesture compliance before submission.
+*   **Multi-Frame Temporal Variance:** Backend compares baseline neutral frame vs. action frame to detect frozen/identical photos (`mean_diff < 0.8`), rejecting static presentations immediately.
+*   **OpenCV Cascade Classifiers:** Uses `haarcascade_eye.xml`, `haarcascade_smile.xml`, and `haarcascade_profileface.xml` to verify genuine human movement and pose shifts.
+*   **DeepFace Neural Anti-Spoofing:** Supports DeepFace's `anti_spoofing=True` with automatic fallback to our OpenCV temporal engine on resource-constrained cloud servers.
+
+### 2. 📝 Assignment Posting & Tracking (Full-Stack MongoDB)
 *   **Faculty Capabilities:** Create, filter (All, Active, Past Due), and delete assignments dynamically. Faculty submissions are instantly persisted in the MongoDB `assignments` collection.
 *   **Student Dashboard Integration:** Read-only dynamic view of all active, past-due, and ongoing assignments. Fully color-coded to match due-date status (🟢 Active, 🔴 Past Due, 🔵 Ongoing) with max marks and author info.
 

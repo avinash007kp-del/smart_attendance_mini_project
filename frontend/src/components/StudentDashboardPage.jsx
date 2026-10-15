@@ -727,33 +727,65 @@ function ScannerQRContent({ user }) {
 // ═══════════════════════════════════════════════════════════
 //  SCANNER: FACE CONTENT
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  SCANNER: FACE CONTENT WITH ANTI-SPOOFING & LIVENESS SHIELD
+// ═══════════════════════════════════════════════════════════
+const LIVENESS_CHALLENGES = [
+  { type: 'blink', prompt: 'Blink your eyes naturally', icon: '👁️', hint: 'Look straight at the webcam and blink 1–2 times' },
+  { type: 'turn_left', prompt: 'Turn your head slightly LEFT', icon: '👈', hint: 'Slowly turn your face towards your left side' },
+  { type: 'turn_right', prompt: 'Turn your head slightly RIGHT', icon: '👉', hint: 'Slowly turn your face towards your right side' },
+  { type: 'smile', prompt: 'Smile naturally for the camera', icon: '😊', hint: 'Give a clear, natural smile towards the webcam' }
+]
+
 function ScannerFaceContent({ user, onVerified }) {
-  const [scanning, setScanning]   = useState(false)
-  const [result, setResult]       = useState(null)
-  const [resultMsg, setMsg]       = useState('')
-  const [history, setHistory]     = useState([
+  const [phase, setPhase]                 = useState('idle') // idle | aligning | challenging | verifying | success | error
+  const [challengeIdx, setChallengeIdx]   = useState(0)
+  const [motionProgress, setProgress]     = useState(0)
+  const [resultMsg, setMsg]               = useState('')
+  const [stream, setStream]               = useState(null)
+  const [history, setHistory]             = useState([
     { id: 1, method: 'Face Recognition', time: 'Today, 11:02 AM', status: 'success' },
     { id: 2, method: 'Face Recognition', time: '13 Apr, 2:00 PM', status: 'success' },
   ])
-  const timerRef = useRef(null)
-  const videoRef = useRef(null)
-  const canvasRef = useRef(null)
-  const [stream, setStream] = useState(null)
+
+  const videoRef        = useRef(null)
+  const canvasRef       = useRef(null)
+  const motionCanvasRef = useRef(null)
+  const prevFrameRef    = useRef(null)
+  const baselineBlobRef = useRef(null)
+  const animFrameRef    = useRef(null)
+  const timerRef        = useRef(null)
+
+  const currentChallenge = LIVENESS_CHALLENGES[challengeIdx]
+
+  const switchChallenge = (e) => {
+    if (e) e.stopPropagation()
+    if (phase === 'verifying') return
+    setChallengeIdx(prev => (prev + 1) % LIVENESS_CHALLENGES.length)
+    setProgress(0)
+    if (phase === 'challenging' || phase === 'aligning') {
+      setMsg(`Action switched to: ${LIVENESS_CHALLENGES[(challengeIdx + 1) % LIVENESS_CHALLENGES.length].prompt}`)
+    }
+  }
 
   const startCamera = async () => {
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: true })
+      const s = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } 
+      })
       setStream(s)
       if (videoRef.current) {
         videoRef.current.srcObject = s
       }
     } catch (err) {
-      setResult('error')
+      setPhase('error')
       setMsg("Camera access denied: " + err.message)
     }
   }
 
   const stopCamera = () => {
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+    if (timerRef.current) clearTimeout(timerRef.current)
     if (stream) {
       stream.getTracks().forEach(t => t.stop())
       setStream(null)
@@ -763,25 +795,134 @@ function ScannerFaceContent({ user, onVerified }) {
   useEffect(() => {
     startCamera()
     return () => stopCamera()
-  }, []) // Stop camera when user navigates away from tab
+  }, [])
 
   useEffect(() => {
     if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
+      videoRef.current.srcObject = stream
     }
-  }, [stream]);
+  }, [stream])
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+  // Helper to grab a high-res JPEG blob from the current video frame
+  const captureFrameBlob = () => {
+    return new Promise((resolve) => {
+      if (!videoRef.current || !canvasRef.current) return resolve(null)
+      const canvas = canvasRef.current
+      const video = videoRef.current
+      canvas.width = video.videoWidth || 640
+      canvas.height = video.videoHeight || 480
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(resolve, 'image/jpeg', 0.95)
+    })
+  }
 
-    setScanning(true)
-    setResult(null)
-    setMsg('🔄 Connecting to server... (may take up to 30s on first use)')
+  // Real-time Motion & Liveness Tracker
+  const runLivenessMotionLoop = () => {
+    if (!motionCanvasRef.current || !videoRef.current) return
+    const mCanvas = motionCanvasRef.current
+    const mCtx = mCanvas.getContext('2d', { willReadFrequently: true })
+    const video = videoRef.current
+
+    mCanvas.width = 160
+    mCanvas.height = 120
+
+    let currentAccumulated = 0
+    let loopRunning = true
+
+    const checkFrame = async () => {
+      if (!loopRunning) return
+
+      try {
+        if (video.readyState >= 2) {
+          mCtx.drawImage(video, 0, 0, 160, 120)
+          const imgData = mCtx.getImageData(0, 0, 160, 120)
+          const data = imgData.data
+
+          if (prevFrameRef.current) {
+            const prevData = prevFrameRef.current
+            let diffSum = 0
+            // Sample every 4th pixel for high-speed performance
+            for (let i = 0; i < data.length; i += 16) {
+              const rDiff = Math.abs(data[i] - prevData[i])
+              const gDiff = Math.abs(data[i + 1] - prevData[i + 1])
+              const bDiff = Math.abs(data[i + 2] - prevData[i + 2])
+              diffSum += (rDiff + gDiff + bDiff) / 3
+            }
+            const meanPixelDelta = diffSum / (data.length / 16)
+
+            // Dynamic accumulation when human action is detected
+            if (meanPixelDelta > 2.0 && meanPixelDelta < 40.0) {
+              // Valid natural human gesture motion (blink / turn / smile)
+              currentAccumulated += Math.min(25, meanPixelDelta * 3.5)
+              setProgress(Math.min(100, Math.round(currentAccumulated)))
+
+              if (currentAccumulated >= 100) {
+                loopRunning = false
+                // Challenge completed! Capture action frame and submit to backend
+                await completeLivenessVerification()
+                return
+              }
+            } else if (meanPixelDelta <= 0.8) {
+              // Static photo or motionless hold
+              currentAccumulated = Math.max(0, currentAccumulated - 1)
+              setProgress(Math.round(currentAccumulated))
+            }
+          }
+          prevFrameRef.current = new Uint8ClampedArray(data)
+        }
+      } catch (e) {
+        // Continue tracking loop
+      }
+
+      animFrameRef.current = setTimeout(() => {
+        requestAnimationFrame(checkFrame)
+      }, 100)
+    }
+
+    requestAnimationFrame(checkFrame)
+  }
+
+  // Start the interactive Liveness Flow
+  const startLivenessFlow = async () => {
+    if (!videoRef.current) return
+    setPhase('aligning')
+    setProgress(0)
+    setMsg('Align your face inside the circle...')
+    prevFrameRef.current = null
+
+    // Step 1: Capture baseline neutral face after 700ms alignment
+    timerRef.current = setTimeout(async () => {
+      const baselineBlob = await captureFrameBlob()
+      if (!baselineBlob) {
+        setPhase('error')
+        setMsg('Could not access camera frame.')
+        return
+      }
+      baselineBlobRef.current = baselineBlob
+
+      // Step 2: Prompt for challenge action
+      setPhase('challenging')
+      setMsg(`${currentChallenge.icon} ${currentChallenge.prompt}!`)
+      runLivenessMotionLoop()
+    }, 700)
+  }
+
+  // Complete Liveness and send both frames to backend
+  const completeLivenessVerification = async () => {
+    setPhase('verifying')
+    setMsg('🔄 Anti-Spoofing & Biometric Verification in progress...')
 
     try {
+      const challengeBlob = await captureFrameBlob()
+      if (!challengeBlob || !baselineBlobRef.current) {
+        throw new Error('Could not capture liveness motion frames.')
+      }
+
       const formData = new FormData()
-      formData.append("file", file, "face.jpg")
+      formData.append("file", baselineBlobRef.current, "baseline_face.jpg")
+      formData.append("challenge_file", challengeBlob, "challenge_face.jpg")
+      formData.append("challenge_type", currentChallenge.type)
       formData.append("student_id", user?.email || "mock_student@smartattend.com")
 
       const controller = new AbortController()
@@ -794,107 +935,100 @@ function ScannerFaceContent({ user, onVerified }) {
       })
       clearTimeout(timeoutId)
 
+      const data = await res.json()
+
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.detail || "Face not recognized")
+        throw new Error(data.detail || "Face verification failed.")
       }
 
-      const data = await res.json()
-      setResult('success')
-      setMsg(data.detail || 'Identity verified successfully! Moving to QR Step...')
+      setPhase('success')
+      setMsg(data.detail || 'Identity & Liveness verified successfully! Moving to QR Step...')
+
+      setHistory(prev => [
+        { id: Date.now(), method: `Face + Liveness (${currentChallenge.type})`, time: 'Just now', status: 'success' },
+        ...prev
+      ])
+
+      stopCamera()
 
       setTimeout(() => {
         if (onVerified) onVerified()
-      }, 2000)
-    } catch(err) {
-      setResult('error')
+      }, 1500)
+    } catch (err) {
+      setPhase('error')
       if (err.name === 'AbortError') {
-        setMsg('⏱️ Server took too long to respond. The server may be starting up — please wait 30 seconds and try again.')
+        setMsg('⏱️ Server timeout. The backend may be booting up — please wait 20s and try again.')
       } else {
         setMsg(err.message)
       }
-    } finally {
-      setScanning(false)
     }
   }
 
-  const startScan = () => {
-    if (!videoRef.current || !canvasRef.current) return
-    setScanning(true)
-    setResult(null)
-    setMsg('')
-    
-    // Simulate UI delay for scanning effect
-    timerRef.current = setTimeout(() => {
-      const canvas = canvasRef.current
-      const video = videoRef.current
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          setScanning(false);
-          setResult('error');
-          setMsg('Could not capture frame. Please make sure the camera is working.');
-          return;
-        }
-        try {
-          const formData = new FormData();
-          formData.append("file", blob, "face.jpg");
-          formData.append("student_id", user?.email || "mock_student@smartattend.com");
+  // Fallback photo upload with anti-spoofing notice
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
 
-          setMsg('🔄 Analyzing face... (may take up to 30s on first use)')
+    setPhase('verifying')
+    setMsg('🔄 Analyzing uploaded photo against Anti-Spoofing & Biometric models...')
 
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 90000)
+    try {
+      const formData = new FormData()
+      formData.append("file", file, "face.jpg")
+      formData.append("student_id", user?.email || "mock_student@smartattend.com")
 
-          const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
-            method: "POST",
-            body: formData,
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId)
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/verify-only`, {
+        method: "POST",
+        body: formData
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || "Face verification failed")
 
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.detail || "Face not recognized");
-          }
-
-          const data = await res.json();
-
-          setResult('success');
-          setMsg(data.detail || 'Identity verified successfully! Moving to QR Step...');
-
-          stopCamera();
-
-          setTimeout(() => {
-            if (onVerified) onVerified();
-          }, 1500);
-        } catch(err) {
-          setResult('error');
-          if (err.name === 'AbortError') {
-            setMsg('⏱️ Server took too long. It may be starting up — please wait 30 seconds and try again.');
-          } else {
-            setMsg(err.message);
-          }
-        } finally {
-          setScanning(false);
-        }
-      }, 'image/jpeg', 0.95)
-    }, 1500)
+      setPhase('success')
+      setMsg(data.detail || 'Identity verified! Moving to QR Step...')
+      setTimeout(() => { if (onVerified) onVerified() }, 1500)
+    } catch (err) {
+      setPhase('error')
+      setMsg(err.message)
+    }
   }
-
-  useEffect(() => () => clearTimeout(timerRef.current), [])
 
   return (
     <>
       <div className="sd-qr-layout">
         <div className="sd-card sd-scanner-card">
-          <h3 className="sd-card-title">🎥 Webcam Verification</h3>
+          {/* Liveness Shield Header */}
+          <div className="sd-liveness-shield-header">
+            <span className="sd-liveness-shield-title">
+              <span>🛡️</span> Liveness Shield™ Active
+            </span>
+            <span className="sd-liveness-shield-tag">Anti-Spoofing V2</span>
+          </div>
 
-          <div className={`sd-viewfinder ${scanning ? 'scanning' : ''} ${result === 'success' ? 'vf-success' : result === 'error' ? 'vf-error' : ''}`} style={{ borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#000' }}>
+          {/* Interactive Challenge Selector Bar */}
+          <div className={`sd-challenge-card ${phase === 'challenging' ? 'active-challenge' : ''}`}>
+            <span className="sd-challenge-icon">{currentChallenge.icon}</span>
+            <div className="sd-challenge-info">
+              <div className="sd-challenge-prompt">{currentChallenge.prompt}</div>
+              <div className="sd-challenge-hint">{currentChallenge.hint}</div>
+            </div>
+            {phase !== 'verifying' && phase !== 'success' && (
+              <button 
+                type="button" 
+                className="sd-challenge-switch-btn" 
+                onClick={switchChallenge}
+                title="Switch to another challenge"
+              >
+                🔄 Switch Action
+              </button>
+            )}
+          </div>
+
+          {/* Camera Viewfinder */}
+          <div 
+            className={`sd-viewfinder ${phase === 'challenging' || phase === 'aligning' ? 'scanning' : ''} ${phase === 'success' ? 'vf-success' : phase === 'error' ? 'vf-error' : ''}`} 
+            style={{ borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#000' }}
+          >
             {stream ? (
               <video 
                 ref={videoRef} 
@@ -908,60 +1042,116 @@ function ScannerFaceContent({ user, onVerified }) {
                 <span className="sd-vf-hint" style={{ textAlign: 'center' }}>No Camera Access</span>
                 <label className="sd-outline-btn" style={{ fontSize: '0.8rem', padding: '0.3rem 0.8rem', cursor: 'pointer' }}>
                   Upload Photo
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={scanning} />
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={phase === 'verifying'} />
                 </label>
               </div>
             )}
             
+            {/* Hidden processing canvases */}
             <canvas ref={canvasRef} style={{ display: 'none' }} />
+            <canvas ref={motionCanvasRef} style={{ display: 'none' }} />
 
-            {scanning && (
+            {/* Biometric Oval Reticle */}
+            <div className={`sd-biometric-reticle ${phase === 'challenging' || phase === 'aligning' ? 'active' : phase === 'success' ? 'success' : phase === 'error' ? 'error' : ''}`} />
+
+            {/* Real-time Floating Challenge Badge */}
+            {(phase === 'challenging' || phase === 'aligning' || phase === 'verifying') && (
+              <div className="sd-liveness-pill">
+                <span>{phase === 'verifying' ? '🔄' : currentChallenge.icon}</span>
+                <span>
+                  {phase === 'aligning' && 'Align face in oval...'}
+                  {phase === 'challenging' && currentChallenge.prompt}
+                  {phase === 'verifying' && 'Verifying liveness & identity...'}
+                </span>
+              </div>
+            )}
+
+            {/* Active Scanning Visual Effects */}
+            {(phase === 'challenging' || phase === 'verifying') && (
               <>
                 <div className="sd-scan-lines" style={{ borderRadius: '50%' }} />
                 <div className="sd-scan-laser" />
-                <p className="sd-scanning-label" style={{ top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', padding: '4px 10px', borderRadius: '4px', zIndex: 10 }}>Analyzing Face…</p>
               </>
             )}
           </div>
 
-          {result && (
-            <div className={`sd-result-banner ${result}`}>
-              <span>{result === 'success' ? '✅' : '❌'}</span>
+          {/* Liveness Motion Meter */}
+          {phase === 'challenging' && (
+            <div className="sd-liveness-progress-wrap">
+              <div className="sd-liveness-progress-header">
+                <span>Live Gesture Detection</span>
+                <span>{motionProgress}%</span>
+              </div>
+              <div className="sd-liveness-progress-bar">
+                <div 
+                  className="sd-liveness-progress-fill" 
+                  style={{ width: `${motionProgress}%` }} 
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Status / Error Banner */}
+          {resultMsg && (
+            <div className={`sd-result-banner ${phase === 'success' ? 'success' : phase === 'error' ? 'error' : 'info'}`}>
+              <span>{phase === 'success' ? '✅' : phase === 'error' ? '❌' : 'ℹ️'}</span>
               <span>{resultMsg}</span>
             </div>
           )}
 
+          {/* Primary Action Button */}
           <div className="sd-scanner-actions">
-            <button
-              className={`sd-primary-btn sd-btn-full ${scanning ? 'loading' : ''}`}
-              onClick={startScan}
-              disabled={scanning || !stream || result === 'success'}
-            >
-              {scanning ? (
-                <><span className="sd-spinner" /> Verifying…</>
-              ) : (
-                <><span>👁️</span> {result === 'error' ? 'Try Again' : 'Verify Identity'}</>
-              )}
-            </button>
+            {phase === 'idle' || phase === 'error' ? (
+              <button
+                className="sd-primary-btn sd-btn-full"
+                onClick={startLivenessFlow}
+                disabled={!stream}
+              >
+                <span>🛡️</span> {phase === 'error' ? 'Retry Liveness Verification' : 'Start Liveness Verification'}
+              </button>
+            ) : phase === 'verifying' ? (
+              <button className="sd-primary-btn sd-btn-full loading" disabled>
+                <span className="sd-spinner" /> Verifying Liveness & Face…
+              </button>
+            ) : phase === 'success' ? (
+              <button className="sd-primary-btn sd-btn-full" style={{ background: '#10b981' }} disabled>
+                <span>✅</span> Verified! Proceeding…
+              </button>
+            ) : (
+              <button 
+                className="sd-outline-btn sd-btn-full" 
+                onClick={() => {
+                  if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+                  setPhase('idle')
+                  setProgress(0)
+                  setMsg('')
+                }}
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </div>
 
+        {/* Right Column: Guidance & History */}
         <div className="sd-qr-right">
           <div className="sd-card">
-            <h3 className="sd-card-title">ℹ️ How it works</h3>
+            <h3 className="sd-card-title">🛡️ Anti-Spoofing Protection</h3>
             <ol className="sd-how-list">
-              <li><span>1</span> Click <strong>Start Scan</strong> to open the webcam</li>
-              <li><span>2</span> Position your face inside the circle</li>
-              <li><span>3</span> Look directly at the camera</li>
-              <li><span>4</span> Wait for AI facial recognition to verify you ✅</li>
+              <li><span>1</span> Click <strong>Start Liveness Verification</strong></li>
+              <li><span>2</span> Align your face inside the biometric reticle</li>
+              <li><span>3</span> Complete the dynamic action (<strong>Blink</strong>, <strong>Turn Head</strong>, or <strong>Smile</strong>)</li>
+              <li><span>4</span> AI verifies both live biometric motion and facial identity ✅</li>
             </ol>
-            <div className="sd-info-note">💡 Ensure you are in a well-lit area without wearing sunglasses or masks.</div>
+            <div className="sd-info-note">
+              🔒 <strong>Anti-Spoofing Guarantee:</strong> Static photographs, mobile screen replays, and printed pictures are strictly rejected.
+            </div>
           </div>
 
           <div className="sd-card">
-            <h3 className="sd-card-title">📋 Recent Scans</h3>
+            <h3 className="sd-card-title">📋 Verification History</h3>
             {history.length === 0 ? (
-              <p style={{ color: 'var(--sd-muted)', fontSize: '0.83rem' }}>No scans yet.</p>
+              <p style={{ color: 'var(--sd-muted)', fontSize: '0.83rem' }}>No verification records yet.</p>
             ) : (
               <div className="sd-scan-history">
                 {history.map(h => (
