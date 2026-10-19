@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from '../hooks/useRouter'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import AttentifyLogo from './AttentifyLogo'
 import './FacultyDashboardPage.css'
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
@@ -976,7 +977,9 @@ export default function FacultyDashboardPage() {
       {/* Sidebar */}
       <aside className={`fd-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="fd-sidebar-brand">
-          <div className="fd-sidebar-logo">A</div>
+          <div className="fd-sidebar-logo">
+            <AttentifyLogo size={22} color="#ffffff" />
+          </div>
           <span className="fd-sidebar-name">ATTENTIFY</span>
         </div>
 

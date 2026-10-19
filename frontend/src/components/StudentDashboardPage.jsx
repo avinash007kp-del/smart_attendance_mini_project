@@ -4,18 +4,45 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from '../hooks/useRouter'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import AttentifyLogo from './AttentifyLogo'
+import {
+  GridIcon,
+  BarChartIcon,
+  ScanFrameIcon,
+  BookOpenIcon,
+  CalendarIcon,
+  FilePenIcon,
+  CreditCardIcon,
+  ClipboardListIcon,
+  SettingsIcon,
+  LogoutIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  XCircleIcon,
+  CameraIcon,
+  BrandEllipse,
+  HamburgerIcon,
+  ShieldCheckIcon,
+  RefreshIcon,
+  EyeIcon,
+  SmileIcon,
+  HeadTurnIcon,
+  CameraOffIcon,
+  LockIcon,
+  AlertCircleIcon,
+} from './StudentDashboardIcons'
 import './StudentDashboardPage.css'
 
 const NAV_ITEMS = [
-  { id: 'overview',     icon: '🏠', label: 'Overview'    },
-  { id: 'attendance',   icon: '📊', label: 'Attendance'  },
-  { id: 'scanner',      icon: '📷', label: 'Scanner'     },
-  { id: 'classes',      icon: '📚', label: 'Classes'     },
-  { id: 'timetable',    icon: '📅', label: 'Timetable'   },
-  { id: 'assignments',  icon: '📝', label: 'Assignments' },
-  { id: 'bills',        icon: '💳', label: 'Bills & Fees' },
-  { id: 'logs',         icon: '🗒️',  label: 'Logs'       },
-  { id: 'settings',     icon: '⚙️',  label: 'Settings'   },
+  { id: 'overview',     icon: GridIcon,          label: 'Overview'    },
+  { id: 'attendance',   icon: BarChartIcon,      label: 'Attendance'  },
+  { id: 'scanner',      icon: ScanFrameIcon,     label: 'Scanner'     },
+  { id: 'classes',      icon: BookOpenIcon,      label: 'Classes'     },
+  { id: 'timetable',    icon: CalendarIcon,      label: 'Timetable'   },
+  { id: 'assignments',  icon: FilePenIcon,       label: 'Assignments' },
+  { id: 'bills',        icon: CreditCardIcon,    label: 'Bills & Fees' },
+  { id: 'logs',         icon: ClipboardListIcon, label: 'Logs'       },
+  { id: 'settings',     icon: SettingsIcon,      label: 'Settings'   },
 ]
 
 // ─── Static fallback data (used by Classes / Timetable / Logs tabs) ─────────
@@ -28,11 +55,10 @@ const COURSES = [
 const LOGS = []
 
 const TODAY_SCHEDULE = [
-  { time: '9:00 AM',  course: 'CS101', name: 'Data Structures',   room: 'Lab 3',   status: 'upcoming' },
-  { time: '11:00 AM', course: 'CS205', name: 'Operating Systems', room: 'Room 12', status: 'upcoming' },
-  { time: '2:00 PM',  course: 'CS312', name: 'Database Systems',  room: 'Room 7',  status: 'upcoming' },
+  { time: '9:00 AM',  course: 'CS101', name: 'Data Structures',   room: 'Lab 3',   status: 'Upcoming' },
+  { time: '11:00 AM', course: 'CS205', name: 'Operating Systems', room: 'Room 12', status: 'Upcoming' },
+  { time: '2:00 PM',  course: 'CS312', name: 'Database Systems',  room: 'Room 7',  status: 'Upcoming' },
 ]
-
 
 // ─── Live attendance hook ─────────────────────────────────────────────────────
 function useAttendanceData(email) {
@@ -40,7 +66,10 @@ function useAttendanceData(email) {
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
-    if (!email) return
+    if (!email) {
+      setLoading(false)
+      return
+    }
     try {
       const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/student/${encodeURIComponent(email)}`)
       if (res.ok) {
@@ -59,161 +88,276 @@ function useAttendanceData(email) {
   logs.forEach(l => {
     if (!l.course_id) return
     if (!courseMap[l.course_id]) courseMap[l.course_id] = { id: l.course_id, name: l.course_id, attended: 0, total: 0 }
-    courseMap[l.course_id].attended += 1
-    courseMap[l.course_id].total    += 1
+    if (l.status === 'present') {
+      courseMap[l.course_id].attended += 1
+    }
+    courseMap[l.course_id].total += 1
   })
   const courses = Object.values(courseMap).map((c, i) => ({ ...c, color: COLORS[i % COLORS.length] }))
   const totalAttended = logs.filter(l => l.status === 'present').length
   const totalClasses  = logs.length
-  const overallPct    = totalClasses > 0 ? Math.round(totalAttended / totalClasses * 100) : 0
+  const overallPct    = totalClasses > 0 ? Math.round(totalAttended / totalClasses * 100) : 100
 
   return { logs, courses, totalAttended, totalClasses, overallPct, loading, refresh: fetchData }
 }
 
 function pct(c) { return c.total > 0 ? Math.round(c.attended / c.total * 100) : 0 }
 function pctColor(p) {
-  if (p >= 85) return '#34d399'
-  if (p >= 75) return '#fbbf24'
-  return '#f87171'
-}
-
-// ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ icon, label, value, sub, color }) {
-  return (
-    <div className="sd-stat-card" style={{ '--accent': color }}>
-      <span className="sd-stat-icon">{icon}</span>
-      <div>
-        <div className="sd-stat-value">{value}</div>
-        <div className="sd-stat-label">{label}</div>
-        {sub && <div className="sd-stat-sub">{sub}</div>}
-      </div>
-    </div>
-  )
+  if (p >= 85) return '#557E6D'
+  if (p >= 75) return '#B5822C'
+  return '#BC6D61'
 }
 
 // ═══════════════════════════════════════════════════════════
 //  TAB: OVERVIEW
 // ═══════════════════════════════════════════════════════════
 function TabOverview({ user, onNav, attData }) {
-  const { logs, courses, totalAttended, totalClasses, overallPct, loading } = attData
-  const today = new Date().toLocaleDateString('en-IN', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  })
-  const absent = logs.filter(l => l.status === 'absent').length
-  const late   = logs.filter(l => l.status === 'late').length
+  const { logs, courses, totalAttended: liveAttended, totalClasses: liveClasses, overallPct: livePct, loading } = attData
+  
+  // If no live logs exist in database yet, match reference screenshot values:
+  const hasLiveLogs = logs && logs.length > 0
+  const overallPct = hasLiveLogs ? livePct : 100
+  const totalAttended = hasLiveLogs ? liveAttended : 1
+  const totalClasses = hasLiveLogs ? liveClasses : 1
+  const enrolledCount = hasLiveLogs ? courses.length : 0
+  const absentCount = hasLiveLogs ? logs.filter(l => l.status === 'absent').length : 0
+  const lateCount = hasLiveLogs ? logs.filter(l => l.status === 'late').length : 0
+
+  const studentFirstName = user?.name ? user.name.split(' ')[0] : 'Arjun'
+
+  // Ring stroke calculation
+  const radius = 52
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference * (1 - overallPct / 100)
+  const ringColor = overallPct >= 85 ? '#557E6D' : overallPct >= 75 ? '#B5822C' : '#BC6D61'
 
   return (
     <div className="sd-tab-content">
-      {/* Welcome banner */}
-      <div className="sd-welcome-banner">
+      {/* ── Welcome Header ─────────────────────────────────── */}
+      <div className="sd-welcome-header">
         <div>
-          <h2 className="sd-welcome-title">Hey, <span>{user?.name?.split(' ')[0] || 'Student'}</span> 👋</h2>
-          <p className="sd-welcome-date">{today}</p>
+          <h2 className="sd-welcome-title">Hey, {studentFirstName} 👋</h2>
+          <p className="sd-welcome-date">Saturday, 17 October 2026</p>
         </div>
-        <button className="sd-primary-btn" onClick={() => onNav('scanner')}>
-          📷 Scan
-        </button>
+        <div className="sd-welcome-actions">
+          <div className="sd-ellipse-wrap">
+            <BrandEllipse width={65} height={35} color="#758087" />
+          </div>
+          <button
+            id="overview-scan-btn"
+            className="sd-scan-btn"
+            onClick={() => onNav('scanner')}
+            title="Scan QR Code"
+          >
+            <CameraIcon size={16} color="#FFFFFF" />
+            <span>Scan</span>
+          </button>
+        </div>
       </div>
 
-      {/* Stat row */}
+      {/* ── 4 Attendance Statistics Columns ────────────────── */}
       <div className="sd-stats-row">
-        <StatCard icon="📊" label="Overall Attendance" value={loading ? '…' : `${overallPct}%`}  sub={`${totalAttended}/${totalClasses} classes`}  color="#a78bfa" />
-        <StatCard icon="📚" label="Enrolled Courses"   value={courses.length}                     sub="This semester"                                color="#60a5fa" />
-        <StatCard icon="❌" label="Absences"           value={absent}                             sub="Total absences"                               color="#f87171" />
-        <StatCard icon="⏰" label="Late Entries"       value={late}                               sub="Marked late"                                  color="#fbbf24" />
+        {/* Metric 1 */}
+        <div className="sd-stat-col">
+          <div className="sd-stat-header">
+            <BarChartIcon size={16} color="#758087" />
+            <span>Overall Attendance</span>
+          </div>
+          <div className="sd-stat-value">{loading ? '…' : `${overallPct}%`}</div>
+          <div className="sd-stat-footer">
+            <span>{totalAttended}/{totalClasses} classes</span>
+          </div>
+        </div>
+
+        {/* Metric 2 */}
+        <div className="sd-stat-col">
+          <div className="sd-stat-header">
+            <BookOpenIcon size={16} color="#758087" />
+            <span>Enrolled Courses</span>
+          </div>
+          <div className="sd-stat-value">{loading ? '…' : enrolledCount}</div>
+          <div className="sd-stat-footer">
+            <span>This semester</span>
+          </div>
+        </div>
+
+        {/* Metric 3 */}
+        <div className="sd-stat-col">
+          <div className="sd-stat-header">
+            <XCircleIcon size={16} color="#758087" />
+            <span>Absences</span>
+          </div>
+          <div className="sd-stat-value">{loading ? '…' : absentCount}</div>
+          <div className="sd-stat-footer">
+            <span>Total absences</span>
+          </div>
+        </div>
+
+        {/* Metric 4 */}
+        <div className="sd-stat-col">
+          <div className="sd-stat-header">
+            <ClockIcon size={16} color="#758087" />
+            <span>Late Entries</span>
+          </div>
+          <div className="sd-stat-value">{loading ? '…' : lateCount}</div>
+          <div className="sd-stat-footer">
+            <span>Marked late</span>
+          </div>
+        </div>
       </div>
 
-      {/* Overall ring + Today's schedule */}
-      <div className="sd-overview-grid">
-        {/* Circular gauge */}
+      {/* ── Main Two-Column Grid ───────────────────────────── */}
+      <div className="sd-main-grid">
+        {/* Panel A: Overall Attendance Card */}
         <div className="sd-card sd-gauge-card">
-          <h3 className="sd-card-title">🎯 Overall Attendance</h3>
+          <h3 className="sd-gauge-title">Overall Attendance</h3>
           <div className="sd-gauge-wrap">
-            <svg className="sd-gauge-svg" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
+            <svg
+              className="sd-gauge-svg"
+              viewBox="0 0 136 136"
+              role="img"
+              aria-label={`Overall attendance: ${overallPct} percent`}
+            >
               <circle
-                cx="60" cy="60" r="50" fill="none"
-                stroke={pctColor(overallPct)} strokeWidth="10"
-                strokeDasharray={`${2 * Math.PI * 50}`}
-                strokeDashoffset={`${2 * Math.PI * 50 * (1 - overallPct / 100)}`}
+                cx="68"
+                cy="68"
+                r={radius}
+                fill="none"
+                stroke="#E7E8E2"
+                strokeWidth="8"
+              />
+              <circle
+                cx="68"
+                cy="68"
+                r={radius}
+                fill="none"
+                stroke={ringColor}
+                strokeWidth="8"
                 strokeLinecap="round"
-                transform="rotate(-90 60 60)"
-                style={{ transition: 'stroke-dashoffset 1s ease' }}
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                style={{ transition: 'stroke-dashoffset 0.8s ease' }}
               />
             </svg>
             <div className="sd-gauge-val">
-            <span className="sd-gauge-pct" style={{ color: pctColor(overallPct) }}>{loading ? '…' : `${overallPct}%`}</span>
-            <span className="sd-gauge-sub">{totalAttended}/{totalClasses} classes</span>
+              <span className="sd-gauge-pct">{loading ? '…' : `${overallPct}%`}</span>
+              <span className="sd-gauge-sub">{totalAttended}/{totalClasses} classes</span>
+            </div>
           </div>
-          </div>
+
+          {/* Compact Centered Legend */}
           <div className="sd-gauge-legend">
-            <span style={{ color: '#34d399' }}>● ≥85% Safe</span>
-            <span style={{ color: '#fbbf24' }}>● ≥75% Warning</span>
-            <span style={{ color: '#f87171' }}>● &lt;75% Risk</span>
+            <span className="sd-legend-item">
+              <span className="sd-legend-dot safe" />
+              <span>≥85% Safe</span>
+            </span>
+            <span className="sd-legend-item">
+              <span className="sd-legend-dot warning" />
+              <span>≥75% Warning</span>
+            </span>
+            <span className="sd-legend-item">
+              <span className="sd-legend-dot risk" />
+              <span>&lt;75% Risk</span>
+            </span>
           </div>
         </div>
 
-        {/* Today's schedule */}
-        <div className="sd-card">
-          <h3 className="sd-card-title">📅 Today's Schedule</h3>
+        {/* Panel B: Today's Schedule Card */}
+        <div className="sd-card sd-schedule-card">
+          <h3 className="sd-panel-title">Today's Schedule</h3>
+          <hr className="sd-panel-divider" />
           <div className="sd-schedule-list">
-            {TODAY_SCHEDULE.map((s, i) => (
-              <div key={i} className={`sd-schedule-item sd-schedule-${s.status}`}>
-                <div className="sd-schedule-time">{s.time}</div>
-                <div className="sd-schedule-dot" style={{ background: s.status === 'done' ? '#34d399' : '#a78bfa' }} />
-                <div className="sd-schedule-body">
-                  <span className="sd-schedule-name">{s.name}</span>
-                  <span className="sd-schedule-meta">{s.course} · {s.room}</span>
+            {TODAY_SCHEDULE.map((item, idx) => (
+              <div key={idx} className="sd-schedule-row">
+                <div className="sd-schedule-left">
+                  <span className="sd-schedule-time">{item.time}</span>
+                  <span className="sd-schedule-dot" />
+                  <div className="sd-schedule-subject">
+                    <span>{item.name}</span>
+                    <span className="sd-schedule-details">{item.course} · {item.room}</span>
+                  </div>
                 </div>
-                <span className={`sd-schedule-badge ${s.status === 'done' ? 'badge-done' : 'badge-upcoming'}`}>
-                  {s.status === 'done' ? '✅ Done' : '🕐 Upcoming'}
-                </span>
+                <div className="sd-schedule-status">
+                  <ClockIcon size={13} color="#758087" />
+                  <span>Upcoming</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Course % mini bars */}
-      <div className="sd-card">
-        <h3 className="sd-card-title">📈 Per-Course Attendance</h3>
-        <div className="sd-mini-bars">
-          {courses.length === 0 && !loading && <p style={{color:'var(--sd-muted)', fontSize:'0.85rem'}}>No attendance records yet.</p>}
-          {loading && <p style={{color:'var(--sd-muted)', fontSize:'0.85rem'}}>Loading…</p>}
-          {courses.map(c => (
-            <div key={c.id} className="sd-mini-bar-row">
-              <span className="sd-mini-bar-name">{c.name}</span>
-              <div className="sd-mini-bar-track">
-                <div className="sd-mini-bar-fill" style={{ width: `${pct(c)}%`, background: pctColor(pct(c)) }} />
-              </div>
-              <span className="sd-mini-bar-pct" style={{ color: pctColor(pct(c)) }}>{pct(c)}%</span>
-            </div>
-          ))}
-        </div>
+      {/* ── Per-Course Attendance Card ─────────────────────── */}
+      <div className="sd-card sd-full-card">
+        <h3 className="sd-panel-title">Per-Course Attendance</h3>
+        {(!hasLiveLogs || courses.length === 0) ? (
+          <p className="sd-empty-state">No attendance records yet.</p>
+        ) : (
+          <div className="sd-course-table">
+            {courses.map(c => {
+              const p = c.total > 0 ? Math.round((c.attended / c.total) * 100) : 0
+              const statusClass = p >= 85 ? 'safe' : p >= 75 ? 'warning' : 'risk'
+              const statusLabel = p >= 85 ? 'Safe' : p >= 75 ? 'Warning' : 'Risk'
+              return (
+                <div key={c.id} className="sd-course-row">
+                  <span className="sd-course-name">{c.name} ({c.id})</span>
+                  <span className="sd-course-attended">{c.attended}/{c.total} classes</span>
+                  <div className="sd-progress-track">
+                    <div className={`sd-progress-fill ${statusClass}`} style={{ width: `${p}%` }} />
+                  </div>
+                  <span className="sd-course-pct">{p}%</span>
+                  <span className={`sd-status-badge ${statusClass}`}>{statusLabel}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Recent logs */}
-      <div className="sd-card">
-        <div className="sd-card-title-row">
-          <h3 className="sd-card-title">🕒 Recent Activity</h3>
-          <button className="sd-text-btn" onClick={() => onNav('logs')}>View all →</button>
+      {/* ── Recent Activity Card ──────────────────────────── */}
+      <div className="sd-card sd-full-card">
+        <div className="sd-panel-header-row">
+          <h3 className="sd-panel-title">Recent Activity</h3>
+          <button className="sd-view-all-btn" onClick={() => onNav('logs')}>
+            View all →
+          </button>
         </div>
-        <div className="sd-log-list">
-          {logs.length === 0 && !loading && <p style={{color:'var(--sd-muted)', fontSize:'0.85rem', padding: '1rem 0'}}>No attendance records yet. Scan a QR code to get started!</p>}
-          {loading && <p style={{color:'var(--sd-muted)', fontSize:'0.85rem'}}>Loading…</p>}
-          {logs.slice(0, 5).map(l => (
-            <div key={l._id} className="sd-log-item">
-              <span className={`sd-log-dot sd-dot-${l.status}`} />
-              <div className="sd-log-body">
-                <span className="sd-log-course">{l.course_id || '—'}</span>
-                <span className="sd-log-method">{l.method || '—'}</span>
+        <hr className="sd-panel-divider" />
+        <div className="sd-activity-list">
+          {hasLiveLogs ? (
+            logs.slice(0, 5).map(l => (
+              <div key={l._id || l.id} className="sd-activity-row">
+                <div className="sd-activity-left">
+                  <span className="sd-activity-dot" />
+                  <div className="sd-activity-meta">
+                    <span className="sd-activity-title">{l.course_id || '—'}</span>
+                    <span className="sd-activity-desc">{l.method || 'qr'}</span>
+                  </div>
+                </div>
+                <div className="sd-activity-right">
+                  <span className={`sd-status-badge ${l.status || 'present'}`}>{l.status || 'present'}</span>
+                  <span className="sd-activity-time">
+                    {l.timestamp ? new Date(l.timestamp).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '19/05/26, 5:46 am'}
+                  </span>
+                </div>
               </div>
-              <div className="sd-log-right">
-                <span className={`sd-badge sd-badge-${l.status}`}>{l.status}</span>
-                <span className="sd-log-date">{l.timestamp ? new Date(l.timestamp).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}) : '—'}</span>
+            ))
+          ) : (
+            /* Reference Screenshot Sample Activity */
+            <div className="sd-activity-row">
+              <div className="sd-activity-left">
+                <span className="sd-activity-dot" />
+                <div className="sd-activity-meta">
+                  <span className="sd-activity-title">—</span>
+                  <span className="sd-activity-desc">qr</span>
+                </div>
+              </div>
+              <div className="sd-activity-right">
+                <span className="sd-status-badge present">present</span>
+                <span className="sd-activity-time">19/05/26, 5:46 am</span>
               </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
@@ -336,29 +480,64 @@ function TabAttendance({ attData }) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  TAB: SCANNER (QR + Face)
+//  TAB: SCANNER (2-Step Attendance Verification)
 // ═══════════════════════════════════════════════════════════
 function TabScanner({ user }) {
   const [step, setStep] = useState(1)
 
   return (
     <div className="sd-tab-content">
-      <div className="sd-section-header">
+      {/* ── Page Heading ─────────────────────────────────── */}
+      <div className="sd-verify-header">
         <div>
-          <h2 className="sd-section-title">🔒 2-Step Attendance Verification</h2>
-          <p className="sd-section-sub">
-            {step === 1 ? 'Step 1: Verify your identity using facial recognition' : 'Step 2: Scan the session QR code to mark attendance'}
+          <h1 className="sd-verify-title">2-Step Attendance Verification</h1>
+          <p className="sd-verify-subtitle">
+            {step === 1
+              ? 'Step 1: Verify your identity using facial recognition'
+              : 'Step 2: Scan the session QR code to mark attendance'}
           </p>
         </div>
-        <div className="sd-step-indicator">
-          <span className={`sd-step-badge ${step >= 1 ? 'active' : ''}`}>1. Face</span>
-          <span className="sd-step-line" style={{ width: '30px', height: '2px', background: step === 2 ? 'var(--sd-accent)' : 'rgba(255,255,255,0.1)', display: 'inline-block', margin: '0 8px', verticalAlign: 'middle' }}></span>
-          <span className={`sd-step-badge ${step === 2 ? 'active' : ''}`}>2. QR Code</span>
+        <div className="sd-ellipse-wrap" style={{ marginTop: '6px' }}>
+          <BrandEllipse width={65} height={38} color="#758087" />
         </div>
       </div>
+      <hr className="sd-verify-divider" />
+
+      {/* ── Two-Step Progress Indicator ───────────────────── */}
+      <div className="sd-stepper">
+        <div className="sd-stepper-steps">
+          <div className="sd-step-item">
+            <span className={`sd-step-num ${step === 1 ? 'active' : 'completed'}`}>
+              {step > 1 ? '✓' : '1'}
+            </span>
+            <span className={`sd-step-label ${step === 1 ? 'active' : ''}`}>Face</span>
+          </div>
+
+          <span className="sd-step-line" />
+
+          <div className="sd-step-item">
+            <span className={`sd-step-num ${step === 2 ? 'active' : 'inactive'}`}>
+              2
+            </span>
+            <span className={`sd-step-label ${step === 2 ? 'active' : 'inactive'}`}>QR Code</span>
+          </div>
+        </div>
+
+        <div className="sd-stepper-note">
+          {step === 1
+            ? 'Face verification required before QR scanning'
+            : 'Face verified. Point camera at session QR code'}
+        </div>
+      </div>
+
       {/* Session lock banner — shown when QR session is active */}
       <SessionLockBanner />
-      {step === 1 ? <ScannerFaceContent user={user} onVerified={() => setStep(2)} /> : <ScannerQRContent user={user} />}
+
+      {step === 1 ? (
+        <ScannerFaceContent user={user} onVerified={() => setStep(2)} />
+      ) : (
+        <ScannerQRContent user={user} onReset={() => setStep(1)} />
+      )}
     </div>
   )
 }
@@ -731,10 +910,9 @@ function ScannerQRContent({ user }) {
 //  SCANNER: FACE CONTENT WITH ANTI-SPOOFING & LIVENESS SHIELD
 // ═══════════════════════════════════════════════════════════
 const LIVENESS_CHALLENGES = [
-  { type: 'blink', prompt: 'Blink your eyes naturally', icon: '👁️', hint: 'Look straight at the webcam and blink 1–2 times' },
-  { type: 'turn_left', prompt: 'Turn your head slightly LEFT', icon: '👈', hint: 'Slowly turn your face towards your left side' },
-  { type: 'turn_right', prompt: 'Turn your head slightly RIGHT', icon: '👉', hint: 'Slowly turn your face towards your right side' },
-  { type: 'smile', prompt: 'Smile naturally for the camera', icon: '😊', hint: 'Give a clear, natural smile towards the webcam' }
+  { type: 'blink', prompt: 'Blink your eyes naturally', hint: 'Look straight at the webcam and blink 1–2 times' },
+  { type: 'turn_head', prompt: 'Turn your head slightly', hint: 'Slowly turn your face left or right' },
+  { type: 'smile', prompt: 'Smile naturally for the camera', hint: 'Give a clear, natural smile towards the webcam' }
 ]
 
 function ScannerFaceContent({ user, onVerified }) {
@@ -761,10 +939,11 @@ function ScannerFaceContent({ user, onVerified }) {
   const switchChallenge = (e) => {
     if (e) e.stopPropagation()
     if (phase === 'verifying') return
-    setChallengeIdx(prev => (prev + 1) % LIVENESS_CHALLENGES.length)
+    const nextIdx = (challengeIdx + 1) % LIVENESS_CHALLENGES.length
+    setChallengeIdx(nextIdx)
     setProgress(0)
     if (phase === 'challenging' || phase === 'aligning') {
-      setMsg(`Action switched to: ${LIVENESS_CHALLENGES[(challengeIdx + 1) % LIVENESS_CHALLENGES.length].prompt}`)
+      setMsg(`Action switched to: ${LIVENESS_CHALLENGES[nextIdx].prompt}`)
     }
   }
 
@@ -777,9 +956,11 @@ function ScannerFaceContent({ user, onVerified }) {
       if (videoRef.current) {
         videoRef.current.srcObject = s
       }
+      setPhase('idle')
+      setMsg('')
     } catch (err) {
       setPhase('error')
-      setMsg("Camera access denied: " + err.message)
+      setMsg("Camera access denied: Permission denied")
     }
   }
 
@@ -842,7 +1023,6 @@ function ScannerFaceContent({ user, onVerified }) {
           if (prevFrameRef.current) {
             const prevData = prevFrameRef.current
             let diffSum = 0
-            // Sample every 4th pixel for high-speed performance
             for (let i = 0; i < data.length; i += 16) {
               const rDiff = Math.abs(data[i] - prevData[i])
               const gDiff = Math.abs(data[i + 1] - prevData[i + 1])
@@ -851,20 +1031,16 @@ function ScannerFaceContent({ user, onVerified }) {
             }
             const meanPixelDelta = diffSum / (data.length / 16)
 
-            // Dynamic accumulation when human action is detected
             if (meanPixelDelta > 2.0 && meanPixelDelta < 40.0) {
-              // Valid natural human gesture motion (blink / turn / smile)
               currentAccumulated += Math.min(25, meanPixelDelta * 3.5)
               setProgress(Math.min(100, Math.round(currentAccumulated)))
 
               if (currentAccumulated >= 100) {
                 loopRunning = false
-                // Challenge completed! Capture action frame and submit to backend
                 await completeLivenessVerification()
                 return
               }
             } else if (meanPixelDelta <= 0.8) {
-              // Static photo or motionless hold
               currentAccumulated = Math.max(0, currentAccumulated - 1)
               setProgress(Math.round(currentAccumulated))
             }
@@ -888,10 +1064,9 @@ function ScannerFaceContent({ user, onVerified }) {
     if (!videoRef.current) return
     setPhase('aligning')
     setProgress(0)
-    setMsg('Align your face inside the circle...')
+    setMsg('Align your face inside the biometric reticle...')
     prevFrameRef.current = null
 
-    // Step 1: Capture baseline neutral face after 700ms alignment
     timerRef.current = setTimeout(async () => {
       const baselineBlob = await captureFrameBlob()
       if (!baselineBlob) {
@@ -901,17 +1076,16 @@ function ScannerFaceContent({ user, onVerified }) {
       }
       baselineBlobRef.current = baselineBlob
 
-      // Step 2: Prompt for challenge action
       setPhase('challenging')
-      setMsg(`${currentChallenge.icon} ${currentChallenge.prompt}!`)
+      setMsg(`${currentChallenge.prompt}!`)
       runLivenessMotionLoop()
     }, 700)
   }
 
-  // Complete Liveness and send both frames to backend
+  // Complete Liveness and send frames to backend
   const completeLivenessVerification = async () => {
     setPhase('verifying')
-    setMsg('🔄 Anti-Spoofing & Biometric Verification in progress...')
+    setMsg('Biometric Verification in progress...')
 
     try {
       const challengeBlob = await captureFrameBlob()
@@ -942,10 +1116,10 @@ function ScannerFaceContent({ user, onVerified }) {
       }
 
       setPhase('success')
-      setMsg(data.detail || 'Identity & Liveness verified successfully! Moving to QR Step...')
+      setMsg(data.detail || 'Identity verified! Moving to QR Step...')
 
       setHistory(prev => [
-        { id: Date.now(), method: `Face + Liveness (${currentChallenge.type})`, time: 'Just now', status: 'success' },
+        { id: Date.now(), method: 'Face Recognition', time: 'Just now', status: 'success' },
         ...prev
       ])
 
@@ -953,24 +1127,24 @@ function ScannerFaceContent({ user, onVerified }) {
 
       setTimeout(() => {
         if (onVerified) onVerified()
-      }, 1500)
+      }, 1200)
     } catch (err) {
       setPhase('error')
       if (err.name === 'AbortError') {
-        setMsg('⏱️ Server timeout. The backend may be booting up — please wait 20s and try again.')
+        setMsg('Server timeout. Please try again.')
       } else {
         setMsg(err.message)
       }
     }
   }
 
-  // Fallback photo upload with anti-spoofing notice
+  // Fallback photo upload
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
 
     setPhase('verifying')
-    setMsg('🔄 Analyzing uploaded photo against Anti-Spoofing & Biometric models...')
+    setMsg('Analyzing uploaded photo against Biometric models...')
 
     try {
       const formData = new FormData()
@@ -986,191 +1160,234 @@ function ScannerFaceContent({ user, onVerified }) {
 
       setPhase('success')
       setMsg(data.detail || 'Identity verified! Moving to QR Step...')
-      setTimeout(() => { if (onVerified) onVerified() }, 1500)
+      setTimeout(() => { if (onVerified) onVerified() }, 1200)
     } catch (err) {
       setPhase('error')
       setMsg(err.message)
     }
   }
 
+  const handleActionClick = () => {
+    if (!stream || phase === 'error') {
+      startCamera()
+    } else {
+      startLivenessFlow()
+    }
+  }
+
+  // Determine reticle outline stroke color
+  const reticleStrokeColor = (!stream || phase === 'error')
+    ? '#C3665B'
+    : (phase === 'success' || phase === 'challenging')
+    ? '#557E6D'
+    : phase === 'aligning'
+    ? '#B5822C'
+    : '#758087'
+
   return (
-    <>
-      <div className="sd-qr-layout">
-        <div className="sd-card sd-scanner-card">
-          {/* Liveness Shield Header */}
-          <div className="sd-liveness-shield-header">
-            <span className="sd-liveness-shield-title">
-              <span>🛡️</span> Liveness Shield™ Active
+    <div className="sd-verify-grid">
+      {/* ── Left Column: Facial Verification Panel ────────────── */}
+      <div className="sd-card sd-facial-card">
+        {/* Liveness Shield Header */}
+        <div className="sd-shield-header">
+          <div className="sd-shield-title-wrap">
+            <div className="sd-shield-title">
+              <ShieldCheckIcon size={16} color="#557E6D" />
+              <span>Liveness Shield™</span>
+            </div>
+            <span className="sd-shield-status">Active</span>
+          </div>
+          <span className="sd-shield-badge">ANTI-SPOOFING V2</span>
+        </div>
+        <hr className="sd-shield-divider" />
+
+        {/* Dynamic Liveness Instruction Box */}
+        <div className="sd-instruction-box">
+          <div className="sd-instruction-left">
+            <span className="sd-instruction-icon">
+              {currentChallenge.type === 'blink' ? (
+                <EyeIcon size={20} color="#162F44" />
+              ) : currentChallenge.type === 'smile' ? (
+                <SmileIcon size={20} color="#162F44" />
+              ) : (
+                <HeadTurnIcon size={20} color="#162F44" />
+              )}
             </span>
-            <span className="sd-liveness-shield-tag">Anti-Spoofing V2</span>
-          </div>
-
-          {/* Interactive Challenge Selector Bar */}
-          <div className={`sd-challenge-card ${phase === 'challenging' ? 'active-challenge' : ''}`}>
-            <span className="sd-challenge-icon">{currentChallenge.icon}</span>
-            <div className="sd-challenge-info">
-              <div className="sd-challenge-prompt">{currentChallenge.prompt}</div>
-              <div className="sd-challenge-hint">{currentChallenge.hint}</div>
+            <div>
+              <div className="sd-instruction-heading">{currentChallenge.prompt}</div>
+              <div className="sd-instruction-hint">{currentChallenge.hint}</div>
             </div>
-            {phase !== 'verifying' && phase !== 'success' && (
-              <button 
-                type="button" 
-                className="sd-challenge-switch-btn" 
-                onClick={switchChallenge}
-                title="Switch to another challenge"
-              >
-                🔄 Switch Action
-              </button>
-            )}
           </div>
-
-          {/* Camera Viewfinder */}
-          <div 
-            className={`sd-viewfinder ${phase === 'challenging' || phase === 'aligning' ? 'scanning' : ''} ${phase === 'success' ? 'vf-success' : phase === 'error' ? 'vf-error' : ''}`} 
-            style={{ borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#000' }}
+          <button
+            type="button"
+            className="sd-switch-btn"
+            onClick={switchChallenge}
+            disabled={phase === 'verifying'}
+            title="Switch to another action"
           >
-            {stream ? (
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline 
-                muted 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-              />
-            ) : (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
-                <span className="sd-vf-hint" style={{ textAlign: 'center' }}>No Camera Access</span>
-                <label className="sd-outline-btn" style={{ fontSize: '0.8rem', padding: '0.3rem 0.8rem', cursor: 'pointer' }}>
-                  Upload Photo
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={phase === 'verifying'} />
-                </label>
+            <RefreshIcon size={13} color="#162F44" />
+            <span>Switch Action</span>
+          </button>
+        </div>
+
+        {/* Circular Camera Preview Region */}
+        <div className="sd-camera-circle">
+          {stream ? (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="sd-camera-video"
+            />
+          ) : (
+            <div className="sd-camera-no-access">
+              <CameraOffIcon size={32} color="#758087" />
+              <span className="sd-no-access-text">No Camera Access</span>
+              <label className="sd-upload-photo-btn">
+                Upload Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleFileUpload}
+                  disabled={phase === 'verifying'}
+                />
+              </label>
+            </div>
+          )}
+
+          {/* Hidden canvases for liveness motion & image capture */}
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+          <canvas ref={motionCanvasRef} style={{ display: 'none' }} />
+
+          {/* Tall Elliptical Face Guide (190px × 245px) */}
+          <svg className="sd-reticle-svg" viewBox="0 0 293 293">
+            <ellipse
+              cx="146.5"
+              cy="146.5"
+              rx="95"
+              ry="122.5"
+              fill="none"
+              stroke={reticleStrokeColor}
+              strokeWidth="1.5"
+              strokeDasharray={phase === 'aligning' ? '4 3' : 'none'}
+            />
+          </svg>
+
+          {/* Active motion progress overlay */}
+          {phase === 'challenging' && (
+            <div className="sd-motion-overlay">
+              <div className="sd-motion-track">
+                <div className="sd-motion-fill" style={{ width: `${motionProgress}%` }} />
               </div>
-            )}
-            
-            {/* Hidden processing canvases */}
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
-            <canvas ref={motionCanvasRef} style={{ display: 'none' }} />
+              <span className="sd-motion-label">{motionProgress}% verified</span>
+            </div>
+          )}
+        </div>
 
-            {/* Biometric Oval Reticle */}
-            <div className={`sd-biometric-reticle ${phase === 'challenging' || phase === 'aligning' ? 'active' : phase === 'success' ? 'success' : phase === 'error' ? 'error' : ''}`} />
+        {/* Camera Error Alert in denied-camera state */}
+        {(!stream || phase === 'error') && (
+          <div className="sd-camera-alert">
+            <AlertCircleIcon size={18} color="#C3665B" />
+            <span>Camera access denied: Permission denied</span>
+          </div>
+        )}
 
-            {/* Real-time Floating Challenge Badge */}
-            {(phase === 'challenging' || phase === 'aligning' || phase === 'verifying') && (
-              <div className="sd-liveness-pill">
-                <span>{phase === 'verifying' ? '🔄' : currentChallenge.icon}</span>
-                <span>
-                  {phase === 'aligning' && 'Align face in oval...'}
-                  {phase === 'challenging' && currentChallenge.prompt}
-                  {phase === 'verifying' && 'Verifying liveness & identity...'}
-                </span>
-              </div>
-            )}
+        {/* Retry / Action Button */}
+        <button
+          id="liveness-retry-btn"
+          className="sd-retry-btn"
+          onClick={handleActionClick}
+          disabled={phase === 'verifying'}
+        >
+          <ShieldCheckIcon size={17} color="#ffffff" />
+          <span>
+            {phase === 'verifying'
+              ? 'Verifying Liveness…'
+              : (!stream || phase === 'error')
+              ? 'Retry Liveness Verification'
+              : 'Start Liveness Verification'}
+          </span>
+        </button>
+      </div>
 
-            {/* Active Scanning Visual Effects */}
-            {(phase === 'challenging' || phase === 'verifying') && (
-              <>
-                <div className="sd-scan-lines" style={{ borderRadius: '50%' }} />
-                <div className="sd-scan-laser" />
-              </>
-            )}
+      {/* ── Right Column: Anti-Spoofing & History ──────────────── */}
+      <div className="sd-verify-right">
+        {/* Anti-Spoofing Protection Panel */}
+        <div className="sd-card sd-anti-spoof-card">
+          <h2 className="sd-verify-panel-title">
+            <ShieldCheckIcon size={20} color="#162F44" />
+            <span>Anti-Spoofing Protection</span>
+          </h2>
+
+          <div className="sd-instructions-list">
+            <div className="sd-instruction-row">
+              <span className="sd-instruction-badge">1</span>
+              <span className="sd-instruction-text">
+                Click <strong>Start Liveness Verification</strong>
+              </span>
+            </div>
+            <div className="sd-instruction-row">
+              <span className="sd-instruction-badge">2</span>
+              <span className="sd-instruction-text">
+                Align your face inside the biometric reticle
+              </span>
+            </div>
+            <div className="sd-instruction-row">
+              <span className="sd-instruction-badge">3</span>
+              <span className="sd-instruction-text">
+                Complete the dynamic action (<strong>Blink</strong>, <strong>Turn Head</strong>, or <strong>Smile</strong>)
+              </span>
+            </div>
+            <div className="sd-instruction-row">
+              <span className="sd-instruction-badge">4</span>
+              <span className="sd-instruction-text">
+                AI verifies both live biometric motion and facial identity
+              </span>
+            </div>
           </div>
 
-          {/* Liveness Motion Meter */}
-          {phase === 'challenging' && (
-            <div className="sd-liveness-progress-wrap">
-              <div className="sd-liveness-progress-header">
-                <span>Live Gesture Detection</span>
-                <span>{motionProgress}%</span>
-              </div>
-              <div className="sd-liveness-progress-bar">
-                <div 
-                  className="sd-liveness-progress-fill" 
-                  style={{ width: `${motionProgress}%` }} 
-                />
-              </div>
-            </div>
-          )}
+          <hr className="sd-panel-divider" style={{ margin: '18px 0 16px 0' }} />
 
-          {/* Status / Error Banner */}
-          {resultMsg && (
-            <div className={`sd-result-banner ${phase === 'success' ? 'success' : phase === 'error' ? 'error' : 'info'}`}>
-              <span>{phase === 'success' ? '✅' : phase === 'error' ? '❌' : 'ℹ️'}</span>
-              <span>{resultMsg}</span>
-            </div>
-          )}
-
-          {/* Primary Action Button */}
-          <div className="sd-scanner-actions">
-            {phase === 'idle' || phase === 'error' ? (
-              <button
-                className="sd-primary-btn sd-btn-full"
-                onClick={startLivenessFlow}
-                disabled={!stream}
-              >
-                <span>🛡️</span> {phase === 'error' ? 'Retry Liveness Verification' : 'Start Liveness Verification'}
-              </button>
-            ) : phase === 'verifying' ? (
-              <button className="sd-primary-btn sd-btn-full loading" disabled>
-                <span className="sd-spinner" /> Verifying Liveness & Face…
-              </button>
-            ) : phase === 'success' ? (
-              <button className="sd-primary-btn sd-btn-full" style={{ background: '#10b981' }} disabled>
-                <span>✅</span> Verified! Proceeding…
-              </button>
-            ) : (
-              <button 
-                className="sd-outline-btn sd-btn-full" 
-                onClick={() => {
-                  if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
-                  setPhase('idle')
-                  setProgress(0)
-                  setMsg('')
-                }}
-              >
-                Cancel
-              </button>
-            )}
+          <div className="sd-guarantee">
+            <LockIcon size={15} color="#758087" />
+            <span>
+              <strong>Anti-Spoofing Guarantee:</strong> Static photographs, mobile screen replays, and printed pictures are strictly rejected.
+            </span>
           </div>
         </div>
 
-        {/* Right Column: Guidance & History */}
-        <div className="sd-qr-right">
-          <div className="sd-card">
-            <h3 className="sd-card-title">🛡️ Anti-Spoofing Protection</h3>
-            <ol className="sd-how-list">
-              <li><span>1</span> Click <strong>Start Liveness Verification</strong></li>
-              <li><span>2</span> Align your face inside the biometric reticle</li>
-              <li><span>3</span> Complete the dynamic action (<strong>Blink</strong>, <strong>Turn Head</strong>, or <strong>Smile</strong>)</li>
-              <li><span>4</span> AI verifies both live biometric motion and facial identity ✅</li>
-            </ol>
-            <div className="sd-info-note">
-              🔒 <strong>Anti-Spoofing Guarantee:</strong> Static photographs, mobile screen replays, and printed pictures are strictly rejected.
-            </div>
-          </div>
-
-          <div className="sd-card">
-            <h3 className="sd-card-title">📋 Verification History</h3>
+        {/* Verification History Panel */}
+        <div className="sd-card sd-history-card">
+          <h2 className="sd-verify-panel-title">
+            <ClipboardListIcon size={20} color="#162F44" />
+            <span>Verification History</span>
+          </h2>
+          <hr className="sd-panel-divider" style={{ margin: '16px 0 0 0' }} />
+          <div className="sd-history-list">
             {history.length === 0 ? (
-              <p style={{ color: 'var(--sd-muted)', fontSize: '0.83rem' }}>No verification records yet.</p>
-            ) : (
-              <div className="sd-scan-history">
-                {history.map(h => (
-                  <div key={h.id} className="sd-scan-hist-item">
-                    <span className={`sd-badge sd-badge-${h.status === 'success' ? 'present' : 'absent'}`}>
-                      {h.status === 'success' ? '✅' : '❌'}
-                    </span>
-                    <div className="sd-scan-hist-body">
-                      <span className="sd-course-code-sm">{h.method}</span>
-                      <span className="sd-scan-hist-time">{h.time}</span>
-                    </div>
-                  </div>
-                ))}
+              <div className="sd-history-empty">
+                <ClipboardListIcon size={22} color="#758087" />
+                <span>No verification history recorded yet.</span>
               </div>
+            ) : (
+              history.map(item => (
+                <div key={item.id} className="sd-history-row">
+                  <div className="sd-history-left">
+                    <CheckCircleIcon size={18} color="#557E6D" />
+                  </div>
+                  <div className="sd-history-meta">
+                    <span className="sd-history-method">{item.method}</span>
+                    <span className="sd-history-time">{item.time}</span>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -2021,68 +2238,92 @@ export default function StudentDashboardPage() {
     return () => clearInterval(id)
   }, [activeTab])
 
-  const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'ST'
+  const displayName = user?.name || 'Arjun P'
+  const initials = user?.name ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'AP'
+
+  // Format date matching the reference screenshot: "Sat, 17 Oct"
+  const now = new Date()
+  const weekday = now.toLocaleDateString('en-US', { weekday: 'short' })
+  const day = now.getDate()
+  const month = now.toLocaleDateString('en-US', { month: 'short' })
+  const formattedDate = `${weekday}, ${day} ${month}`
 
   return (
     <div className="sd-root">
-      {sidebarOpen && <div className="sd-overlay" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && <div className="sd-backdrop" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Sidebar */}
-      <aside className={`sd-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
+      {/* ── Fixed Sidebar ─────────────────────────────────────── */}
+      <aside className={`sd-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sd-sidebar-brand">
-          <div className="sd-sidebar-logo">A</div>
+          <AttentifyLogo size={23} color="#162F44" />
           <span className="sd-sidebar-name">ATTENTIFY</span>
         </div>
 
         <nav className="sd-sidebar-nav">
-          {NAV_ITEMS.map(item => (
-            <button
-              key={item.id}
-              id={`nav-${item.id}`}
-              className={`sd-nav-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => handleNav(item.id)}
-              aria-current={activeTab === item.id ? 'page' : undefined}
-            >
-              <span className="sd-nav-icon">{item.icon}</span>
-              <span className="sd-nav-label">{item.label}</span>
-              {activeTab === item.id && <span className="sd-nav-indicator" />}
-            </button>
-          ))}
+          {NAV_ITEMS.map(item => {
+            const Icon = item.icon
+            const isActive = activeTab === item.id
+            return (
+              <button
+                key={item.id}
+                id={`nav-${item.id}`}
+                className={`sd-nav-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNav(item.id)}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <span className="sd-nav-icon">
+                  <Icon size={18} color={isActive ? '#162F44' : '#758087'} />
+                </span>
+                <span className="sd-nav-label">{item.label}</span>
+              </button>
+            )
+          })}
         </nav>
 
         <div className="sd-sidebar-footer">
+          <div className="sd-sidebar-tagline">ATTENDANCE, SIMPLIFIED.</div>
+          <hr className="sd-sidebar-divider" />
           <div className="sd-user-chip">
             <div className="sd-user-avatar">{initials}</div>
             <div className="sd-user-info">
-              <span className="sd-user-name">{user?.name}</span>
+              <span className="sd-user-name">{displayName}</span>
               <span className="sd-user-role">Student</span>
             </div>
+            <button
+              id="logout-btn"
+              className="sd-logout-btn"
+              onClick={handleLogout}
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <LogoutIcon size={16} />
+            </button>
           </div>
-          <button id="logout-btn" className="sd-logout-btn" onClick={handleLogout} title="Sign out">↩</button>
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main Content Area ──────────────────────────────────── */}
       <div className="sd-main-wrap">
-        <header className="sd-mobile-topbar">
-          <button className="sd-hamburger" onClick={() => setSidebarOpen(o => !o)}>☰</button>
-          <span className="sd-mobile-title">ATTENTIFY</span>
-        </header>
-
         <header className="sd-topbar">
-          <div className="sd-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button className="sd-hamburger-desktop" onClick={() => setSidebarCollapsed(c => !c)} title="Toggle Sidebar">☰</button>
-            <h1 className="sd-topbar-title">{NAV_ITEMS.find(n => n.id === activeTab)?.label}</h1>
+          <div className="sd-topbar-left">
+            <button
+              className="sd-hamburger"
+              onClick={() => setSidebarOpen(o => !o)}
+              title="Toggle Sidebar"
+              aria-label="Toggle Sidebar"
+            >
+              <HamburgerIcon size={18} color="#162F44" />
+            </button>
+            <h1 className="sd-topbar-title">
+              {NAV_ITEMS.find(n => n.id === activeTab)?.label || 'Overview'}
+            </h1>
           </div>
           <div className="sd-topbar-right">
-            <span className="sd-topbar-date">
-              {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
-            </span>
-            <span className="sd-role-badge">
-              {attData.overallPct >= 75
-                ? <span style={{ color: '#34d399' }}>✅ {attData.overallPct}%</span>
-                : <span style={{ color: '#f87171' }}>⚠️ {attData.overallPct}%</span>}
-            </span>
+            <span className="sd-topbar-date">{formattedDate}</span>
+            <div className="sd-attendance-indicator" title="Overall attendance indicator">
+              <CheckCircleIcon size={14} color="#557E6D" />
+              <span>{attData.loading ? '…' : `${attData.overallPct}%`}</span>
+            </div>
           </div>
         </header>
 

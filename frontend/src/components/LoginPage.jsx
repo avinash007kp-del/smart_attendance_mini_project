@@ -3,36 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
+import AttentifyLogo from './AttentifyLogo';
 import './LoginPage.css';
 
 // ─────────────────────────────────────────────────────────────
 // 1. BRAND LOGO COMPONENT
-// Minimal geometric monogram logo resembling a thin-line, abstract letter A
+// Minimalist geometric monogram logo: letter A with open circular arc
 // ─────────────────────────────────────────────────────────────
 function BrandLogo() {
   return (
     <div className="att-brand">
-      <svg
-        className="att-logo-icon"
-        viewBox="0 0 36 36"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-label="Attentify Monogram"
-      >
-        {/* Geometric thin-line abstract letter A */}
-        <path
-          d="M18 3.5L5 32.5H10.5L18 15L25.5 32.5H31L18 3.5Z"
-          fill="#142E43"
-        />
-        <rect
-          x="11"
-          y="23"
-          width="14"
-          height="2"
-          fill="#142E43"
-          rx="0.5"
-        />
-      </svg>
+      <AttentifyLogo size={32} color="#142E43" className="att-logo-icon" />
       <span className="att-brand-name">ATTENTIFY</span>
     </div>
   );
