@@ -8,31 +8,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
-        const path = window.location.pathname;
-        if (path.includes('/student')) {
-          const studentUser = {
-            name: 'Arjun P',
-            email: 'arjun.student@attentify.ac.in',
-            role: 'student',
-            dept: 'CS',
-            token: 'demo_token'
-          };
-          localStorage.setItem('sa_user', JSON.stringify(studentUser));
-          return studentUser;
-        }
-
         const saved = localStorage.getItem('sa_user');
-        if (saved) return JSON.parse(saved);
-        // Default admin profile for seamless dashboard viewing and offline resilience
-        const defaultAdmin = {
-          name: 'ARJUN P',
-          email: 'arjun.admin@attentify.ac.in',
-          role: 'admin',
-          dept: 'CS',
-          token: 'demo_token'
-        };
-        localStorage.setItem('sa_user', JSON.stringify(defaultAdmin));
-        return defaultAdmin;
+        return saved ? JSON.parse(saved) : null;
       } catch {
         return null;
       }
@@ -70,20 +47,6 @@ export function AuthProvider({ children }) {
       return userData;
     } catch (err) {
       setLoading(false);
-      // Fallback for offline development / preview when backend is not actively running
-      if (err.name === 'TypeError' || err.message?.includes('Failed to fetch')) {
-        const demoRole = email.includes('student') ? 'student' : email.includes('teacher') || email.includes('faculty') ? 'teacher' : 'admin';
-        const demoUser = {
-          name: email.includes('admin') ? 'ARJUN P' : email.split('@')[0].replace('.', ' ').toUpperCase(),
-          email: email,
-          role: demoRole,
-          dept: 'CS',
-          token: 'demo_token_offline'
-        };
-        localStorage.setItem('sa_user', JSON.stringify(demoUser));
-        setUser(demoUser);
-        return demoUser;
-      }
       const msg = typeof err.message === 'string' ? err.message : "An unexpected error occurred";
       setError(msg);
       throw err;
@@ -117,8 +80,11 @@ export function AuthProvider({ children }) {
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem('sa_user')
-    setUser(null)
+    localStorage.removeItem('sa_user');
+    setUser(null);
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   }, [])
 
   const clearError = useCallback(() => setError(null), [])
