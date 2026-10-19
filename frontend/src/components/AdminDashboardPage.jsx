@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
 import AttentifyLogo from './AttentifyLogo';
@@ -21,7 +19,8 @@ import {
   BellIcon,
   LockIcon,
   ClipboardListIcon,
-  BrandEllipse
+  BrandEllipse,
+  CameraIcon
 } from './AdminDashboardIcons';
 import './AdminDashboardPage.css';
 
@@ -449,6 +448,234 @@ function TabDepartments({ onShowToast }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  MODAL: DEDICATED STUDENT FACE REGISTRATION
+// ═══════════════════════════════════════════════════════════════
+function FaceRegistrationModal({ student, onClose, onSuccess, onShowToast }) {
+  const [method, setMethod] = useState('camera'); // 'camera' | 'upload'
+  const [stream, setStream] = useState(null);
+  const [photoBlob, setPhotoBlob] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const videoRef = React.useRef(null);
+
+  const startCamera = async () => {
+    setErrorMsg(null);
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+      });
+      setStream(s);
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+      }
+    } catch (e) {
+      setErrorMsg("Camera access denied or unavailable: " + e.message);
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      setStream(null);
+    }
+  };
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, method]);
+
+  useEffect(() => {
+    if (method === 'camera' && !photoPreview) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => stopCamera();
+  }, [method, photoPreview]);
+
+  const captureSnapshot = () => {
+    if (!videoRef.current) return;
+    const v = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = v.videoWidth || 640;
+    canvas.height = v.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      if (blob) {
+        setPhotoBlob(blob);
+        setPhotoPreview(URL.createObjectURL(blob));
+        stopCamera();
+      }
+    }, 'image/jpeg', 0.95);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhotoBlob(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    stopCamera();
+  };
+
+  const handleUploadFace = async () => {
+    if (!photoBlob) {
+      setErrorMsg("Please take a photo or select an image file first.");
+      return;
+    }
+    setLoading(true);
+    setErrorMsg(null);
+
+    try {
+      const fd = new FormData();
+      fd.append('file', photoBlob, 'face.jpg');
+      fd.append('student_id', student.email);
+
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, {
+        method: 'POST',
+        body: fd
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "Face registration failed");
+      }
+
+      onSuccess(`✅ Face profile registered successfully for ${student.name}!`);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const retake = () => {
+    setPhotoBlob(null);
+    setPhotoPreview(null);
+    setErrorMsg(null);
+  };
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card" onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <h3 className="ad-modal-title" style={{ margin: 0 }}>Register Face Biometrics</h3>
+          <span className="ad-role-pill student" style={{ background: '#E8ECE8', color: '#162F44', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+            Student
+          </span>
+        </div>
+        <p className="ad-modal-desc">
+          Enroll reference biometric face profile for <strong>{student.name}</strong> ({student.email}).
+        </p>
+
+        {errorMsg && (
+          <div className="ad-error-banner" style={{ marginBottom: '14px' }}>
+            <AlertTriangleIcon size={16} color="#C3665B" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {photoPreview ? (
+          <div className="ad-face-preview-box">
+            <div className="ad-face-preview-circle">
+              <img src={photoPreview} alt="Captured face" className="ad-face-preview-img" />
+            </div>
+            <div className="ad-face-preview-info">
+              <span className="ad-face-preview-status">✅ Face Frame Ready</span>
+              <button
+                type="button"
+                className="ad-btn-outline"
+                onClick={retake}
+                disabled={loading}
+                style={{ height: '30px', fontSize: '12px' }}
+              >
+                Retake Photo
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+              <button
+                type="button"
+                className={`ad-btn-${method === 'camera' ? 'primary' : 'outline'}`}
+                onClick={() => setMethod('camera')}
+                style={{ flex: 1, height: '34px', fontSize: '12.5px' }}
+              >
+                <CameraIcon size={14} />
+                <span>Webcam Capture</span>
+              </button>
+              <button
+                type="button"
+                className={`ad-btn-${method === 'upload' ? 'primary' : 'outline'}`}
+                onClick={() => setMethod('upload')}
+                style={{ flex: 1, height: '34px', fontSize: '12.5px' }}
+              >
+                <DownloadIcon size={14} />
+                <span>Upload Photo</span>
+              </button>
+            </div>
+
+            {method === 'camera' ? (
+              <div className="ad-camera-viewfinder-wrap">
+                <div className="ad-camera-preview-circle">
+                  <video ref={videoRef} autoPlay playsInline muted className="ad-camera-video" />
+                </div>
+                <div className="ad-camera-controls">
+                  <button
+                    type="button"
+                    className="ad-btn-primary"
+                    onClick={captureSnapshot}
+                    style={{ height: '34px', fontSize: '12.5px' }}
+                  >
+                    📸 Capture Face Frame
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="ad-upload-box" style={{ marginBottom: '14px' }}>
+                <label className="ad-upload-dropzone">
+                  <DownloadIcon size={24} color="#758087" />
+                  <span style={{ fontSize: '13px', color: 'var(--ad-navy)', fontWeight: 500 }}>
+                    Click to select face photograph
+                  </span>
+                  <span style={{ fontSize: '11.5px', color: 'var(--ad-text-secondary)' }}>
+                    PNG, JPG, or WEBP (Clear lighting, neutral expression)
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleFileUpload}
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="ad-modal-actions">
+          <button type="button" className="ad-btn-outline" onClick={onClose} disabled={loading}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="ad-btn-primary"
+            onClick={handleUploadFace}
+            disabled={!photoBlob || loading}
+          >
+            {loading ? 'Analyzing with DeepFace…' : 'Save & Register Face Profile'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  TAB: USER MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 function TabUsers({ users, setUsers, onShowToast }) {
@@ -456,6 +683,7 @@ function TabUsers({ users, setUsers, onShowToast }) {
   const [roleFilter, setRoleFilter] = useState('all');
   const [deptFilter, setDeptFilter] = useState('all');
   const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [editingFaceUser, setEditingFaceUser] = useState(null);
   const { register } = useAuth();
 
   const [newUser, setNewUser] = useState({
@@ -465,6 +693,81 @@ function TabUsers({ users, setUsers, onShowToast }) {
     role: 'student',
     dept: 'CS',
   });
+
+  // State for face registration inside AddUserModal
+  const [faceBlob, setFaceBlob] = useState(null);
+  const [facePreview, setFacePreview] = useState(null);
+  const [modalCameraActive, setModalCameraActive] = useState(false);
+  const [modalStream, setModalStream] = useState(null);
+  const modalVideoRef = React.useRef(null);
+
+  const startModalCamera = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+      });
+      setModalStream(s);
+      setModalCameraActive(true);
+      if (modalVideoRef.current) {
+        modalVideoRef.current.srcObject = s;
+      }
+    } catch (e) {
+      onShowToast("❌ Camera error: " + e.message);
+    }
+  };
+
+  const stopModalCamera = () => {
+    if (modalStream) {
+      modalStream.getTracks().forEach(t => t.stop());
+      setModalStream(null);
+    }
+    setModalCameraActive(false);
+  };
+
+  useEffect(() => {
+    if (modalVideoRef.current && modalStream) {
+      modalVideoRef.current.srcObject = modalStream;
+    }
+  }, [modalStream, modalCameraActive]);
+
+  useEffect(() => {
+    return () => {
+      if (modalStream) {
+        modalStream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [modalStream]);
+
+  const captureModalSnapshot = () => {
+    if (!modalVideoRef.current) return;
+    const v = modalVideoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = v.videoWidth || 640;
+    canvas.height = v.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      if (blob) {
+        setFaceBlob(blob);
+        setFacePreview(URL.createObjectURL(blob));
+        stopModalCamera();
+      }
+    }, 'image/jpeg', 0.95);
+  };
+
+  const handleModalFaceFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setFaceBlob(file);
+    setFacePreview(URL.createObjectURL(file));
+    stopModalCamera();
+  };
+
+  const clearModalFacePhoto = () => {
+    setFaceBlob(null);
+    setFacePreview(null);
+    stopModalCamera();
+  };
 
   const filtered = useMemo(() => {
     return users.filter(u => {
@@ -493,9 +796,30 @@ function TabUsers({ users, setUsers, onShowToast }) {
         status: 'active',
       };
       setUsers([created, ...users]);
+
+      // If student and face photo was provided, register face in MongoDB
+      if (newUser.role === 'student' && faceBlob) {
+        try {
+          const fd = new FormData();
+          fd.append('file', faceBlob, 'face.jpg');
+          fd.append('student_id', newUser.email);
+          const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/face/register`, {
+            method: 'POST',
+            body: fd
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Failed to register face");
+          onShowToast(`✅ Student "${newUser.name}" and Face Profile registered successfully!`);
+        } catch (faceErr) {
+          onShowToast(`⚠️ Student created, but Face Registration failed: ${faceErr.message}`);
+        }
+      } else {
+        onShowToast(`✅ User "${newUser.name}" registered successfully`);
+      }
+
       setShowAddUserModal(false);
       setNewUser({ name: '', email: '', password: '', role: 'student', dept: 'CS' });
-      onShowToast(`✅ User "${newUser.name}" registered successfully`);
+      clearModalFacePhoto();
     } catch (err) {
       onShowToast(`❌ Registration error: ${err.message}`);
     }
@@ -516,7 +840,10 @@ function TabUsers({ users, setUsers, onShowToast }) {
         <button
           type="button"
           className="ad-btn-primary"
-          onClick={() => setShowAddUserModal(true)}
+          onClick={() => {
+            clearModalFacePhoto();
+            setShowAddUserModal(true);
+          }}
         >
           <UserPlusIcon size={16} />
           <span>Add User</span>
@@ -579,7 +906,7 @@ function TabUsers({ users, setUsers, onShowToast }) {
               </tr>
             ) : (
               filtered.map(u => (
-                <tr key={u.id}>
+                <tr key={u.id || u.email}>
                   <td><strong>{u.id}</strong></td>
                   <td>{u.name}</td>
                   <td>{u.email}</td>
@@ -591,14 +918,27 @@ function TabUsers({ users, setUsers, onShowToast }) {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button
-                      type="button"
-                      className="ad-btn-outline"
-                      style={{ height: '30px', padding: '0 10px', fontSize: '11.5px', display: 'inline-flex' }}
-                      onClick={() => handleToggleStatus(u.id)}
-                    >
-                      {u.status === 'inactive' ? 'Activate' : 'Deactivate'}
-                    </button>
+                    <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                      {u.role === 'student' && (
+                        <button
+                          type="button"
+                          className="ad-btn-face"
+                          onClick={() => setEditingFaceUser(u)}
+                          title="Register or update biometric face profile"
+                        >
+                          <CameraIcon size={13} />
+                          <span>Face ID</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="ad-btn-outline"
+                        style={{ height: '30px', padding: '0 10px', fontSize: '11.5px', display: 'inline-flex' }}
+                        onClick={() => handleToggleStatus(u.id)}
+                      >
+                        {u.status === 'inactive' ? 'Activate' : 'Deactivate'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -607,8 +947,9 @@ function TabUsers({ users, setUsers, onShowToast }) {
         </table>
       </div>
 
+      {/* Add User Modal */}
       {showAddUserModal && (
-        <div className="ad-modal-backdrop" onClick={() => setShowAddUserModal(false)}>
+        <div className="ad-modal-backdrop" onClick={() => { stopModalCamera(); setShowAddUserModal(false); }}>
           <div className="ad-modal-card" onClick={e => e.stopPropagation()}>
             <h3 className="ad-modal-title">Create User Account</h3>
             <p className="ad-modal-desc">Register a new student, faculty member, or system administrator.</p>
@@ -640,7 +981,11 @@ function TabUsers({ users, setUsers, onShowToast }) {
                 <select
                   className="ad-select"
                   value={newUser.role}
-                  onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                  onChange={e => {
+                    const r = e.target.value;
+                    setNewUser({ ...newUser, role: r });
+                    if (r !== 'student') clearModalFacePhoto();
+                  }}
                 >
                   <option value="student">Student</option>
                   <option value="teacher">Faculty Member</option>
@@ -670,11 +1015,97 @@ function TabUsers({ users, setUsers, onShowToast }) {
                   onChange={e => setNewUser({ ...newUser, password: e.target.value })}
                 />
               </div>
+
+              {/* Biometric Face Registration Section when role is Student */}
+              {newUser.role === 'student' && (
+                <div className="ad-face-enroll-box">
+                  <div className="ad-face-enroll-header">
+                    <div className="ad-face-enroll-title">
+                      <CameraIcon size={15} color="#162F44" />
+                      <span>Biometric Face Registration</span>
+                    </div>
+                    <span className="ad-face-badge">For Attendance</span>
+                  </div>
+                  <p className="ad-face-enroll-desc">
+                    Attach a frontal face photograph for biometric AI verification. You can also register or update this anytime later from the table.
+                  </p>
+
+                  {facePreview ? (
+                    <div className="ad-face-preview-box">
+                      <div className="ad-face-preview-circle">
+                        <img src={facePreview} alt="Face preview" className="ad-face-preview-img" />
+                      </div>
+                      <div className="ad-face-preview-info">
+                        <span className="ad-face-preview-status">✅ Face Photo Selected</span>
+                        <button
+                          type="button"
+                          className="ad-btn-outline"
+                          style={{ height: '30px', fontSize: '12px' }}
+                          onClick={clearModalFacePhoto}
+                        >
+                          Remove / Retake
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {modalCameraActive ? (
+                        <div className="ad-camera-viewfinder-wrap">
+                          <div className="ad-camera-preview-circle">
+                            <video ref={modalVideoRef} autoPlay playsInline muted className="ad-camera-video" />
+                          </div>
+                          <div className="ad-camera-controls">
+                            <button
+                              type="button"
+                              className="ad-btn-primary"
+                              style={{ height: '32px', fontSize: '12px' }}
+                              onClick={captureModalSnapshot}
+                            >
+                              📸 Snap Photo
+                            </button>
+                            <button
+                              type="button"
+                              className="ad-btn-outline"
+                              style={{ height: '32px', fontSize: '12px' }}
+                              onClick={stopModalCamera}
+                            >
+                              Cancel Camera
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="ad-face-btn-row">
+                          <button
+                            type="button"
+                            className="ad-btn-outline"
+                            onClick={startModalCamera}
+                            style={{ height: '34px', fontSize: '12px', flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                          >
+                            <CameraIcon size={14} />
+                            <span>Take Webcam Photo</span>
+                          </button>
+                          <label className="ad-btn-outline" style={{ height: '34px', fontSize: '12px', flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px', cursor: 'pointer' }}>
+                            <DownloadIcon size={14} />
+                            <span>Upload Image</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              onChange={handleModalFaceFileUpload}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="ad-modal-actions">
                 <button
                   type="button"
                   className="ad-btn-outline"
-                  onClick={() => setShowAddUserModal(false)}
+                  onClick={() => { stopModalCamera(); setShowAddUserModal(false); }}
                 >
                   Cancel
                 </button>
@@ -685,6 +1116,19 @@ function TabUsers({ users, setUsers, onShowToast }) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Dedicated Face Registration Modal for any Student */}
+      {editingFaceUser && (
+        <FaceRegistrationModal
+          student={editingFaceUser}
+          onClose={() => setEditingFaceUser(null)}
+          onSuccess={(msg) => {
+            setEditingFaceUser(null);
+            onShowToast(msg);
+          }}
+          onShowToast={onShowToast}
+        />
       )}
     </div>
   );
