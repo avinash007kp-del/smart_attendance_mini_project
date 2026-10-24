@@ -1156,24 +1156,6 @@
   color: var(--ad-success);
 }
 
-.ad-upload-dropzone {
-  border: 1.5px dashed var(--ad-border);
-  border-radius: 6px;
-  padding: 24px 16px;
-  text-align: center;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background-color: #FCFBF9;
-  transition: border-color 0.15s ease;
-}
-
-.ad-upload-dropzone:hover {
-  border-color: var(--ad-navy);
-}
-
 .ad-error-banner {
   background-color: #F8EEEB;
   border: 1px solid rgba(195, 102, 91, 0.25);

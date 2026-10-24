@@ -451,7 +451,6 @@ function TabDepartments({ onShowToast }) {
 //  MODAL: DEDICATED STUDENT FACE REGISTRATION
 // ═══════════════════════════════════════════════════════════════
 function FaceRegistrationModal({ student, onClose, onSuccess, onShowToast }) {
-  const [method, setMethod] = useState('camera'); // 'camera' | 'upload'
   const [stream, setStream] = useState(null);
   const [photoBlob, setPhotoBlob] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -485,16 +484,16 @@ function FaceRegistrationModal({ student, onClose, onSuccess, onShowToast }) {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
-  }, [stream, method]);
+  }, [stream]);
 
   useEffect(() => {
-    if (method === 'camera' && !photoPreview) {
+    if (!photoPreview) {
       startCamera();
     } else {
       stopCamera();
     }
     return () => stopCamera();
-  }, [method, photoPreview]);
+  }, [photoPreview]);
 
   const captureSnapshot = () => {
     if (!videoRef.current) return;
@@ -513,17 +512,9 @@ function FaceRegistrationModal({ student, onClose, onSuccess, onShowToast }) {
     }, 'image/jpeg', 0.95);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setPhotoBlob(file);
-    setPhotoPreview(URL.createObjectURL(file));
-    stopCamera();
-  };
-
   const handleUploadFace = async () => {
     if (!photoBlob) {
-      setErrorMsg("Please take a photo or select an image file first.");
+      setErrorMsg("Please capture a photo first.");
       return;
     }
     setLoading(true);
@@ -568,7 +559,7 @@ function FaceRegistrationModal({ student, onClose, onSuccess, onShowToast }) {
           </span>
         </div>
         <p className="ad-modal-desc">
-          Enroll reference biometric face profile for <strong>{student.name}</strong> ({student.email}).
+          Enroll reference biometric face profile for <strong>{student.name}</strong> ({student.email}) using live camera capture.
         </p>
 
         {errorMsg && (
@@ -597,63 +588,20 @@ function FaceRegistrationModal({ student, onClose, onSuccess, onShowToast }) {
             </div>
           </div>
         ) : (
-          <div>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+          <div className="ad-camera-viewfinder-wrap">
+            <div className="ad-camera-preview-circle">
+              <video ref={videoRef} autoPlay playsInline muted className="ad-camera-video" />
+            </div>
+            <div className="ad-camera-controls">
               <button
                 type="button"
-                className={`ad-btn-${method === 'camera' ? 'primary' : 'outline'}`}
-                onClick={() => setMethod('camera')}
-                style={{ flex: 1, height: '34px', fontSize: '12.5px' }}
+                className="ad-btn-primary"
+                onClick={captureSnapshot}
+                style={{ height: '34px', fontSize: '12.5px' }}
               >
-                <CameraIcon size={14} />
-                <span>Webcam Capture</span>
-              </button>
-              <button
-                type="button"
-                className={`ad-btn-${method === 'upload' ? 'primary' : 'outline'}`}
-                onClick={() => setMethod('upload')}
-                style={{ flex: 1, height: '34px', fontSize: '12.5px' }}
-              >
-                <DownloadIcon size={14} />
-                <span>Upload Photo</span>
+                📸 Capture Face Frame
               </button>
             </div>
-
-            {method === 'camera' ? (
-              <div className="ad-camera-viewfinder-wrap">
-                <div className="ad-camera-preview-circle">
-                  <video ref={videoRef} autoPlay playsInline muted className="ad-camera-video" />
-                </div>
-                <div className="ad-camera-controls">
-                  <button
-                    type="button"
-                    className="ad-btn-primary"
-                    onClick={captureSnapshot}
-                    style={{ height: '34px', fontSize: '12.5px' }}
-                  >
-                    📸 Capture Face Frame
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="ad-upload-box" style={{ marginBottom: '14px' }}>
-                <label className="ad-upload-dropzone">
-                  <DownloadIcon size={24} color="#758087" />
-                  <span style={{ fontSize: '13px', color: 'var(--ad-navy)', fontWeight: 500 }}>
-                    Click to select face photograph
-                  </span>
-                  <span style={{ fontSize: '11.5px', color: 'var(--ad-text-secondary)' }}>
-                    PNG, JPG, or WEBP (Clear lighting, neutral expression)
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleFileUpload}
-                  />
-                </label>
-              </div>
-            )}
           </div>
         )}
 
@@ -753,14 +701,6 @@ function TabUsers({ users, setUsers, onShowToast }) {
         stopModalCamera();
       }
     }, 'image/jpeg', 0.95);
-  };
-
-  const handleModalFaceFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setFaceBlob(file);
-    setFacePreview(URL.createObjectURL(file));
-    stopModalCamera();
   };
 
   const clearModalFacePhoto = () => {
@@ -1027,7 +967,7 @@ function TabUsers({ users, setUsers, onShowToast }) {
                     <span className="ad-face-badge">For Attendance</span>
                   </div>
                   <p className="ad-face-enroll-desc">
-                    Attach a frontal face photograph for biometric AI verification. You can also register or update this anytime later from the table.
+                    Capture a live frontal face photo using the camera for biometric AI verification. You can also register or update this anytime later from the table.
                   </p>
 
                   {facePreview ? (
@@ -1074,27 +1014,15 @@ function TabUsers({ users, setUsers, onShowToast }) {
                           </div>
                         </div>
                       ) : (
-                        <div className="ad-face-btn-row">
-                          <button
-                            type="button"
-                            className="ad-btn-outline"
-                            onClick={startModalCamera}
-                            style={{ height: '34px', fontSize: '12px', flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
-                          >
-                            <CameraIcon size={14} />
-                            <span>Take Webcam Photo</span>
-                          </button>
-                          <label className="ad-btn-outline" style={{ height: '34px', fontSize: '12px', flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px', cursor: 'pointer' }}>
-                            <DownloadIcon size={14} />
-                            <span>Upload Image</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              style={{ display: 'none' }}
-                              onChange={handleModalFaceFileUpload}
-                            />
-                          </label>
-                        </div>
+                        <button
+                          type="button"
+                          className="ad-btn-outline"
+                          onClick={startModalCamera}
+                          style={{ width: '100%', height: '36px', fontSize: '12.5px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                        >
+                          <CameraIcon size={15} />
+                          <span>Take Webcam Photo</span>
+                        </button>
                       )}
                     </div>
                   )}
