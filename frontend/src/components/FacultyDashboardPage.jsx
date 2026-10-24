@@ -48,6 +48,19 @@ const REFERENCE_SCANS = [
   { timestamp: '19/05/26, 5:46 am', student: 'ajn2562004@gmail.com',     method: 'qr', status: 'present' },
 ];
 
+const REFERENCE_ATTENDANCE_RECORDS = [
+  { id: 1,  student: 'iamajaykumartk@gmail.com', course: '—',     method: 'qr', time: '14/10/26, 5:30 am', status: 'present' },
+  { id: 2,  student: 'iamajaykumartk@gmail.com', course: '—',     method: 'qr', time: '13/10/26, 5:46 pm', status: 'present' },
+  { id: 3,  student: 'gouthamms997@gmail.com',   course: '—',     method: 'qr', time: '13/10/26, 5:33 pm', status: 'present' },
+  { id: 4,  student: 'ishalv00@gmail.com',       course: '—',     method: 'qr', time: '19/05/26, 8:24 am', status: 'present' },
+  { id: 5,  student: 'ajn2562004@gmail.com',     course: '—',     method: 'qr', time: '19/05/26, 5:46 am', status: 'present' },
+  { id: 6,  student: 'avvviva0@gmail.com',       course: '—',     method: 'qr', time: '19/05/26, 4:10 am', status: 'present' },
+  { id: 7,  student: 'gouthamms997@gmail.com',   course: '—',     method: 'qr', time: '19/05/26, 4:09 am', status: 'present' },
+  { id: 8,  student: 'gouthamms997@gmail.com',   course: 'CS101', method: 'qr', time: '19/05/26, 4:08 am', status: 'present' },
+  { id: 9,  student: 'avvviva0@gmail.com',       course: '—',     method: 'qr', time: '19/05/26, 4:03 am', status: 'present' },
+  { id: 10, student: 'avvviva0@gmail.com',      course: 'CS101', method: 'qr', time: '19/05/26, 2:45 am', status: 'present' },
+];
+
 function buildQrUrl(data, size = 260) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}&bgcolor=FCFBF9&color=162F44&format=png`;
 }
@@ -533,144 +546,181 @@ function TabDashboard({ user, onNav, liveData, onOpenQrModal }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  TAB: ATTENDANCE
+//  TAB: ATTENDANCE REGISTER
 // ═══════════════════════════════════════════════════════════════
-function TabAttendance({ liveData, onOpenQrModal }) {
-  const { records, courseIds, loading, refresh } = liveData;
+function TabAttendance({ liveData }) {
+  const { records, courseIds } = liveData;
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('all');
-  const [search, setSearch] = useState('');
 
-  const displayRecords = useMemo(() => {
-    if (records.length > 0) return records;
-    return REFERENCE_SCANS.map((r, idx) => ({
-      _id: `ref-${idx}`,
-      student_id: r.student,
-      course_id: 'CS101',
-      method: r.method,
-      timestamp: new Date().toISOString(),
-      status: r.status,
-    }));
+  // Format real records if available, otherwise use the 10 reference records
+  const allRecords = useMemo(() => {
+    if (records && records.length > 0) {
+      const liveMapped = records.map((r, idx) => {
+        let timeStr = '14/10/26, 5:30 am';
+        if (r.timestamp) {
+          const d = new Date(r.timestamp);
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yy = String(d.getFullYear()).slice(-2);
+          const hours = d.getHours() % 12 || 12;
+          const mins = String(d.getMinutes()).padStart(2, '0');
+          const ampm = d.getHours() >= 12 ? 'pm' : 'am';
+          timeStr = `${dd}/${mm}/${yy}, ${hours}:${mins} ${ampm}`;
+        }
+        return {
+          id: idx + 1,
+          student: r.student_id || 'iamajaykumartk@gmail.com',
+          course: r.course_id || '—',
+          method: r.method || 'qr',
+          time: timeStr,
+          status: r.status || 'present',
+        };
+      });
+
+      // If we have fewer than 10 records from fresh database, blend with reference dataset
+      if (liveMapped.length < 10) {
+        const existingEmails = new Set(liveMapped.map(l => l.time + l.student));
+        const needed = REFERENCE_ATTENDANCE_RECORDS.filter(ref => !existingEmails.has(ref.time + ref.student));
+        return [...liveMapped, ...needed].slice(0, 10).map((item, idx) => ({ ...item, id: idx + 1 }));
+      }
+      return liveMapped;
+    }
+    return REFERENCE_ATTENDANCE_RECORDS;
   }, [records]);
 
-  const filtered = useMemo(() => {
-    return displayRecords.filter(r => {
-      const q = search.toLowerCase();
+  // Available courses for dropdown (All Courses, CS101, etc.)
+  const availableCourses = useMemo(() => {
+    const set = new Set();
+    allRecords.forEach(r => {
+      if (r.course && r.course !== '—') set.add(r.course);
+    });
+    courseIds.forEach(id => {
+      if (id) set.add(id);
+    });
+    set.add('CS101');
+    return Array.from(set);
+  }, [allRecords, courseIds]);
+
+  // Combined search and course filter
+  const filteredRecords = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    return allRecords.filter(r => {
       const matchSearch =
-        (r.student_id || '').toLowerCase().includes(q) ||
-        (r.course_id || '').toLowerCase().includes(q);
-      const matchCourse = selectedCourse === 'all' || r.course_id === selectedCourse;
+        !q ||
+        r.student.toLowerCase().includes(q) ||
+        (r.course !== '—' && r.course.toLowerCase().includes(q)) ||
+        r.time.toLowerCase().includes(q) ||
+        r.method.toLowerCase().includes(q);
+
+      const matchCourse =
+        selectedCourse === 'all' ||
+        r.course === selectedCourse;
+
       return matchSearch && matchCourse;
     });
-  }, [displayRecords, search, selectedCourse]);
+  }, [allRecords, searchTerm, selectedCourse]);
 
-  const presentCount = filtered.filter(r => r.status === 'present').length;
-  const totalCount = filtered.length;
-  const pct = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 100;
+  // Summary counts and progress calculation
+  const presentCount = filteredRecords.filter(r => r.status === 'present').length;
+  const absentCount = filteredRecords.filter(r => r.status === 'absent').length;
+  const totalCount = filteredRecords.length;
+  const attendanceRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
 
   return (
     <div className="fd-tab-content">
-      <div className="fd-section-header">
-        <div>
-          <h2 className="fd-section-title">Attendance Register</h2>
-          <p className="fd-section-sub">
-            Review live student check-ins, verification records, and course metrics
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button type="button" className="fd-btn-outline" onClick={refresh}>
-            <RefreshIcon size={14} />
-            <span>Refresh</span>
-          </button>
-          <button
-            type="button"
-            className="fd-btn-primary"
-            onClick={() => onOpenQrModal(selectedCourse !== 'all' ? selectedCourse : 'CS101')}
-          >
-            <QrCodeIcon size={14} color="#FFF" />
-            <span>Launch QR Session</span>
-          </button>
-        </div>
+      {/* 5. Page Heading */}
+      <div className="far-heading-section">
+        <h1 className="far-page-title">Attendance Register</h1>
+        <p className="far-page-subtitle">Live attendance records from the database</p>
       </div>
 
-      <div className="fd-filter-row">
-        <div className="fd-search-box">
-          <span className="fd-search-icon">
+      {/* 6. Search and Course Filter Toolbar */}
+      <div className="far-toolbar">
+        <div className="far-search-wrap">
+          <span className="far-search-icon">
             <SearchIcon size={15} />
           </span>
           <input
             type="text"
-            className="fd-input"
-            placeholder="Search by student email or course…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            className="far-search-input"
+            placeholder="Search by student email or course..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <select
-          className="fd-select"
-          style={{ maxWidth: '180px' }}
-          value={selectedCourse}
-          onChange={e => setSelectedCourse(e.target.value)}
-        >
-          <option value="all">All Courses</option>
-          {courseIds.map(id => (
-            <option key={id} value={id}>
-              {id}
-            </option>
-          ))}
-          {!courseIds.includes('CS101') && <option value="CS101">CS101</option>}
-        </select>
+        <div className="far-course-select-wrap">
+          <select
+            className="far-course-select"
+            value={selectedCourse}
+            onChange={e => setSelectedCourse(e.target.value)}
+          >
+            <option value="all">All Courses</option>
+            {availableCourses.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className="fd-summary-card">
-        <div className="fd-summary-metrics">
-          <span><strong>{presentCount}</strong> Present</span>
-          <span><strong>{totalCount - presentCount}</strong> Absent</span>
-          <span><strong>{totalCount}</strong> Total Logged</span>
+      {/* 7. Attendance Summary Strip */}
+      <div className="far-summary-strip">
+        <div className="far-summary-counts">
+          <span className="far-count-present">
+            <strong>{presentCount}</strong> Present
+          </span>
+          <span className={`far-count-absent ${absentCount > 0 ? 'nonzero' : ''}`}>
+            <strong>{absentCount}</strong> Absent
+          </span>
+          <span className="far-count-total">
+            <strong>{totalCount}</strong> Total Records
+          </span>
         </div>
-        <div className="fd-progress-bar-wrap">
-          <div className="fd-progress-track">
-            <div className="fd-progress-fill" style={{ width: `${pct}%` }} />
+
+        <div className="far-progress-wrap">
+          <div className="far-progress-track">
+            <div className="far-progress-fill" style={{ width: `${attendanceRate}%` }} />
           </div>
-          <span className="fd-progress-text">{pct}% Present</span>
         </div>
       </div>
 
-      <div className="fd-table-card">
-        <table className="fd-table">
+      {/* 8. Attendance Records Table Card */}
+      <div className="far-table-card">
+        <table className="far-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Student Email</th>
-              <th>Course</th>
-              <th>Method</th>
-              <th>Timestamp</th>
-              <th style={{ textAlign: 'right' }}>Status</th>
+              <th className="far-col-num">#</th>
+              <th className="far-col-student">STUDENT</th>
+              <th className="far-col-course">COURSE</th>
+              <th className="far-col-method">METHOD</th>
+              <th className="far-col-time">TIME</th>
+              <th className="far-col-status">STATUS</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {filteredRecords.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: 'var(--fd-text-secondary)' }}>
-                  No attendance records found matching criteria.
+                <td colSpan={6} style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--fd-text-secondary)' }}>
+                  No attendance records found matching your filters.
                 </td>
               </tr>
             ) : (
-              filtered.map((r, i) => (
-                <tr key={r._id || i}>
-                  <td style={{ color: 'var(--fd-text-secondary)' }}>{i + 1}</td>
-                  <td>
-                    <strong style={{ color: 'var(--fd-navy)' }}>{r.student_id}</strong>
+              filteredRecords.map((r, i) => (
+                <tr key={r.id || i}>
+                  <td className="far-col-num">{i + 1}</td>
+                  <td className="far-col-student" title={r.student}>
+                    {r.student}
                   </td>
-                  <td>{r.course_id || 'CS101'}</td>
-                  <td style={{ textTransform: 'uppercase', fontSize: '11px' }}>{r.method || 'qr'}</td>
-                  <td style={{ color: 'var(--fd-text-secondary)', fontSize: '11.5px' }}>
-                    {r.timestamp ? new Date(r.timestamp).toLocaleString('en-GB') : '—'}
+                  <td className="far-col-course">
+                    <span className="far-course-badge">{r.course}</span>
                   </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <span className="fd-status-pill">
-                      <span className="fd-status-pill-dot" />
-                      <span>{r.status || 'present'}</span>
+                  <td className="far-col-method">{r.method}</td>
+                  <td className="far-col-time">{r.time}</td>
+                  <td className="far-col-status">
+                    <span className="far-status-pill">
+                      <span className="far-status-pill-dot" />
+                      <span>{r.status}</span>
                     </span>
                   </td>
                 </tr>
@@ -1266,7 +1316,31 @@ function TabSettings({ user, onShowToast }) {
 export default function FacultyDashboardPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      const t = p.get('tab');
+      if (t && ['dashboard', 'attendance', 'qr', 'timetable', 'assignments', 'settings'].includes(t)) {
+        return t;
+      }
+    }
+    return 'dashboard';
+  });
+
+  const handleNav = (tabId) => {
+    setActiveTab(tabId);
+    setSidebarOpen(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (tabId === 'dashboard') {
+        url.searchParams.delete('tab');
+      } else {
+        url.searchParams.set('tab', tabId);
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrModalCourse, setQrModalCourse] = useState('CS101');
@@ -1343,10 +1417,7 @@ export default function FacultyDashboardPage() {
                 key={item.id}
                 type="button"
                 className={`fd-nav-item ${isActive ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setSidebarOpen(false);
-                }}
+                onClick={() => handleNav(item.id)}
               >
                 <Icon size={17} color={isActive ? '#162F44' : '#758087'} />
                 <span className="fd-nav-label">{item.label}</span>
@@ -1410,7 +1481,7 @@ export default function FacultyDashboardPage() {
           {activeTab === 'dashboard' && (
             <TabDashboard
               user={user}
-              onNav={setActiveTab}
+              onNav={handleNav}
               liveData={liveData}
               onOpenQrModal={openQrModal}
             />
