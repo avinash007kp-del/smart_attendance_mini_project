@@ -1003,56 +1003,514 @@
   background-color: var(--fd-success);
 }
 
-/* ── Full QR Tab Styles ────────────────────────────────────── */
-.fd-qr-tab-grid {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 24px;
+/* ── Faculty QR Session Management (.fqr-*) ─────────────────── */
+.fqr-heading-section {
+  margin-bottom: 28px;
 }
 
-.fd-qr-preview-box {
+.fqr-page-title {
+  font-family: var(--fd-font-serif);
+  font-size: 42px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.fqr-page-subtitle {
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  color: var(--fd-text-secondary);
+  margin-top: 8px;
+  font-weight: 400;
+}
+
+/* Two-column layout: 347px left, remaining right (~814px desktop), gap 21px */
+.fqr-main-grid {
+  display: grid;
+  grid-template-columns: 347px minmax(0, 1fr);
+  gap: 21px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 960px) {
+  .fqr-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fqr-card {
+  background-color: var(--fd-card-bg, #FCFBF9);
+  border: 1px solid var(--fd-border, #D9DEDA);
+  border-radius: 4px;
+  padding: 24px;
+  box-shadow: none;
+}
+
+.fqr-config-card {
+  min-height: 457px;
+  display: flex;
+  flex-direction: column;
+}
+
+.fqr-preview-card {
+  min-height: 457px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px;
-  background-color: var(--fd-card-bg);
-  border: 1px solid var(--fd-border);
-  border-radius: 4px;
   text-align: center;
+  padding: 30px;
 }
 
-.fd-qr-img-wrap {
-  width: 260px;
-  height: 260px;
+.fqr-card-title {
+  font-family: var(--fd-font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.fqr-field {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fqr-label {
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-navy);
+}
+
+.fqr-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 11px;
   background-color: #FFFFFF;
   border: 1px solid var(--fd-border);
-  border-radius: 8px;
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  color: var(--fd-text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.fqr-input:focus {
+  border-color: var(--fd-navy);
+}
+
+.fqr-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.fqr-select {
+  cursor: pointer;
+  appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23758087' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+/* 3 Selectable Duration Buttons: 30s, 45s, 1m */
+.fqr-duration-row {
+  display: flex;
+  gap: 8px;
+}
+
+.fqr-dur-btn {
+  height: 33px;
+  padding: 0 13px;
+  background-color: #FCFBF9;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fqr-dur-btn:hover {
+  background-color: var(--fd-nav-active);
+}
+
+.fqr-dur-btn.selected {
+  background-color: var(--fd-nav-active, #E8ECE8);
+  border-color: var(--fd-navy, #162F44);
+  color: var(--fd-navy, #162F44);
+  font-weight: 600;
+}
+
+/* Session Summary */
+.fqr-summary-box {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.fqr-divider {
+  height: 1px;
+  background-color: var(--fd-border);
+  margin: 10px 0;
+}
+
+.fqr-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+}
+
+.fqr-summary-label {
+  font-size: 12px;
+  color: var(--fd-text-secondary);
+}
+
+.fqr-summary-val {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-navy);
+}
+
+/* Start QR Session Button */
+.fqr-start-btn {
+  width: 100%;
+  height: 39px;
+  margin-top: 14px;
+  background-color: var(--fd-navy);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.fqr-start-btn:hover {
+  opacity: 0.92;
+}
+
+.fqr-start-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fqr-start-btn.active-mode {
+  background-color: var(--fd-error);
+}
+
+/* Empty State in Preview Card */
+.fqr-empty-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.fqr-placeholder-wrap {
+  width: 192px;
+  height: 192px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
-  position: relative;
+  margin-bottom: 24px;
+}
+
+.fqr-preview-title {
+  font-family: var(--fd-font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin-bottom: 8px;
+  line-height: 1.25;
+}
+
+.fqr-preview-caption {
+  font-family: var(--fd-font-sans);
+  font-size: 11px;
+  color: var(--fd-text-secondary);
+}
+
+/* Active State in Preview Card */
+.fqr-active-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+}
+
+.fqr-active-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.fqr-countdown-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: var(--fd-success-bg, #E8EEEA);
+  color: var(--fd-navy);
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.fqr-active-img-box {
+  width: 220px;
+  height: 220px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
   box-shadow: 0 2px 10px rgba(22, 47, 68, 0.04);
 }
 
-.fd-qr-img {
+.fqr-active-qr-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.fd-qr-countdown-tag {
-  margin-top: 18px;
+.fqr-active-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.fqr-meta-line {
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fqr-meta-line strong {
+  color: var(--fd-navy);
+  font-weight: 600;
+}
+
+.fqr-meta-line code {
+  color: var(--fd-navy);
+  font-weight: 600;
+  background-color: var(--fd-nav-active);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.fqr-meta-dot {
+  color: var(--fd-text-secondary);
+}
+
+.fqr-scan-stat {
+  font-size: 12px;
+  color: var(--fd-success);
+  font-weight: 500;
+}
+
+.fqr-end-btn {
+  height: 33px;
+  padding: 0 16px;
+  background-color: transparent;
+  color: var(--fd-error);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fqr-end-btn:hover {
+  background-color: #F7EBEB;
+  border-color: var(--fd-error);
+}
+
+.fqr-reset-btn {
+  height: 33px;
+  padding: 0 16px;
+  margin-top: 14px;
+  background-color: var(--fd-navy);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fqr-expired-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--fd-nav-active);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Recent QR Sessions Card & Table */
+.fqr-sessions-card {
+  background-color: var(--fd-card-bg, #FCFBF9);
+  border: 1px solid var(--fd-border, #D9DEDA);
+  border-radius: 4px;
+  padding: 20px;
+  min-height: 298px;
+}
+
+.fqr-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fqr-sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  table-layout: fixed;
+}
+
+.fqr-sessions-table th {
+  padding: 0 12px;
+  height: 38px;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fd-text-secondary);
+  border-bottom: 1px solid var(--fd-border);
+  background-color: transparent;
+}
+
+.fqr-sessions-table td {
+  padding: 0 12px;
+  height: 41px;
+  font-size: 11.5px;
+  border-bottom: 1px solid #ECEEEA;
+  vertical-align: middle;
+}
+
+.fqr-sessions-table tr:last-child td {
+  border-bottom: none;
+}
+
+.fqr-col-id {
+  width: 22%;
+  color: var(--fd-navy);
+  font-size: 11.5px;
+}
+
+.fqr-col-id code {
+  font-weight: 500;
+  color: var(--fd-navy);
+}
+
+.fqr-col-course {
+  width: 14%;
+}
+
+.fqr-col-date {
+  width: 22%;
+  color: var(--fd-text-secondary);
+  font-size: 11.5px;
+}
+
+.fqr-col-dur {
+  width: 14%;
+  color: var(--fd-navy);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.fqr-col-scan {
+  width: 14%;
+  color: var(--fd-navy);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.fqr-col-status {
+  width: 14%;
+}
+
+.fqr-course-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background-color: var(--fd-success-bg);
+  justify-content: center;
+  padding: 2px 7px;
+  background-color: var(--fd-nav-active, #E8ECE8);
   color: var(--fd-navy);
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+}
+
+.fqr-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2.5px 8px;
+  background-color: var(--fd-success-bg, #E8EEEA);
+  color: var(--fd-success, #557E6D);
+  border-radius: 12px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.fqr-status-pill-dot {
+  width: 4.5px;
+  height: 4.5px;
+  border-radius: 50%;
+  background-color: var(--fd-success, #557E6D);
+}
+
+.fqr-status-pill.active {
+  background-color: var(--fd-nav-active, #E8ECE8);
+  color: var(--fd-navy);
+}
+
+.fqr-status-pill.active .fqr-status-pill-dot {
+  background-color: var(--fd-success);
+  box-shadow: 0 0 0 2px rgba(85, 126, 109, 0.35);
+}
+
+.fqr-status-pill.expired {
+  background-color: #F7EBEB;
+  color: var(--fd-error, #C94A4A);
+}
+
+.fqr-status-pill.expired .fqr-status-pill-dot {
+  background-color: var(--fd-error, #C94A4A);
 }
 
 /* ── Modal Dialog Styles ───────────────────────────────────── */

@@ -256,3 +256,13 @@ export function ClockIcon({ size = 15, color = 'currentColor' }) {
     </svg>
   );
 }
+
+// 22. Play Outline Icon (Start QR Session)
+export function PlayIcon({ size = 15, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={iconStyle}>
+      <polygon points="6 4 20 12 6 20 6 4" />
+    </svg>
+  );
+}
+

@@ -26,6 +26,7 @@ import {
   XIcon,
   RefreshIcon,
   ClockIcon,
+  PlayIcon,
 } from './FacultyDashboardIcons';
 import './FacultyDashboardPage.css';
 
@@ -60,6 +61,131 @@ const REFERENCE_ATTENDANCE_RECORDS = [
   { id: 9,  student: 'avvviva0@gmail.com',       course: '—',     method: 'qr', time: '19/05/26, 4:03 am', status: 'present' },
   { id: 10, student: 'avvviva0@gmail.com',      course: 'CS101', method: 'qr', time: '19/05/26, 2:45 am', status: 'present' },
 ];
+
+// Reference records for Recent QR Sessions
+const REFERENCE_QR_SESSIONS = [
+  {
+    sessionId: 'A-CS101-ABCD1',
+    course: 'CS101',
+    date: 'Today, 9:05 AM',
+    duration: '10 min',
+    scanned: '38/42',
+    status: 'ended',
+  },
+  {
+    sessionId: 'A-CS205-XYZ23',
+    course: 'CS205',
+    date: 'Today, 11:00 AM',
+    duration: '15 min',
+    scanned: '35/38',
+    status: 'ended',
+  },
+  {
+    sessionId: 'A-CS312-MNOP4',
+    course: 'CS312',
+    date: 'Yesterday, 2:00 PM',
+    duration: '10 min',
+    scanned: '30/35',
+    status: 'ended',
+  },
+  {
+    sessionId: 'A-CS101-QRST5',
+    course: 'CS101',
+    date: '2 days ago, 9:00 AM',
+    duration: '20 min',
+    scanned: '40/42',
+    status: 'ended',
+  },
+];
+
+// 192 × 192px decorative placeholder in neutral gray #D5DAD8
+function QrPlaceholderIllustration({ size = 192 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 192 192"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ display: 'block', margin: '0 auto' }}
+      aria-hidden="true"
+    >
+      {/* Top-Left Finder */}
+      <rect x="14" y="14" width="46" height="46" rx="4" stroke="#D5DAD8" strokeWidth="6" />
+      <rect x="25" y="25" width="24" height="24" rx="2" fill="#D5DAD8" />
+
+      {/* Top-Right Finder */}
+      <rect x="132" y="14" width="46" height="46" rx="4" stroke="#D5DAD8" strokeWidth="6" />
+      <rect x="143" y="25" width="24" height="24" rx="2" fill="#D5DAD8" />
+
+      {/* Bottom-Left Finder */}
+      <rect x="14" y="132" width="46" height="46" rx="4" stroke="#D5DAD8" strokeWidth="6" />
+      <rect x="25" y="143" width="24" height="24" rx="2" fill="#D5DAD8" />
+
+      {/* Timing Patterns */}
+      <line x1="68" y1="22" x2="124" y2="22" stroke="#D5DAD8" strokeWidth="4" strokeDasharray="6 6" />
+      <line x1="22" y1="68" x2="22" y2="124" stroke="#D5DAD8" strokeWidth="4" strokeDasharray="6 6" />
+
+      {/* Center Alignment / Decorative QR Modules */}
+      <rect x="88" y="88" width="16" height="16" rx="2" stroke="#D5DAD8" strokeWidth="4" />
+      <rect x="94" y="94" width="4" height="4" fill="#D5DAD8" />
+
+      {/* Decorative Modules Grid */}
+      <rect x="68" y="38" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="84" y="38" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="100" y="38" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="116" y="38" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+
+      <rect x="68" y="54" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="100" y="54" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+
+      <rect x="38" y="68" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="54" y="68" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="74" y="74" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="110" y="74" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="132" y="68" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="148" y="68" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="164" y="68" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+
+      <rect x="38" y="84" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="54" y="92" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="74" y="92" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="132" y="84" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="156" y="84" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+
+      <rect x="38" y="108" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="54" y="108" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="132" y="100" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="148" y="108" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="164" y="108" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+
+      <rect x="68" y="116" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="90" y="116" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="106" y="116" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+
+      <rect x="68" y="132" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="84" y="132" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="100" y="132" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="116" y="132" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="140" y="132" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="160" y="132" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+
+      <rect x="68" y="148" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="92" y="148" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="116" y="148" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="132" y="148" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="152" y="148" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="168" y="148" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+
+      <rect x="68" y="164" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="84" y="164" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="108" y="164" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="124" y="164" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="148" y="164" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+      <rect x="164" y="164" width="8" height="8" rx="1.5" fill="#D5DAD8" />
+    </svg>
+  );
+}
 
 function buildQrUrl(data, size = 260) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}&bgcolor=FCFBF9&color=162F44&format=png`;
@@ -734,60 +860,173 @@ function TabAttendance({ liveData }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  TAB: FULL QR CODE PROJECTION SCREEN
+//  TAB: QR CODE SESSION MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
-function TabQR({ onShowToast }) {
+function TabQR({ onShowToast, liveData, user }) {
+  // Course ID state
   const [course, setCourse] = useState('CS101');
-  const [duration, setDuration] = useState(30);
+  // Duration: '30s', '45s', '1m'
+  const [duration, setDuration] = useState('30s');
+  // Session Note (Optional)
   const [note, setNote] = useState('');
+
+  // Active Session states
   const [active, setActive] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [tokenPayload, setTokenPayload] = useState('SMARTATTEND::CS101::DEMO');
-  const [sessionId, setSessionId] = useState('A-CS101-LIVE');
+  const [tokenPayload, setTokenPayload] = useState('');
+  const [sessionId, setSessionId] = useState('');
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [sessionExpireTime, setSessionExpireTime] = useState(null);
+  const [scanCount, setScanCount] = useState(0);
+  const [isExpired, setIsExpired] = useState(false);
+
+  // Recent QR Sessions history
+  const [sessionsList, setSessionsList] = useState(REFERENCE_QR_SESSIONS);
+
   const timerRef = useRef(null);
 
+  // Available courses
+  const courseOptions = useMemo(() => {
+    const list = ['CS101', 'CS205', 'CS312'];
+    if (liveData?.courses) {
+      liveData.courses.forEach(c => {
+        const id = typeof c === 'string' ? c : c.code || c.id;
+        if (id && !list.includes(id)) list.push(id);
+      });
+    }
+    return list;
+  }, [liveData?.courses]);
+
+  // Duration in seconds
+  const durationSeconds = useMemo(() => {
+    if (duration === '45s') return 45;
+    if (duration === '1m') return 60;
+    return 30;
+  }, [duration]);
+
+  // Start QR Session
   const startSession = async () => {
+    if (!course) return;
+    setLoading(true);
+    const secs = durationSeconds;
+    const durMinutes = secs / 60.0;
+    const now = new Date();
+    const expireDate = new Date(now.getTime() + secs * 1000);
+    const genSessionId = `A-${course}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
     try {
       const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'}/attendance/qr/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ course_id: course, duration_minutes: duration / 60.0 }),
+        body: JSON.stringify({ course_id: course, duration_minutes: durMinutes }),
       });
+
       let token = `SMARTATTEND::${course}::${Date.now()}`;
       if (res.ok) {
         const data = await res.json();
         token = data.token || token;
       }
+
       setTokenPayload(token);
-      setSessionId('A-' + token.slice(-8).toUpperCase());
+      setSessionId(genSessionId);
+      setSessionStartTime(now);
+      setSessionExpireTime(expireDate);
+      setTimeLeft(secs);
       setActive(true);
-      setTimeLeft(duration);
+      setIsExpired(false);
+      setScanCount(0);
+
+      // Prepend to recent sessions
+      const newSessionItem = {
+        sessionId: genSessionId,
+        course: course,
+        date: 'Today, ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        duration: duration,
+        scanned: '0/42',
+        status: 'active',
+      };
+      setSessionsList(prev => [newSessionItem, ...prev]);
 
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timerRef.current);
+            setIsExpired(true);
             setActive(false);
+            setSessionsList(currentList =>
+              currentList.map(s =>
+                s.sessionId === genSessionId ? { ...s, status: 'ended' } : s
+              )
+            );
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
 
-      onShowToast(`✅ Session started for ${course}`);
+      onShowToast?.(`✅ QR session started for ${course}`);
     } catch (err) {
-      console.warn(err);
+      console.warn('QR session fallback', err);
+      const token = `SMARTATTEND::${course}::${Date.now()}`;
+      setTokenPayload(token);
+      setSessionId(genSessionId);
+      setSessionStartTime(now);
+      setSessionExpireTime(expireDate);
+      setTimeLeft(secs);
       setActive(true);
-      setTimeLeft(duration);
+      setIsExpired(false);
+      setScanCount(0);
+
+      const newSessionItem = {
+        sessionId: genSessionId,
+        course: course,
+        date: 'Today, ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        duration: duration,
+        scanned: '0/42',
+        status: 'active',
+      };
+      setSessionsList(prev => [newSessionItem, ...prev]);
+
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            setIsExpired(true);
+            setActive(false);
+            setSessionsList(currentList =>
+              currentList.map(s =>
+                s.sessionId === genSessionId ? { ...s, status: 'ended' } : s
+              )
+            );
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      onShowToast?.(`✅ Live QR session active for ${course}`);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Stop Session
   const stopSession = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setActive(false);
+    setIsExpired(false);
     setTimeLeft(0);
-    onShowToast('Session ended');
+    if (sessionId) {
+      setSessionsList(currentList =>
+        currentList.map(s =>
+          s.sessionId === sessionId ? { ...s, status: 'ended' } : s
+        )
+      );
+    }
+    onShowToast?.('Session ended');
   };
 
   useEffect(() => {
@@ -796,95 +1035,228 @@ function TabQR({ onShowToast }) {
     };
   }, []);
 
+  const formattedStartTime = sessionStartTime
+    ? sessionStartTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : '';
+  const formattedExpireTime = sessionExpireTime
+    ? sessionExpireTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : '';
+
   return (
     <div className="fd-tab-content">
-      <div className="fd-section-header">
-        <div>
-          <h2 className="fd-section-title">QR Code Session Room</h2>
-          <p className="fd-section-sub">
-            Display live dynamic attendance codes for student scanning in classroom or hall
-          </p>
-        </div>
+      {/* 5. Page Heading */}
+      <div className="fqr-heading-section">
+        <h1 className="fqr-page-title">QR Code</h1>
+        <p className="fqr-page-subtitle">
+          Generate time-limited QR sessions for attendance marking
+        </p>
       </div>
 
-      <div className="fd-qr-tab-grid">
-        {/* Left: Configuration */}
-        <div className="fd-card">
-          <h3 className="fd-card-title" style={{ fontSize: '20px' }}>Session Parameters</h3>
-          <hr className="fd-card-divider" />
-          <div className="fd-modal-form">
-            <div className="fd-form-field">
-              <label className="fd-form-label">Course Code</label>
-              <input
-                type="text"
-                className="fd-input"
+      {/* 6. Main Content Grid (Two-column layout) */}
+      <div className="fqr-main-grid">
+        {/* 7. Session Configuration Card (~347px wide, ~457px tall) */}
+        <div className="fqr-card fqr-config-card">
+          <h2 className="fqr-card-title">Session Configuration</h2>
+
+          {/* Field 1 — Course ID */}
+          <div className="fqr-field">
+            <label className="fqr-label" htmlFor="fqr-course-select">Course ID</label>
+            <div className="fqr-select-wrap">
+              <select
+                id="fqr-course-select"
+                className="fqr-input fqr-select"
                 value={course}
                 onChange={e => setCourse(e.target.value)}
                 disabled={active}
-              />
-            </div>
-            <div className="fd-form-field">
-              <label className="fd-form-label">Duration</label>
-              <div className="fd-duration-pills">
-                {[15, 30, 60, 180].map(d => (
-                  <button
-                    key={d}
-                    type="button"
-                    className={`fd-dur-pill ${duration === d ? 'active' : ''}`}
-                    onClick={() => setDuration(d)}
-                    disabled={active}
-                  >
-                    {d < 60 ? `${d}s` : `${d / 60}m`}
-                  </button>
+              >
+                {courseOptions.map(c => (
+                  <option key={c} value={c}>{c}</option>
                 ))}
-              </div>
+              </select>
             </div>
-            <div className="fd-form-field">
-              <label className="fd-form-label">Note</label>
-              <input
-                type="text"
-                className="fd-input"
-                placeholder="e.g. Regular Morning Attendance"
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                disabled={active}
-              />
-            </div>
+          </div>
 
-            <div style={{ marginTop: '10px' }}>
-              {!active ? (
-                <button type="button" className="fd-btn-primary" style={{ width: '100%' }} onClick={startSession}>
-                  <QrCodeIcon size={16} color="#FFF" />
-                  <span>Start Live QR Session</span>
+          {/* Field 2 — Session Duration */}
+          <div className="fqr-field">
+            <label className="fqr-label">Session Duration</label>
+            <div className="fqr-duration-row">
+              {['30s', '45s', '1m'].map(d => (
+                <button
+                  key={d}
+                  type="button"
+                  className={`fqr-dur-btn ${duration === d ? 'selected' : ''}`}
+                  onClick={() => setDuration(d)}
+                  disabled={active}
+                >
+                  {d}
                 </button>
-              ) : (
-                <button type="button" className="fd-btn-danger" style={{ width: '100%' }} onClick={stopSession}>
-                  <span>Stop Active Session</span>
-                </button>
-              )}
+              ))}
             </div>
+          </div>
+
+          {/* Field 3 — Session Note (Optional) */}
+          <div className="fqr-field">
+            <label className="fqr-label" htmlFor="fqr-session-note">Session Note (Optional)</label>
+            <input
+              id="fqr-session-note"
+              type="text"
+              className="fqr-input"
+              placeholder="e.g., Unit Test 2 — Chapter 5"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              disabled={active}
+            />
+          </div>
+
+          {/* Session Summary & Action Button */}
+          <div className="fqr-summary-box">
+            <div className="fqr-divider" />
+            <div className="fqr-summary-row">
+              <span className="fqr-summary-label">Course ID</span>
+              <span className="fqr-summary-val">{course || '—'}</span>
+            </div>
+            <div className="fqr-summary-row">
+              <span className="fqr-summary-label">Duration</span>
+              <span className="fqr-summary-val">{duration}</span>
+            </div>
+            <div className="fqr-divider" />
+
+            <button
+              type="button"
+              className={`fqr-start-btn ${active ? 'active-mode' : ''}`}
+              onClick={active ? stopSession : startSession}
+              disabled={loading || !course}
+            >
+              {loading ? (
+                <span>Generating Session...</span>
+              ) : active ? (
+                <span>Stop Active Session</span>
+              ) : (
+                <>
+                  <PlayIcon size={14} color="#FFFFFF" />
+                  <span>Start QR Session</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Right: Preview & Projection */}
-        <div className="fd-qr-preview-box">
-          <div className="fd-qr-img-wrap" style={{ width: '280px', height: '280px' }}>
-            <img src={buildQrUrl(tokenPayload, 280)} alt="Live QR" className="fd-qr-img" />
-          </div>
+        {/* 8. QR Code Preview Card (~814px wide, ~457px tall) */}
+        <div className="fqr-card fqr-preview-card">
+          {!active && !isExpired ? (
+            /* Initial Empty State */
+            <div className="fqr-empty-preview">
+              <div className="fqr-placeholder-wrap">
+                <QrPlaceholderIllustration size={192} />
+              </div>
+              <h2 className="fqr-preview-title">Start a session to activate</h2>
+              <p className="fqr-preview-caption">
+                Visual preview only · No active QR session
+              </p>
+            </div>
+          ) : active ? (
+            /* Active Session State */
+            <div className="fqr-active-preview">
+              <div className="fqr-active-top-bar">
+                <span className="fqr-course-badge">{course}</span>
+                <span className="fqr-countdown-tag">
+                  <ClockIcon size={13} color="#162F44" />
+                  <span>{timeLeft}s remaining</span>
+                </span>
+                <span className="fqr-status-pill active">
+                  <span className="fqr-status-pill-dot" />
+                  <span>active</span>
+                </span>
+              </div>
 
-          <div className="fd-qr-countdown-tag" style={{ marginTop: '20px' }}>
-            <ClockIcon size={15} color="#162F44" />
-            <span>
-              {active
-                ? `${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')} active`
-                : 'Session Idle (Click Start to broadcast)'}
-            </span>
-          </div>
+              <div className="fqr-active-img-box">
+                <img
+                  src={buildQrUrl(tokenPayload, 220)}
+                  alt="Active Attendance QR"
+                  className="fqr-active-qr-img"
+                />
+              </div>
 
-          <div style={{ marginTop: '14px', fontSize: '13px', color: 'var(--fd-text-secondary)' }}>
-            Course: <strong style={{ color: 'var(--fd-navy)' }}>{course}</strong> · Session ID:{' '}
-            <code style={{ color: 'var(--fd-navy)' }}>{sessionId}</code>
-          </div>
+              <div className="fqr-active-meta">
+                <div className="fqr-meta-line">
+                  <span>Started: <strong>{formattedStartTime}</strong></span>
+                  <span className="fqr-meta-dot">·</span>
+                  <span>Expires: <strong>{formattedExpireTime}</strong></span>
+                  <span className="fqr-meta-dot">·</span>
+                  <span>Session: <code>{sessionId}</code></span>
+                </div>
+                <div className="fqr-scan-stat">
+                  <span>{scanCount} / 42 students scanned</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="fqr-end-btn"
+                onClick={stopSession}
+              >
+                End Session
+              </button>
+            </div>
+          ) : (
+            /* Expired Session State */
+            <div className="fqr-empty-preview">
+              <div className="fqr-expired-icon-wrap">
+                <ClockIcon size={44} color="#758087" />
+              </div>
+              <h2 className="fqr-preview-title" style={{ marginTop: '16px' }}>Session Expired</h2>
+              <p className="fqr-preview-caption">
+                Attendance submissions for session <code>{sessionId}</code> are closed
+              </p>
+              <button
+                type="button"
+                className="fqr-reset-btn"
+                onClick={() => setIsExpired(false)}
+              >
+                Configure New Session
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 9. Recent QR Sessions Table (~298px min-height) */}
+      <div className="fqr-sessions-card">
+        <h2 className="fqr-card-title">Recent QR Sessions</h2>
+        <div className="fqr-table-wrap">
+          <table className="fqr-sessions-table">
+            <thead>
+              <tr>
+                <th className="fqr-col-id">SESSION ID</th>
+                <th className="fqr-col-course">COURSE</th>
+                <th className="fqr-col-date">DATE</th>
+                <th className="fqr-col-dur">DURATION</th>
+                <th className="fqr-col-scan">SCANNED</th>
+                <th className="fqr-col-status">STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sessionsList.map((s, idx) => (
+                <tr key={s.sessionId || idx}>
+                  <td className="fqr-col-id">
+                    <code>{s.sessionId}</code>
+                  </td>
+                  <td className="fqr-col-course">
+                    <span className="fqr-course-badge">{s.course}</span>
+                  </td>
+                  <td className="fqr-col-date">{s.date}</td>
+                  <td className="fqr-col-dur">{s.duration}</td>
+                  <td className="fqr-col-scan">{s.scanned}</td>
+                  <td className="fqr-col-status">
+                    <span className={`fqr-status-pill ${s.status}`}>
+                      <span className="fqr-status-pill-dot" />
+                      <span>{s.status}</span>
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1495,7 +1867,7 @@ export default function FacultyDashboardPage() {
           )}
 
           {activeTab === 'qr' && (
-            <TabQR onShowToast={showToast} />
+            <TabQR onShowToast={showToast} liveData={liveData} user={user} />
           )}
 
           {activeTab === 'timetable' && (
