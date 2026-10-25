@@ -2998,3 +2998,912 @@
     margin-top: 6px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ATTENDANCE REGISTER WORKSPACE & ADVANCED FEATURES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Heading Actions Bar ───────────────────────────────────── */
+.far-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.far-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px;
+  background-color: #FCFBF9;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.far-btn-secondary:hover {
+  background-color: #F0F3F1;
+  border-color: #C0C8C3;
+  transform: translateY(-1px);
+}
+
+.far-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  background-color: transparent;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.far-btn-outline:hover {
+  background-color: #ECEEEA;
+}
+
+.far-live-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--fd-green);
+  box-shadow: 0 0 0 2px rgba(85, 126, 109, 0.25);
+  animation: fdPulseDot 1.8s infinite;
+}
+
+/* ── Sub-navigation Strip (Present, Late, Absent, Exceptions, Duplicates, History) ── */
+.far-subnav-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 3px 0 16px 0;
+  margin-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.far-subnav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background-color: #FCFBF9;
+  border: 1px solid var(--fd-border);
+  border-radius: 20px;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 450;
+  color: var(--fd-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.far-subnav-pill:hover {
+  background-color: #F2F4F0;
+  color: var(--fd-navy);
+}
+
+.far-subnav-pill.active {
+  background-color: var(--fd-navy);
+  border-color: var(--fd-navy);
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.far-subnav-pill.active .far-subnav-badge {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+.far-subnav-pill.active svg {
+  color: #FFFFFF !important;
+}
+
+.far-subnav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font-size: 10.5px;
+  font-weight: 500;
+  background-color: #E8ECE8;
+  color: var(--fd-navy);
+}
+
+.far-subnav-badge.green {
+  background-color: rgba(85, 126, 109, 0.15);
+  color: #3D6B57;
+}
+
+.far-subnav-badge.amber {
+  background-color: rgba(181, 130, 44, 0.15);
+  color: #B5822C;
+}
+
+.far-subnav-badge.red {
+  background-color: rgba(195, 102, 91, 0.15);
+  color: #C3665B;
+}
+
+.far-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.far-dot.green { background-color: var(--fd-green); }
+.far-dot.amber { background-color: var(--fd-amber); }
+.far-dot.red { background-color: var(--fd-red); }
+
+/* ── Table & Record Enhancements ───────────────────────────── */
+.far-student-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.far-avatar-chip {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #E6EAE7;
+  color: var(--fd-navy);
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.far-student-email {
+  font-weight: 500;
+  color: var(--fd-navy);
+}
+
+.far-verif-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.far-method-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 450;
+  background-color: #F0F2EF;
+  color: var(--fd-navy);
+}
+
+.far-method-pill.face {
+  background-color: rgba(85, 126, 109, 0.1);
+  color: #3D6B57;
+}
+
+.far-method-pill.manual {
+  background-color: #ECEEEA;
+  color: var(--fd-navy);
+}
+
+.far-verified-tag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--fd-green);
+}
+
+.far-pending-tag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--fd-amber);
+  background-color: rgba(181, 130, 44, 0.1);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.far-status-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.far-override-tag {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #758087;
+  background-color: #ECEEEA;
+  padding: 1px 5px;
+  border-radius: 2px;
+  width: fit-content;
+  cursor: help;
+}
+
+.far-status-pill.status-late {
+  background-color: rgba(181, 130, 44, 0.12);
+  color: #B5822C;
+}
+
+.far-status-pill.status-late .far-status-pill-dot {
+  background-color: #B5822C;
+}
+
+.far-status-pill.status-absent {
+  background-color: rgba(195, 102, 91, 0.12);
+  color: #C3665B;
+}
+
+.far-status-pill.status-absent .far-status-pill-dot {
+  background-color: #C3665B;
+}
+
+.far-status-pill.status-blocked {
+  background-color: rgba(85, 126, 109, 0.12);
+  color: #3D6B57;
+}
+
+.far-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.far-btn-verify-student {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: rgba(85, 126, 109, 0.12);
+  color: #3D6B57;
+  border: 1px solid rgba(85, 126, 109, 0.25);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.far-btn-verify-student:hover {
+  background-color: var(--fd-green);
+  color: #FFFFFF;
+}
+
+.far-btn-edit-student {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: none;
+  border: 1px solid var(--fd-border);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.far-btn-edit-student:hover {
+  background-color: #ECEEEA;
+}
+
+/* ── VIEW 2: Recognition Exceptions & Failures ─────────────── */
+.far-exceptions-panel,
+.far-history-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.far-panel-header {
+  padding: 16px 20px;
+  background-color: #FCFBF9;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+}
+
+.far-panel-title {
+  font-family: var(--fd-font-serif);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0 0 4px 0;
+}
+
+.far-panel-sub {
+  font-size: 12.5px;
+  color: var(--fd-text-secondary);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.far-empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 20px;
+  background-color: #FCFBF9;
+  border: 1px dashed var(--fd-border);
+  border-radius: 4px;
+  gap: 12px;
+  color: var(--fd-text-secondary);
+  font-size: 13px;
+}
+
+.far-exceptions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.far-exception-card {
+  background-color: #FFFFFF;
+  border: 1px solid #ECEEEA;
+  border-radius: 4px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-left: 3px solid var(--fd-amber);
+}
+
+.far-ex-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.far-ex-anomaly-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background-color: rgba(195, 102, 91, 0.1);
+  color: #C3665B;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.far-ex-time {
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+}
+
+.far-ex-student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.far-ex-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--fd-navy);
+}
+
+.far-ex-email {
+  font-size: 12px;
+  color: var(--fd-text-secondary);
+}
+
+.far-ex-course {
+  font-size: 11.5px;
+  color: var(--fd-navy);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.far-ex-details {
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+  background-color: #F9FAF7;
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.far-ex-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.far-btn-approve-failure {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  background-color: var(--fd-navy);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.far-btn-approve-failure:hover {
+  opacity: 0.92;
+}
+
+.far-btn-reject-failure {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  background-color: transparent;
+  color: var(--fd-navy);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.far-btn-reject-failure:hover {
+  background-color: #ECEEEA;
+}
+
+/* ── VIEW 4: Attendance History Grid ───────────────────────── */
+.far-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+}
+
+.far-history-card {
+  background-color: #FFFFFF;
+  border: 1px solid #ECEEEA;
+  border-radius: 4px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.far-history-card:hover {
+  border-color: var(--fd-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.far-hist-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.far-hist-session-id {
+  font-size: 10.5px;
+  font-family: monospace;
+  color: var(--fd-text-secondary);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.far-hist-course-name {
+  font-family: var(--fd-font-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+}
+
+.far-hist-rate-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.far-hist-rate-badge.green {
+  background-color: rgba(85, 126, 109, 0.12);
+  color: #3D6B57;
+}
+
+.far-hist-rate-badge.amber {
+  background-color: rgba(181, 130, 44, 0.12);
+  color: #B5822C;
+}
+
+.far-hist-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+  flex-wrap: wrap;
+}
+
+.far-hist-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.far-hist-counts-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background-color: #F9FAF7;
+  border-radius: 4px;
+  font-size: 11.5px;
+  flex-wrap: wrap;
+}
+
+.far-hcount {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.far-hcount.green strong { color: var(--fd-green); }
+.far-hcount.amber strong { color: var(--fd-amber); }
+.far-hcount.red strong { color: var(--fd-red); }
+.far-hcount.blue strong { color: #162F44; }
+
+.far-hist-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid #ECEEEA;
+}
+
+.far-btn-subtle {
+  background: none;
+  border: none;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.far-btn-subtle:hover {
+  color: var(--fd-green);
+}
+
+.far-btn-outline-sm {
+  padding: 5px 10px;
+  background-color: transparent;
+  border: 1px solid var(--fd-border);
+  border-radius: 3px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.far-btn-outline-sm:hover {
+  background-color: #ECEEEA;
+}
+
+/* ── MODALS: Duplicate Warning, Status Selectors, Audit Note ─── */
+.far-duplicate-warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background-color: rgba(181, 130, 44, 0.08);
+  border: 1px solid rgba(181, 130, 44, 0.3);
+  border-radius: 4px;
+  font-size: 12px;
+  color: #7A5314;
+}
+
+.far-duplicate-warning-box p {
+  margin: 3px 0 8px 0;
+  line-height: 1.4;
+}
+
+.far-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--fd-navy);
+  cursor: pointer;
+}
+
+.far-status-options-row {
+  display: flex;
+  gap: 8px;
+}
+
+.far-status-opt-btn {
+  flex: 1;
+  height: 38px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fd-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.far-status-opt-btn.selected.green {
+  background-color: rgba(85, 126, 109, 0.15);
+  border-color: var(--fd-green);
+  color: #3D6B57;
+  font-weight: 600;
+}
+
+.far-status-opt-btn.selected.amber {
+  background-color: rgba(181, 130, 44, 0.15);
+  border-color: var(--fd-amber);
+  color: #B5822C;
+  font-weight: 600;
+}
+
+.far-status-opt-btn.selected.red {
+  background-color: rgba(195, 102, 91, 0.15);
+  border-color: var(--fd-red);
+  color: #C3665B;
+  font-weight: 600;
+}
+
+.far-record-summary-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: #F0F2EF;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.far-rbanner-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--fd-text-secondary);
+  margin-bottom: 2px;
+}
+
+.far-audit-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+  padding: 8px 10px;
+  background-color: #FAFBF9;
+  border: 1px dashed var(--fd-border);
+  border-radius: 4px;
+}
+
+/* ── LIVE SESSION MONITOR MODAL ────────────────────────────── */
+.far-live-dialog {
+  max-width: 620px;
+}
+
+.far-live-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.far-live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #C3665B;
+  box-shadow: 0 0 0 2px rgba(195, 102, 91, 0.25);
+  animation: fdPulseDot 1.4s infinite;
+}
+
+.far-live-timer-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: #162F44;
+  color: #FFFFFF;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+.far-timer-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.far-timer-caption {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #A8B7B7;
+}
+
+.far-timer-clock {
+  font-family: var(--fd-font-serif);
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: #FFFFFF;
+}
+
+.far-timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.far-btn-extend {
+  padding: 8px 14px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.far-btn-extend:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.far-btn-end-session {
+  padding: 8px 16px;
+  background-color: #C3665B;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.far-btn-end-session:hover {
+  opacity: 0.9;
+}
+
+.far-live-metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.far-live-metric-box {
+  padding: 10px 12px;
+  background-color: #F7F8F5;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.far-live-metric-box .label {
+  font-size: 10.5px;
+  color: var(--fd-text-secondary);
+  margin-bottom: 2px;
+}
+
+.far-live-metric-box .value {
+  font-family: var(--fd-font-serif);
+  font-size: 22px;
+  color: var(--fd-navy);
+}
+
+.far-live-metric-box .value.green { color: var(--fd-green); }
+.far-live-metric-box .value.amber { color: var(--fd-amber); }
+.far-live-metric-box .value.red { color: var(--fd-red); }
+.far-live-metric-box .value.blue { color: #162F44; }
+
+.far-live-stream-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.far-stream-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fd-text-secondary);
+  margin: 0;
+}
+
+.far-stream-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.far-stream-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #ECEEEA;
+  border-radius: 4px;
+}
+
+.far-stream-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.far-stream-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--fd-green);
+}
+
+.far-stream-student {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  display: block;
+}
+
+.far-stream-meta {
+  font-size: 10.5px;
+  color: var(--fd-text-secondary);
+}
+
+.far-roster-dialog {
+  max-width: 680px;
+}
+
+.far-roster-stats-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: #F0F2EF;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 14px;
+}

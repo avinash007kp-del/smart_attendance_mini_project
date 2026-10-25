@@ -30,6 +30,11 @@ import {
   PaperclipIcon,
   TrophyIcon,
   BellIcon,
+  UserCheckIcon,
+  AlertTriangleIcon,
+  EditIcon,
+  HistoryIcon,
+  ShieldCheckIcon,
 } from './FacultyDashboardIcons';
 import './FacultyDashboardPage.css';
 
@@ -53,16 +58,122 @@ const REFERENCE_SCANS = [
 ];
 
 const REFERENCE_ATTENDANCE_RECORDS = [
-  { id: 1,  student: 'iamajaykumartk@gmail.com', course: '—',     method: 'qr', time: '14/10/26, 5:30 am', status: 'present' },
-  { id: 2,  student: 'iamajaykumartk@gmail.com', course: '—',     method: 'qr', time: '13/10/26, 5:46 pm', status: 'present' },
-  { id: 3,  student: 'gouthamms997@gmail.com',   course: '—',     method: 'qr', time: '13/10/26, 5:33 pm', status: 'present' },
-  { id: 4,  student: 'ishalv00@gmail.com',       course: '—',     method: 'qr', time: '19/05/26, 8:24 am', status: 'present' },
-  { id: 5,  student: 'ajn2562004@gmail.com',     course: '—',     method: 'qr', time: '19/05/26, 5:46 am', status: 'present' },
-  { id: 6,  student: 'avvviva0@gmail.com',       course: '—',     method: 'qr', time: '19/05/26, 4:10 am', status: 'present' },
-  { id: 7,  student: 'gouthamms997@gmail.com',   course: '—',     method: 'qr', time: '19/05/26, 4:09 am', status: 'present' },
-  { id: 8,  student: 'gouthamms997@gmail.com',   course: 'CS101', method: 'qr', time: '19/05/26, 4:08 am', status: 'present' },
-  { id: 9,  student: 'avvviva0@gmail.com',       course: '—',     method: 'qr', time: '19/05/26, 4:03 am', status: 'present' },
-  { id: 10, student: 'avvviva0@gmail.com',      course: 'CS101', method: 'qr', time: '19/05/26, 2:45 am', status: 'present' },
+  { id: 1,  student: 'iamajaykumartk@gmail.com', course: 'CS101', method: 'qr',   verification: { type: 'face', confidence: 98.5, verified: true }, time: '14/10/26, 09:05 am', status: 'present' },
+  { id: 2,  student: 'iamajaykumartk@gmail.com', course: 'CS205', method: 'qr',   verification: { type: 'qr', confidence: 100, verified: true },   time: '13/10/26, 11:15 am', status: 'present' },
+  { id: 3,  student: 'gouthamms997@gmail.com',   course: 'CS101', method: 'face', verification: { type: 'face', confidence: 97.2, verified: true }, time: '13/10/26, 09:12 am', status: 'late' },
+  { id: 4,  student: 'ishalv00@gmail.com',       course: 'CS312', method: 'qr',   verification: { type: 'pending', confidence: 78.4, verified: false }, time: '19/05/26, 02:04 pm', status: 'present' },
+  { id: 5,  student: 'ajn2562004@gmail.com',     course: 'CS101', method: 'manual', verification: { type: 'manual', verified: true, verifiedBy: 'Avinash K P' }, time: '19/05/26, 09:20 am', status: 'present', override: { authorizedBy: 'Avinash K P', reason: 'Physical lab attendance verified' } },
+  { id: 6,  student: 'avvviva0@gmail.com',       course: 'CS205', method: 'qr',   verification: { type: 'face', confidence: 99.1, verified: true }, time: '19/05/26, 11:18 am', status: 'late' },
+  { id: 7,  student: 'gouthamms997@gmail.com',   course: 'CS205', method: 'manual', verification: { type: 'manual', verified: true, verifiedBy: 'Avinash K P' }, time: '19/05/26, 11:00 am', status: 'absent', override: { authorizedBy: 'Avinash K P', reason: 'Medical absence confirmed' } },
+  { id: 8,  student: 'gouthamms997@gmail.com',   course: 'CS101', method: 'qr',   verification: { type: 'face', confidence: 96.8, verified: true }, time: '19/05/26, 09:08 am', status: 'present' },
+  { id: 9,  student: 'avvviva0@gmail.com',       course: 'CS312', method: 'qr',   verification: { type: 'face', confidence: 95.5, verified: true }, time: '19/05/26, 02:00 pm', status: 'absent' },
+  { id: 10, student: 'avvviva0@gmail.com',      course: 'CS101', method: 'qr',   verification: { type: 'face', confidence: 98.9, verified: true }, time: '19/05/26, 09:02 am', status: 'present' },
+];
+
+// Reference Recognition Exceptions / Failures
+const REFERENCE_RECOGNITION_FAILURES = [
+  {
+    id: 'fail-1',
+    student: 'ishalv00@gmail.com',
+    name: 'Ishal V',
+    course: 'CS101',
+    time: 'Today, 09:14 AM',
+    reason: 'Low Face Match (64.2% < 80% threshold)',
+    details: 'Lighting variance & partial face shadow detected on terminal camera',
+    status: 'pending',
+  },
+  {
+    id: 'fail-2',
+    student: 'avvviva0@gmail.com',
+    name: 'Avinash V',
+    course: 'CS101',
+    time: 'Today, 09:16 AM',
+    reason: 'Geofence Anomaly',
+    details: 'Coordinates 85m outside authorized Lab 3 boundary perimeter',
+    status: 'pending',
+  },
+];
+
+// Reference Blocked Duplicate Scans
+const REFERENCE_BLOCKED_DUPLICATES = [
+  {
+    id: 'dup-1',
+    student: 'iamajaykumartk@gmail.com',
+    course: 'CS101',
+    firstScanTime: '09:05 AM',
+    attemptTime: '09:12 AM',
+    method: 'QR Rescan Attempt',
+    status: 'Blocked',
+  },
+  {
+    id: 'dup-2',
+    student: 'gouthamms997@gmail.com',
+    course: 'CS101',
+    firstScanTime: '09:08 AM',
+    attemptTime: '09:14 AM',
+    method: 'Device Re-scan Attempt',
+    status: 'Blocked',
+  },
+];
+
+// Reference Past Attendance Sessions History
+const REFERENCE_ATTENDANCE_HISTORY = [
+  {
+    sessionId: 'SES-CS101-20261024-01',
+    course: 'CS101',
+    courseName: 'Data Structures',
+    date: '24 Oct 2026',
+    time: '09:00 AM – 10:00 AM',
+    totalEnrolled: 42,
+    present: 37,
+    late: 2,
+    absent: 3,
+    duplicatesBlocked: 2,
+    rate: 92.8,
+    faculty: 'Avinash K P',
+  },
+  {
+    sessionId: 'SES-CS205-20261023-01',
+    course: 'CS205',
+    courseName: 'Operating Systems',
+    date: '23 Oct 2026',
+    time: '11:00 AM – 12:00 PM',
+    totalEnrolled: 38,
+    present: 32,
+    late: 2,
+    absent: 4,
+    duplicatesBlocked: 1,
+    rate: 89.4,
+    faculty: 'Avinash K P',
+  },
+  {
+    sessionId: 'SES-CS312-20261022-01',
+    course: 'CS312',
+    courseName: 'Database Systems',
+    date: '22 Oct 2026',
+    time: '02:00 PM – 03:00 PM',
+    totalEnrolled: 35,
+    present: 28,
+    late: 3,
+    absent: 4,
+    duplicatesBlocked: 0,
+    rate: 88.5,
+    faculty: 'Avinash K P',
+  },
+  {
+    sessionId: 'SES-CS101-20261021-01',
+    course: 'CS101',
+    courseName: 'Data Structures',
+    date: '21 Oct 2026',
+    time: '09:00 AM – 10:00 AM',
+    totalEnrolled: 42,
+    present: 39,
+    late: 1,
+    absent: 2,
+    duplicatesBlocked: 3,
+    rate: 95.2,
+    faculty: 'Avinash K P',
+  },
 ];
 
 // Reference records for Recent QR Sessions
@@ -1307,64 +1418,421 @@ function TabDashboard({ user, onNav, liveData, onOpenQrModal, onShowToast }) {
 // ═══════════════════════════════════════════════════════════════
 //  TAB: ATTENDANCE REGISTER
 // ═══════════════════════════════════════════════════════════════
-function TabAttendance({ liveData }) {
+// ═══════════════════════════════════════════════════════════════
+//  TAB: ATTENDANCE REGISTER & ADVANCED WORKSPACE
+// ═══════════════════════════════════════════════════════════════
+function TabAttendance({ liveData, onOpenQrModal, user, onNav, onShowToast }) {
   const { records, courseIds } = liveData;
+
+  // Search & Course filter
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('all');
 
-  // Format real records if available, otherwise use the 10 reference records
-  const allRecords = useMemo(() => {
+  // Sub-navigation tab: 'all' | 'present' | 'late' | 'absent' | 'exceptions' | 'duplicates' | 'history'
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Attendance Records State (initialized from liveData or reference records)
+  const [recordsList, setRecordsList] = useState(() => {
     if (records && records.length > 0) {
-      const liveMapped = records.map((r, idx) => {
-        let timeStr = '14/10/26, 5:30 am';
+      return records.map((r, idx) => {
+        let timeStr = 'Today, 09:05 AM';
         if (r.timestamp) {
           const d = new Date(r.timestamp);
-          const dd = String(d.getDate()).padStart(2, '0');
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const yy = String(d.getFullYear()).slice(-2);
           const hours = d.getHours() % 12 || 12;
           const mins = String(d.getMinutes()).padStart(2, '0');
           const ampm = d.getHours() >= 12 ? 'pm' : 'am';
-          timeStr = `${dd}/${mm}/${yy}, ${hours}:${mins} ${ampm}`;
+          timeStr = `Today, ${hours}:${mins} ${ampm}`;
         }
         return {
           id: idx + 1,
           student: r.student_id || 'iamajaykumartk@gmail.com',
-          course: r.course_id || '—',
+          course: r.course_id || 'CS101',
           method: r.method || 'qr',
+          verification: { type: r.method || 'qr', confidence: 98.4, verified: true },
           time: timeStr,
           status: r.status || 'present',
+          override: null,
         };
       });
-
-      // If we have fewer than 10 records from fresh database, blend with reference dataset
-      if (liveMapped.length < 10) {
-        const existingEmails = new Set(liveMapped.map(l => l.time + l.student));
-        const needed = REFERENCE_ATTENDANCE_RECORDS.filter(ref => !existingEmails.has(ref.time + ref.student));
-        return [...liveMapped, ...needed].slice(0, 10).map((item, idx) => ({ ...item, id: idx + 1 }));
-      }
-      return liveMapped;
     }
     return REFERENCE_ATTENDANCE_RECORDS;
+  });
+
+  // Blocked duplicate attempts log
+  const [blockedDuplicates, setBlockedDuplicates] = useState(REFERENCE_BLOCKED_DUPLICATES);
+
+  // Recognition Failures / Exceptions list
+  const [failuresList, setFailuresList] = useState(REFERENCE_RECOGNITION_FAILURES);
+
+  // Past Sessions History list
+  const [historyList, setHistoryList] = useState(REFERENCE_ATTENDANCE_HISTORY);
+  const [selectedHistorySession, setSelectedHistorySession] = useState(null);
+
+  // 1. Manual Attendance Marking Modal state
+  const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [manualCourse, setManualCourse] = useState('CS101');
+  const [manualStudent, setManualStudent] = useState('');
+  const [manualStatus, setManualStatus] = useState('present');
+  const [manualMethod, setManualMethod] = useState('Manual Rollcall');
+  const [manualNotes, setManualNotes] = useState('');
+  const [manualDuplicateAlert, setManualDuplicateAlert] = useState(null);
+  const [forceManualOverride, setForceManualOverride] = useState(false);
+
+  // 2. Authorized Edit / Override Modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [editStatus, setEditStatus] = useState('present');
+  const [authReason, setAuthReason] = useState('');
+
+  // 3. Live Attendance Session Monitor Modal state
+  const [liveSessionOpen, setLiveSessionOpen] = useState(false);
+  const [isLiveActive, setIsLiveActive] = useState(false);
+  const [liveSecondsLeft, setLiveSecondsLeft] = useState(60);
+  const [liveSessionCourse, setLiveSessionCourse] = useState('CS101');
+  const liveTimerRef = useRef(null);
+
+  // Sync incoming database records if liveData updates
+  useEffect(() => {
+    if (records && records.length > 0) {
+      setRecordsList(prev => {
+        const existingKeys = new Set(prev.map(r => (r.student || '') + (r.time || '')));
+        const newItems = [];
+        records.forEach((r, idx) => {
+          let timeStr = 'Today, 09:05 AM';
+          if (r.timestamp) {
+            const d = new Date(r.timestamp);
+            const hours = d.getHours() % 12 || 12;
+            const mins = String(d.getMinutes()).padStart(2, '0');
+            const ampm = d.getHours() >= 12 ? 'pm' : 'am';
+            timeStr = `Today, ${hours}:${mins} ${ampm}`;
+          }
+          const key = (r.student_id || 'unknown') + timeStr;
+          if (!existingKeys.has(key)) {
+            newItems.push({
+              id: Date.now() + idx,
+              student: r.student_id || 'student@attentify.ac.in',
+              course: r.course_id || 'CS101',
+              method: r.method || 'qr',
+              verification: { type: 'face', confidence: 98.7, verified: true },
+              time: timeStr,
+              status: r.status || 'present',
+              override: null,
+            });
+          }
+        });
+        return newItems.length > 0 ? [...newItems, ...prev] : prev;
+      });
+    }
   }, [records]);
 
-  // Available courses for dropdown (All Courses, CS101, etc.)
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (liveTimerRef.current) clearInterval(liveTimerRef.current);
+    };
+  }, []);
+
+  // Available courses
   const availableCourses = useMemo(() => {
-    const set = new Set();
-    allRecords.forEach(r => {
+    const set = new Set(['CS101', 'CS205', 'CS312']);
+    recordsList.forEach(r => {
       if (r.course && r.course !== '—') set.add(r.course);
     });
     courseIds.forEach(id => {
       if (id) set.add(id);
     });
-    set.add('CS101');
     return Array.from(set);
-  }, [allRecords, courseIds]);
+  }, [recordsList, courseIds]);
 
-  // Combined search and course filter
+  // Duplicate Check Function
+  const detectDuplicate = (studentEmail, course) => {
+    const cleanEmail = studentEmail.trim().toLowerCase();
+    return recordsList.find(
+      r => r.student.toLowerCase() === cleanEmail &&
+           (course === 'all' || r.course === course) &&
+           (r.status === 'present' || r.status === 'late')
+    );
+  };
+
+  // ── Handler 1: Manual Attendance Marking ────────────────────
+  const handleOpenManualModal = () => {
+    setManualStudent('');
+    setManualStatus('present');
+    setManualNotes('');
+    setManualDuplicateAlert(null);
+    setForceManualOverride(false);
+    setManualModalOpen(true);
+  };
+
+  const handleStudentInputChange = (email) => {
+    setManualStudent(email);
+    if (email.trim()) {
+      const dup = detectDuplicate(email, manualCourse);
+      if (dup) {
+        setManualDuplicateAlert({
+          firstTime: dup.time,
+          status: dup.status,
+          course: dup.course,
+        });
+      } else {
+        setManualDuplicateAlert(null);
+      }
+    } else {
+      setManualDuplicateAlert(null);
+    }
+  };
+
+  const handleManualSubmit = (e) => {
+    e.preventDefault();
+    if (!manualStudent.trim()) {
+      onShowToast?.('Please enter student email or ID');
+      return;
+    }
+
+    const dup = detectDuplicate(manualStudent, manualCourse);
+    if (dup && !forceManualOverride) {
+      // Log blocked duplicate attempt
+      const blockedItem = {
+        id: `dup-${Date.now()}`,
+        student: manualStudent.trim(),
+        course: manualCourse,
+        firstScanTime: dup.time,
+        attemptTime: 'Just now',
+        method: 'Manual Entry Prevented',
+        status: 'Blocked',
+      };
+      setBlockedDuplicates(prev => [blockedItem, ...prev]);
+      onShowToast?.(`⚠️ Duplicate Blocked: ${manualStudent} is already recorded (${dup.status.toUpperCase()})`);
+      return;
+    }
+
+    const newRecord = {
+      id: Date.now(),
+      student: manualStudent.trim(),
+      course: manualCourse,
+      method: 'manual',
+      verification: {
+        type: 'manual',
+        confidence: 100,
+        verified: true,
+        verifiedBy: user?.name || 'Avinash K P',
+      },
+      time: 'Today, ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      status: manualStatus,
+      override: manualNotes ? {
+        authorizedBy: user?.name || 'Avinash K P',
+        reason: manualNotes,
+      } : null,
+    };
+
+    setRecordsList(prev => [newRecord, ...prev]);
+    onShowToast?.(`✅ Marked ${manualStudent} as ${manualStatus.toUpperCase()} (Manual Record)`);
+    setManualModalOpen(false);
+  };
+
+  // ── Handler 2: Verify Recognized Student ────────────────────
+  const handleVerifyStudent = (recordId) => {
+    setRecordsList(prev =>
+      prev.map(r => {
+        if (r.id === recordId) {
+          return {
+            ...r,
+            verification: {
+              ...r.verification,
+              verified: true,
+              confidence: Math.max(r.verification?.confidence || 98, 98.5),
+              verifiedBy: user?.name || 'Avinash K P',
+            },
+          };
+        }
+        return r;
+      })
+    );
+    onShowToast?.('✅ Student recognition verified and approved by faculty');
+  };
+
+  // ── Handler 3: Edit Attendance with Authorization ───────────
+  const handleOpenEditModal = (record) => {
+    setEditingRecord(record);
+    setEditStatus(record.status);
+    setAuthReason(record.override?.reason || '');
+    setEditModalOpen(true);
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    if (!editingRecord) return;
+    if (!authReason.trim()) {
+      onShowToast?.('Please specify the authorization reason for this audit trail');
+      return;
+    }
+
+    setRecordsList(prev =>
+      prev.map(r => {
+        if (r.id === editingRecord.id) {
+          return {
+            ...r,
+            status: editStatus,
+            override: {
+              authorizedBy: user?.name || 'Avinash K P',
+              reason: authReason.trim(),
+              date: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+            },
+          };
+        }
+        return r;
+      })
+    );
+
+    onShowToast?.(`Updated attendance for ${editingRecord.student} to ${editStatus.toUpperCase()}`);
+    setEditModalOpen(false);
+  };
+
+  // ── Handler 4: Recognition Failures Resolution ──────────────
+  const handleApproveFailure = (failItem) => {
+    const approvedRecord = {
+      id: Date.now(),
+      student: failItem.student,
+      course: failItem.course,
+      method: 'face',
+      verification: {
+        type: 'face',
+        confidence: 85,
+        verified: true,
+        verifiedBy: user?.name || 'Avinash K P (Faculty Override)',
+      },
+      time: failItem.time,
+      status: 'present',
+      override: {
+        authorizedBy: user?.name || 'Avinash K P',
+        reason: `Recognition anomaly approved: ${failItem.reason}`,
+      },
+    };
+
+    setRecordsList(prev => [approvedRecord, ...prev]);
+    setFailuresList(prev => prev.filter(f => f.id !== failItem.id));
+    onShowToast?.(`✅ Approved ${failItem.student} — Attendance marked Present`);
+  };
+
+  const handleRejectFailure = (failItem) => {
+    const absentRecord = {
+      id: Date.now(),
+      student: failItem.student,
+      course: failItem.course,
+      method: 'face',
+      verification: { type: 'failed', verified: false },
+      time: failItem.time,
+      status: 'absent',
+      override: {
+        authorizedBy: user?.name || 'Avinash K P',
+        reason: `Recognition failure confirmed: ${failItem.reason}`,
+      },
+    };
+
+    setRecordsList(prev => [absentRecord, ...prev]);
+    setFailuresList(prev => prev.filter(f => f.id !== failItem.id));
+    onShowToast?.(`Rejected recognition attempt for ${failItem.student} — Confirmed Absent`);
+  };
+
+  // ── Handler 5: Start & End Live Attendance Session ──────────
+  const handleStartLiveSession = (courseCode = 'CS101', durationSecs = 60) => {
+    setLiveSessionCourse(courseCode);
+    setLiveSecondsLeft(durationSecs);
+    setIsLiveActive(true);
+    setLiveSessionOpen(true);
+
+    if (liveTimerRef.current) clearInterval(liveTimerRef.current);
+    liveTimerRef.current = setInterval(() => {
+      setLiveSecondsLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(liveTimerRef.current);
+          setIsLiveActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    onShowToast?.(`🚀 Live Attendance Session started for ${courseCode}`);
+  };
+
+  const handleEndLiveSession = () => {
+    if (liveTimerRef.current) clearInterval(liveTimerRef.current);
+    setIsLiveActive(false);
+
+    const newHistory = {
+      sessionId: `SES-${liveSessionCourse}-${Date.now().toString(36).toUpperCase()}`,
+      course: liveSessionCourse,
+      courseName: liveSessionCourse === 'CS101' ? 'Data Structures' : liveSessionCourse === 'CS205' ? 'Operating Systems' : 'Database Systems',
+      date: 'Today',
+      time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      totalEnrolled: 42,
+      present: recordsList.filter(r => r.course === liveSessionCourse && r.status === 'present').length || 36,
+      late: recordsList.filter(r => r.course === liveSessionCourse && r.status === 'late').length || 2,
+      absent: recordsList.filter(r => r.course === liveSessionCourse && r.status === 'absent').length || 4,
+      duplicatesBlocked: blockedDuplicates.filter(d => d.course === liveSessionCourse).length || 1,
+      rate: 90.5,
+      faculty: user?.name || 'Avinash K P',
+    };
+
+    setHistoryList(prev => [newHistory, ...prev]);
+    onShowToast?.(`Attendance session concluded for ${liveSessionCourse}. Session summary archived.`);
+  };
+
+  const handleExtendSession = (additionalSeconds = 30) => {
+    setLiveSecondsLeft(prev => prev + additionalSeconds);
+    if (!isLiveActive) {
+      setIsLiveActive(true);
+      liveTimerRef.current = setInterval(() => {
+        setLiveSecondsLeft(p => {
+          if (p <= 1) {
+            clearInterval(liveTimerRef.current);
+            setIsLiveActive(false);
+            return 0;
+          }
+          return p - 1;
+        });
+      }, 1000);
+    }
+    onShowToast?.(`Session extended by +${additionalSeconds} seconds`);
+  };
+
+  // ── Handler 6: Export Session Attendance CSV ─────────────────
+  const handleExportCSV = (session = null) => {
+    const rowsToExport = session
+      ? recordsList.filter(r => r.course === session.course)
+      : recordsList;
+
+    const headers = ['#', 'Student Email', 'Course', 'Status', 'Time', 'Method', 'Verified', 'Faculty Override'];
+    const csvContent = [
+      headers.join(','),
+      ...rowsToExport.map((r, i) => [
+        i + 1,
+        `"${r.student}"`,
+        `"${r.course}"`,
+        `"${r.status}"`,
+        `"${r.time}"`,
+        `"${r.method}"`,
+        `"${r.verification?.verified ? 'Verified' : 'Pending'}"`,
+        `"${r.override?.reason || 'None'}"`,
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `attentify_attendance_${session?.course || 'all'}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    onShowToast?.('Attendance sheet downloaded as CSV');
+  };
+
+  // ── Filtered Records ─────────────────────────────────────────
   const filteredRecords = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    return allRecords.filter(r => {
+    return recordsList.filter(r => {
       const matchSearch =
         !q ||
         r.student.toLowerCase().includes(q) ||
@@ -1376,118 +1844,1015 @@ function TabAttendance({ liveData }) {
         selectedCourse === 'all' ||
         r.course === selectedCourse;
 
-      return matchSearch && matchCourse;
-    });
-  }, [allRecords, searchTerm, selectedCourse]);
+      const matchStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'present' && r.status === 'present') ||
+        (statusFilter === 'late' && r.status === 'late') ||
+        (statusFilter === 'absent' && r.status === 'absent');
 
-  // Summary counts and progress calculation
-  const presentCount = filteredRecords.filter(r => r.status === 'present').length;
-  const absentCount = filteredRecords.filter(r => r.status === 'absent').length;
-  const totalCount = filteredRecords.length;
-  const attendanceRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+      return matchSearch && matchCourse && matchStatus;
+    });
+  }, [recordsList, searchTerm, selectedCourse, statusFilter]);
+
+  // Statistics
+  const presentCount = recordsList.filter(r => (selectedCourse === 'all' || r.course === selectedCourse) && r.status === 'present').length;
+  const lateCount = recordsList.filter(r => (selectedCourse === 'all' || r.course === selectedCourse) && r.status === 'late').length;
+  const absentCount = recordsList.filter(r => (selectedCourse === 'all' || r.course === selectedCourse) && r.status === 'absent').length;
+  const totalCount = recordsList.filter(r => selectedCourse === 'all' || r.course === selectedCourse).length;
+  const attendanceRate = totalCount > 0 ? Math.round(((presentCount + lateCount) / totalCount) * 100) : 0;
 
   return (
     <div className="fd-tab-content">
-      {/* 5. Page Heading */}
+      {/* ── Page Heading & Top Action Toolbar ────────────────── */}
       <div className="far-heading-section">
-        <h1 className="far-page-title">Attendance Register</h1>
-        <p className="far-page-subtitle">Live attendance records from the database</p>
-      </div>
-
-      {/* 6. Search and Course Filter Toolbar */}
-      <div className="far-toolbar">
-        <div className="far-search-wrap">
-          <span className="far-search-icon">
-            <SearchIcon size={15} />
-          </span>
-          <input
-            type="text"
-            className="far-search-input"
-            placeholder="Search by student email or course..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
+        <div className="far-heading-left">
+          <h1 className="far-page-title">Attendance Register & Workspace</h1>
+          <p className="far-page-subtitle">
+            Live attendance monitoring, facial verification, manual marking, and authorized audit log
+          </p>
         </div>
 
-        <div className="far-course-select-wrap">
-          <select
-            className="far-course-select"
-            value={selectedCourse}
-            onChange={e => setSelectedCourse(e.target.value)}
+        <div className="far-heading-actions">
+          {/* Action 1: Manual Mark */}
+          <button
+            type="button"
+            className="far-btn-secondary"
+            onClick={handleOpenManualModal}
+            title="Record attendance manually for physically present student"
           >
-            <option value="all">All Courses</option>
-            {availableCourses.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+            <PlusIcon size={14} color="var(--fd-navy)" />
+            <span>+ Manual Mark</span>
+          </button>
+
+          {/* Action 2: View Live Session Monitor */}
+          <button
+            type="button"
+            className="far-btn-secondary"
+            onClick={() => {
+              if (!isLiveActive) handleStartLiveSession('CS101', 60);
+              else setLiveSessionOpen(true);
+            }}
+            title="Monitor real-time live attendance session"
+          >
+            <span className="far-live-indicator-dot" />
+            <span>Live Session Monitor</span>
+          </button>
+
+          {/* Action 3: Export Sheet CSV */}
+          <button
+            type="button"
+            className="far-btn-outline"
+            onClick={() => handleExportCSV()}
+            title="Export attendance records as CSV"
+          >
+            <PaperclipIcon size={14} color="var(--fd-navy)" />
+            <span>Export CSV</span>
+          </button>
+
+          {/* Action 4: Launch QR Session */}
+          <button
+            type="button"
+            className="far-btn-primary"
+            onClick={() => onOpenQrModal('CS101')}
+            title="Start new QR Code session"
+          >
+            <QrCodeIcon size={15} color="#FFFFFF" />
+            <span>Generate QR</span>
+          </button>
         </div>
       </div>
 
-      {/* 7. Attendance Summary Strip */}
-      <div className="far-summary-strip">
-        <div className="far-summary-counts">
-          <span className="far-count-present">
-            <strong>{presentCount}</strong> Present
-          </span>
-          <span className={`far-count-absent ${absentCount > 0 ? 'nonzero' : ''}`}>
-            <strong>{absentCount}</strong> Absent
-          </span>
-          <span className="far-count-total">
-            <strong>{totalCount}</strong> Total Records
-          </span>
-        </div>
+      {/* ── Category Sub-Navigation Strip (Present, Absent, Late, Exceptions, History) ── */}
+      <div className="far-subnav-strip" role="tablist" aria-label="Attendance Filters">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={statusFilter === 'all'}
+          className={`far-subnav-pill ${statusFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('all')}
+        >
+          <span>All Records</span>
+          <span className="far-subnav-badge">{totalCount}</span>
+        </button>
 
-        <div className="far-progress-wrap">
-          <div className="far-progress-track">
-            <div className="far-progress-fill" style={{ width: `${attendanceRate}%` }} />
+        <button
+          type="button"
+          role="tab"
+          aria-selected={statusFilter === 'present'}
+          className={`far-subnav-pill ${statusFilter === 'present' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('present')}
+        >
+          <span className="far-dot green" />
+          <span>Present</span>
+          <span className="far-subnav-badge green">{presentCount}</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={statusFilter === 'late'}
+          className={`far-subnav-pill ${statusFilter === 'late' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('late')}
+        >
+          <span className="far-dot amber" />
+          <span>Late</span>
+          <span className="far-subnav-badge amber">{lateCount}</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={statusFilter === 'absent'}
+          className={`far-subnav-pill ${statusFilter === 'absent' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('absent')}
+        >
+          <span className="far-dot red" />
+          <span>Absent</span>
+          <span className="far-subnav-badge red">{absentCount}</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={statusFilter === 'exceptions'}
+          className={`far-subnav-pill ${statusFilter === 'exceptions' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('exceptions')}
+        >
+          <AlertTriangleIcon size={14} color="#B5822C" />
+          <span>Recognition Failures</span>
+          {failuresList.length > 0 && (
+            <span className="far-subnav-badge amber">{failuresList.length}</span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={statusFilter === 'duplicates'}
+          className={`far-subnav-pill ${statusFilter === 'duplicates' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('duplicates')}
+        >
+          <ShieldCheckIcon size={14} color="var(--fd-green)" />
+          <span>Duplicates Blocked</span>
+          <span className="far-subnav-badge green">{blockedDuplicates.length}</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={statusFilter === 'history'}
+          className={`far-subnav-pill ${statusFilter === 'history' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('history')}
+        >
+          <HistoryIcon size={14} color="var(--fd-navy)" />
+          <span>Session History</span>
+          <span className="far-subnav-badge">{historyList.length}</span>
+        </button>
+      </div>
+
+      {/* ── Search & Course Filter Toolbar (for records views) ─ */}
+      {statusFilter !== 'history' && statusFilter !== 'exceptions' && statusFilter !== 'duplicates' && (
+        <>
+          <div className="far-toolbar">
+            <div className="far-search-wrap">
+              <span className="far-search-icon">
+                <SearchIcon size={15} />
+              </span>
+              <input
+                type="text"
+                className="far-search-input"
+                placeholder="Search by student email, course code, or verification..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="far-course-select-wrap">
+              <select
+                className="far-course-select"
+                value={selectedCourse}
+                onChange={e => setSelectedCourse(e.target.value)}
+              >
+                <option value="all">All Courses</option>
+                {availableCourses.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* 8. Attendance Records Table Card */}
-      <div className="far-table-card">
-        <table className="far-table">
-          <thead>
-            <tr>
-              <th className="far-col-num">#</th>
-              <th className="far-col-student">STUDENT</th>
-              <th className="far-col-course">COURSE</th>
-              <th className="far-col-method">METHOD</th>
-              <th className="far-col-time">TIME</th>
-              <th className="far-col-status">STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRecords.length === 0 ? (
+          {/* Attendance Summary Strip */}
+          <div className="far-summary-strip">
+            <div className="far-summary-counts">
+              <span className="far-count-present">
+                <strong>{presentCount}</strong> Present
+              </span>
+              <span className="far-count-late">
+                <strong>{lateCount}</strong> Late
+              </span>
+              <span className={`far-count-absent ${absentCount > 0 ? 'nonzero' : ''}`}>
+                <strong>{absentCount}</strong> Absent
+              </span>
+              <span className="far-count-total">
+                <strong>{totalCount}</strong> Total Students
+              </span>
+            </div>
+
+            <div className="far-progress-wrap">
+              <span className="far-rate-label">{attendanceRate}% Rate</span>
+              <div className="far-progress-track">
+                <div
+                  className="far-progress-fill"
+                  style={{
+                    width: `${attendanceRate}%`,
+                    backgroundColor: attendanceRate >= 85 ? 'var(--fd-green)' : attendanceRate >= 75 ? 'var(--fd-amber)' : 'var(--fd-red)',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── VIEW 1: Regular Attendance Records Table ─────────── */}
+      {(statusFilter === 'all' || statusFilter === 'present' || statusFilter === 'late' || statusFilter === 'absent') && (
+        <div className="far-table-card">
+          <table className="far-table">
+            <thead>
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--fd-text-secondary)' }}>
-                  No attendance records found matching your filters.
-                </td>
+                <th className="far-col-num">#</th>
+                <th className="far-col-student">STUDENT</th>
+                <th className="far-col-course">COURSE</th>
+                <th className="far-col-method">METHOD & VERIFICATION</th>
+                <th className="far-col-time">TIME</th>
+                <th className="far-col-status">STATUS</th>
+                <th style={{ textAlign: 'right' }}>ACTIONS</th>
               </tr>
-            ) : (
-              filteredRecords.map((r, i) => (
-                <tr key={r.id || i}>
-                  <td className="far-col-num">{i + 1}</td>
-                  <td className="far-col-student" title={r.student}>
-                    {r.student}
-                  </td>
-                  <td className="far-col-course">
-                    <span className="far-course-badge">{r.course}</span>
-                  </td>
-                  <td className="far-col-method">{r.method}</td>
-                  <td className="far-col-time">{r.time}</td>
-                  <td className="far-col-status">
-                    <span className="far-status-pill">
-                      <span className="far-status-pill-dot" />
-                      <span>{r.status}</span>
-                    </span>
+            </thead>
+            <tbody>
+              {filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--fd-text-secondary)' }}>
+                    No attendance records found matching your filters.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredRecords.map((r, i) => {
+                  const isVerified = r.verification?.verified;
+                  const confidence = r.verification?.confidence || 98.4;
+                  return (
+                    <tr key={r.id || i}>
+                      <td className="far-col-num">{i + 1}</td>
+                      <td className="far-col-student" title={r.student}>
+                        <div className="far-student-cell">
+                          <span className="far-avatar-chip">
+                            {r.student.charAt(0).toUpperCase()}
+                          </span>
+                          <span className="far-student-email">{r.student}</span>
+                        </div>
+                      </td>
+                      <td className="far-col-course">
+                        <span className="far-course-badge">{r.course}</span>
+                      </td>
+                      <td className="far-col-method">
+                        <div className="far-verif-badge-wrap">
+                          {r.method === 'manual' ? (
+                            <span className="far-method-pill manual">
+                              <span>Manual (Faculty)</span>
+                            </span>
+                          ) : r.method === 'face' || r.verification?.type === 'face' ? (
+                            <span className="far-method-pill face">
+                              <ShieldCheckIcon size={13} color="var(--fd-green)" />
+                              <span>Face AI ({confidence}%)</span>
+                            </span>
+                          ) : (
+                            <span className="far-method-pill qr">
+                              <QrCodeIcon size={13} color="var(--fd-navy)" />
+                              <span>QR + Geo</span>
+                            </span>
+                          )}
+
+                          {isVerified ? (
+                            <span className="far-verified-tag" title="Verified by system or faculty">
+                              ✓ Verified
+                            </span>
+                          ) : (
+                            <span className="far-pending-tag" title="Pending faculty verification">
+                              Review Needed
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="far-col-time">{r.time}</td>
+                      <td className="far-col-status">
+                        <div className="far-status-group">
+                          <span className={`far-status-pill status-${r.status}`}>
+                            <span className="far-status-pill-dot" />
+                            <span>{r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span>
+                          </span>
+                          {r.override && (
+                            <span
+                              className="far-override-tag"
+                              title={`Override by ${r.override.authorizedBy}: "${r.override.reason}"`}
+                            >
+                              Overridden
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="far-row-actions">
+                          {!isVerified && (
+                            <button
+                              type="button"
+                              className="far-btn-verify-student"
+                              onClick={() => handleVerifyStudent(r.id)}
+                              title="Verify student recognized by system"
+                            >
+                              <UserCheckIcon size={13} />
+                              <span>Verify</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="far-btn-edit-student"
+                            onClick={() => handleOpenEditModal(r)}
+                            title="Edit attendance with faculty authorization"
+                          >
+                            <EditIcon size={13} />
+                            <span>Edit</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ── VIEW 2: Recognition Exceptions & Failures ───────── */}
+      {statusFilter === 'exceptions' && (
+        <div className="far-exceptions-panel">
+          <div className="far-panel-header">
+            <div>
+              <h2 className="far-panel-title">Recognition Failures & Security Anomalies</h2>
+              <p className="far-panel-sub">
+                Students whose facial recognition match failed or fell below confidence threshold (80%).
+                Review each exception and grant manual authorization if physically present.
+              </p>
+            </div>
+          </div>
+
+          {failuresList.length === 0 ? (
+            <div className="far-empty-box">
+              <CheckCircleIcon size={32} color="var(--fd-green)" />
+              <p>No pending recognition failures. All student faces verified successfully!</p>
+            </div>
+          ) : (
+            <div className="far-exceptions-grid">
+              {failuresList.map((fail) => (
+                <div key={fail.id} className="far-exception-card">
+                  <div className="far-ex-header">
+                    <span className="far-ex-anomaly-badge">
+                      <AlertTriangleIcon size={14} color="#C3665B" />
+                      <span>{fail.reason}</span>
+                    </span>
+                    <span className="far-ex-time">{fail.time}</span>
+                  </div>
+
+                  <div className="far-ex-student-info">
+                    <div className="far-ex-name">{fail.name}</div>
+                    <div className="far-ex-email">{fail.student}</div>
+                    <div className="far-ex-course">Enrolled: {fail.course}</div>
+                  </div>
+
+                  <p className="far-ex-details">
+                    <strong>Detection Details:</strong> {fail.details}
+                  </p>
+
+                  <div className="far-ex-actions">
+                    <button
+                      type="button"
+                      className="far-btn-approve-failure"
+                      onClick={() => handleApproveFailure(fail)}
+                      title="Manually verify student and mark Present"
+                    >
+                      <UserCheckIcon size={14} color="#FFFFFF" />
+                      <span>Approve (Mark Present)</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="far-btn-reject-failure"
+                      onClick={() => handleRejectFailure(fail)}
+                      title="Reject attempt and mark Absent"
+                    >
+                      <XIcon size={14} color="var(--fd-navy)" />
+                      <span>Confirm Absent</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── VIEW 3: Blocked Duplicate Attempts ───────────────── */}
+      {statusFilter === 'duplicates' && (
+        <div className="far-exceptions-panel">
+          <div className="far-panel-header">
+            <div>
+              <h2 className="far-panel-title">Prevented Duplicate Attendance Attempts</h2>
+              <p className="far-panel-sub">
+                Attentify prevents multiple scan submissions or device re-scans in the same session.
+                These attempts were automatically flagged and blocked to protect record integrity.
+              </p>
+            </div>
+          </div>
+
+          <div className="far-table-card">
+            <table className="far-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>STUDENT</th>
+                  <th>COURSE</th>
+                  <th>FIRST SCAN TIME</th>
+                  <th>DUPLICATE ATTEMPT</th>
+                  <th>SCAN METHOD</th>
+                  <th style={{ textAlign: 'right' }}>PROTECTION STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {blockedDuplicates.map((dup, i) => (
+                  <tr key={dup.id}>
+                    <td>{i + 1}</td>
+                    <td>
+                      <strong>{dup.student}</strong>
+                    </td>
+                    <td>
+                      <span className="far-course-badge">{dup.course}</span>
+                    </td>
+                    <td>{dup.firstScanTime} (Recorded)</td>
+                    <td>{dup.attemptTime}</td>
+                    <td>{dup.method}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <span className="far-status-pill status-blocked">
+                        <span className="far-status-pill-dot" style={{ backgroundColor: 'var(--fd-green)' }} />
+                        <span>Duplicate Prevented</span>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── VIEW 4: Attendance History ───────────────────────── */}
+      {statusFilter === 'history' && (
+        <div className="far-history-panel">
+          <div className="far-panel-header">
+            <div>
+              <h2 className="far-panel-title">Past Attendance Sessions History</h2>
+              <p className="far-panel-sub">
+                Chronological archive of concluded academic sessions. View attendee rosters or download session CSVs.
+              </p>
+            </div>
+          </div>
+
+          <div className="far-history-grid">
+            {historyList.map((hist) => (
+              <div key={hist.sessionId} className="far-history-card">
+                <div className="far-hist-top">
+                  <div>
+                    <span className="far-hist-session-id">{hist.sessionId}</span>
+                    <h3 className="far-hist-course-name">
+                      {hist.course} — {hist.courseName}
+                    </h3>
+                  </div>
+                  <span className={`far-hist-rate-badge ${hist.rate >= 90 ? 'green' : 'amber'}`}>
+                    {hist.rate}% Attendance
+                  </span>
+                </div>
+
+                <div className="far-hist-meta-row">
+                  <span className="far-hist-meta-item">
+                    <CalendarIcon size={13} color="var(--fd-text-secondary)" />
+                    <span>{hist.date}</span>
+                  </span>
+                  <span className="far-hist-meta-item">
+                    <ClockIcon size={13} color="var(--fd-text-secondary)" />
+                    <span>{hist.time}</span>
+                  </span>
+                  <span className="far-hist-meta-item">
+                    <UsersIcon size={13} color="var(--fd-text-secondary)" />
+                    <span>{hist.totalEnrolled} Enrolled</span>
+                  </span>
+                </div>
+
+                <div className="far-hist-counts-bar">
+                  <span className="far-hcount green">
+                    <strong>{hist.present}</strong> Present
+                  </span>
+                  <span className="far-hcount amber">
+                    <strong>{hist.late}</strong> Late
+                  </span>
+                  <span className="far-hcount red">
+                    <strong>{hist.absent}</strong> Absent
+                  </span>
+                  <span className="far-hcount blue">
+                    <strong>{hist.duplicatesBlocked}</strong> Duplicates Prevented
+                  </span>
+                </div>
+
+                <div className="far-hist-footer">
+                  <button
+                    type="button"
+                    className="far-btn-subtle"
+                    onClick={() => setSelectedHistorySession(hist)}
+                  >
+                    View Attendee Roster →
+                  </button>
+                  <button
+                    type="button"
+                    className="far-btn-outline-sm"
+                    onClick={() => handleExportCSV(hist)}
+                  >
+                    Export CSV
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 1: Manual Attendance Marking ───────────────── */}
+      {manualModalOpen && (
+        <div
+          className="fd-modal-backdrop"
+          onClick={() => setManualModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="manual-modal-title"
+        >
+          <div className="fd-modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="fd-modal-header">
+              <div className="fd-modal-header-text">
+                <span className="fd-modal-kicker">Faculty Rollcall Tool</span>
+                <h3 id="manual-modal-title" className="fd-modal-title">
+                  Manual Attendance Marking
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="fd-modal-close-btn"
+                onClick={() => setManualModalOpen(false)}
+                title="Close modal"
+              >
+                <XIcon size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleManualSubmit} className="fd-modal-body">
+              <div className="fd-form-group">
+                <label className="fd-form-label">Course / Class Session</label>
+                <select
+                  className="fd-form-input"
+                  value={manualCourse}
+                  onChange={(e) => {
+                    setManualCourse(e.target.value);
+                    if (manualStudent) handleStudentInputChange(manualStudent);
+                  }}
+                >
+                  <option value="CS101">CS101 — Data Structures</option>
+                  <option value="CS205">CS205 — Operating Systems</option>
+                  <option value="CS312">CS312 — Database Systems</option>
+                </select>
+              </div>
+
+              <div className="fd-form-group">
+                <label className="fd-form-label">Student Email / ID</label>
+                <input
+                  type="email"
+                  className="fd-form-input"
+                  placeholder="e.g. iamajaykumartk@gmail.com"
+                  value={manualStudent}
+                  onChange={(e) => handleStudentInputChange(e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Duplicate Prevention Alert */}
+              {manualDuplicateAlert && (
+                <div className="far-duplicate-warning-box">
+                  <AlertTriangleIcon size={16} color="#B5822C" />
+                  <div>
+                    <strong>Duplicate Entry Prevented:</strong>
+                    <p>
+                      This student is already recorded as <strong>{manualDuplicateAlert.status.toUpperCase()}</strong> for {manualDuplicateAlert.course} at {manualDuplicateAlert.firstTime}.
+                    </p>
+                    <label className="far-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={forceManualOverride}
+                        onChange={(e) => setForceManualOverride(e.target.checked)}
+                      />
+                      <span>I authorize overriding duplicate check for this student</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div className="fd-form-group">
+                <label className="fd-form-label">Attendance Status</label>
+                <div className="far-status-options-row">
+                  <button
+                    type="button"
+                    className={`far-status-opt-btn ${manualStatus === 'present' ? 'selected green' : ''}`}
+                    onClick={() => setManualStatus('present')}
+                  >
+                    Present
+                  </button>
+                  <button
+                    type="button"
+                    className={`far-status-opt-btn ${manualStatus === 'late' ? 'selected amber' : ''}`}
+                    onClick={() => setManualStatus('late')}
+                  >
+                    Late
+                  </button>
+                  <button
+                    type="button"
+                    className={`far-status-opt-btn ${manualStatus === 'absent' ? 'selected red' : ''}`}
+                    onClick={() => setManualStatus('absent')}
+                  >
+                    Absent
+                  </button>
+                </div>
+              </div>
+
+              <div className="fd-form-group">
+                <label className="fd-form-label">Verification Method</label>
+                <select
+                  className="fd-form-input"
+                  value={manualMethod}
+                  onChange={(e) => setManualMethod(e.target.value)}
+                >
+                  <option value="Manual Rollcall">Manual Classroom Rollcall</option>
+                  <option value="Lab Sheet Verification">Lab Signature Sheet Verified</option>
+                  <option value="Faculty Direct Verification">Faculty Direct Approval</option>
+                </select>
+              </div>
+
+              <div className="fd-form-group">
+                <label className="fd-form-label">Faculty Notes / Justification</label>
+                <textarea
+                  className="fd-form-textarea"
+                  rows={2}
+                  placeholder="Optional note: e.g. Present in lab room, camera device failure"
+                  value={manualNotes}
+                  onChange={(e) => setManualNotes(e.target.value)}
+                />
+              </div>
+
+              <div className="fd-modal-actions">
+                <button
+                  type="button"
+                  className="fd-btn-secondary"
+                  onClick={() => setManualModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="fd-btn-primary"
+                  disabled={manualDuplicateAlert && !forceManualOverride}
+                >
+                  <CheckCircleIcon size={14} color="#FFFFFF" />
+                  <span>Record Attendance</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 2: Edit Attendance with Authorization ──────── */}
+      {editModalOpen && editingRecord && (
+        <div
+          className="fd-modal-backdrop"
+          onClick={() => setEditModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="fd-modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="fd-modal-header">
+              <div className="fd-modal-header-text">
+                <span className="fd-modal-kicker">Audit Trail & Security</span>
+                <h3 id="edit-modal-title" className="fd-modal-title">
+                  Authorized Attendance Override
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="fd-modal-close-btn"
+                onClick={() => setEditModalOpen(false)}
+                title="Close modal"
+              >
+                <XIcon size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="fd-modal-body">
+              <div className="far-record-summary-banner">
+                <div>
+                  <span className="far-rbanner-label">Student</span>
+                  <strong>{editingRecord.student}</strong>
+                </div>
+                <div>
+                  <span className="far-rbanner-label">Course</span>
+                  <strong>{editingRecord.course}</strong>
+                </div>
+                <div>
+                  <span className="far-rbanner-label">Original Time</span>
+                  <strong>{editingRecord.time}</strong>
+                </div>
+              </div>
+
+              <div className="fd-form-group">
+                <label className="fd-form-label">New Status</label>
+                <div className="far-status-options-row">
+                  <button
+                    type="button"
+                    className={`far-status-opt-btn ${editStatus === 'present' ? 'selected green' : ''}`}
+                    onClick={() => setEditStatus('present')}
+                  >
+                    Present
+                  </button>
+                  <button
+                    type="button"
+                    className={`far-status-opt-btn ${editStatus === 'late' ? 'selected amber' : ''}`}
+                    onClick={() => setEditStatus('late')}
+                  >
+                    Late
+                  </button>
+                  <button
+                    type="button"
+                    className={`far-status-opt-btn ${editStatus === 'absent' ? 'selected red' : ''}`}
+                    onClick={() => setEditStatus('absent')}
+                  >
+                    Absent
+                  </button>
+                </div>
+              </div>
+
+              <div className="fd-form-group">
+                <label className="fd-form-label">Authorization Reason (Required for Audit Trail)</label>
+                <textarea
+                  className="fd-form-textarea"
+                  rows={3}
+                  placeholder="e.g. Student submitted official HOD medical certificate, or verified presence in lecture hall."
+                  value={authReason}
+                  onChange={(e) => setAuthReason(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="far-audit-note">
+                <ShieldCheckIcon size={14} color="var(--fd-navy)" />
+                <span>Override will be recorded under: <strong>{user?.name || 'Avinash K P'} (Faculty)</strong></span>
+              </div>
+
+              <div className="fd-modal-actions">
+                <button
+                  type="button"
+                  className="fd-btn-secondary"
+                  onClick={() => setEditModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="fd-btn-primary">
+                  <span>Authorize & Save</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 3: Live Attendance Session Monitor ──────────── */}
+      {liveSessionOpen && (
+        <div
+          className="fd-modal-backdrop"
+          onClick={() => setLiveSessionOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="live-modal-title"
+        >
+          <div className="fd-modal-dialog far-live-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="fd-modal-header">
+              <div className="fd-modal-header-text">
+                <div className="far-live-badge-row">
+                  <span className="far-live-pulse-dot" />
+                  <span className="fd-modal-kicker">Live Attendance Session</span>
+                </div>
+                <h3 id="live-modal-title" className="fd-modal-title">
+                  {liveSessionCourse} — Active Session Monitor
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="fd-modal-close-btn"
+                onClick={() => setLiveSessionOpen(false)}
+                title="Close monitor"
+              >
+                <XIcon size={18} />
+              </button>
+            </div>
+
+            <div className="fd-modal-body">
+              {/* Countdown Timer Strip */}
+              <div className="far-live-timer-strip">
+                <div className="far-timer-left">
+                  <span className="far-timer-caption">Time Remaining</span>
+                  <div className="far-timer-clock">
+                    00:{String(liveSecondsLeft).padStart(2, '0')}
+                  </div>
+                </div>
+                <div className="far-timer-controls">
+                  <button
+                    type="button"
+                    className="far-btn-extend"
+                    onClick={() => handleExtendSession(30)}
+                  >
+                    +30s Extend
+                  </button>
+                  <button
+                    type="button"
+                    className="far-btn-end-session"
+                    onClick={handleEndLiveSession}
+                    disabled={!isLiveActive}
+                  >
+                    End Session
+                  </button>
+                </div>
+              </div>
+
+              {/* Real-time attendee counter */}
+              <div className="far-live-metrics-strip">
+                <div className="far-live-metric-box">
+                  <span className="label">Present</span>
+                  <span className="value green">{presentCount}</span>
+                </div>
+                <div className="far-live-metric-box">
+                  <span className="label">Late</span>
+                  <span className="value amber">{lateCount}</span>
+                </div>
+                <div className="far-live-metric-box">
+                  <span className="label">Absent</span>
+                  <span className="value red">{absentCount}</span>
+                </div>
+                <div className="far-live-metric-box">
+                  <span className="label">Duplicates Blocked</span>
+                  <span className="value blue">{blockedDuplicates.length}</span>
+                </div>
+              </div>
+
+              {/* Live Scans Ticker */}
+              <div className="far-live-stream-section">
+                <h4 className="far-stream-title">Live Scanned Students Stream</h4>
+                <div className="far-stream-list">
+                  {recordsList.slice(0, 6).map((r, i) => (
+                    <div key={r.id || i} className="far-stream-item">
+                      <div className="far-stream-left">
+                        <span className="far-stream-status-dot" />
+                        <div>
+                          <span className="far-stream-student">{r.student}</span>
+                          <span className="far-stream-meta">
+                            {r.method === 'face' ? 'Face Match (98.8%)' : 'QR Scan'} · {r.time}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`far-status-pill status-${r.status}`}>
+                        {r.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fd-modal-actions">
+                <button
+                  type="button"
+                  className="fd-btn-secondary"
+                  onClick={() => setLiveSessionOpen(false)}
+                >
+                  Minimize Monitor
+                </button>
+                <button
+                  type="button"
+                  className="fd-btn-primary"
+                  onClick={handleOpenManualModal}
+                >
+                  <PlusIcon size={14} color="#FFFFFF" />
+                  <span>Manual Mark Student</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 4: History Attendee Roster Modal ───────────── */}
+      {selectedHistorySession && (
+        <div
+          className="fd-modal-backdrop"
+          onClick={() => setSelectedHistorySession(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="roster-modal-title"
+        >
+          <div className="fd-modal-dialog far-roster-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="fd-modal-header">
+              <div className="fd-modal-header-text">
+                <span className="fd-modal-kicker">Session Attendee Roster</span>
+                <h3 id="roster-modal-title" className="fd-modal-title">
+                  {selectedHistorySession.course} — {selectedHistorySession.date}
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="fd-modal-close-btn"
+                onClick={() => setSelectedHistorySession(null)}
+                title="Close roster"
+              >
+                <XIcon size={18} />
+              </button>
+            </div>
+
+            <div className="fd-modal-body">
+              <div className="far-roster-stats-strip">
+                <div>Enrolled: <strong>{selectedHistorySession.totalEnrolled}</strong></div>
+                <div>Present: <strong style={{ color: 'var(--fd-green)' }}>{selectedHistorySession.present}</strong></div>
+                <div>Late: <strong style={{ color: 'var(--fd-amber)' }}>{selectedHistorySession.late}</strong></div>
+                <div>Absent: <strong style={{ color: 'var(--fd-red)' }}>{selectedHistorySession.absent}</strong></div>
+                <div>Rate: <strong>{selectedHistorySession.rate}%</strong></div>
+              </div>
+
+              <div className="far-table-card" style={{ maxHeight: '320px', overflowY: 'auto' }}>
+                <table className="far-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>STUDENT</th>
+                      <th>STATUS</th>
+                      <th>TIME</th>
+                      <th>VERIFIED</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recordsList.filter(r => r.course === selectedHistorySession.course).map((rec, idx) => (
+                      <tr key={rec.id || idx}>
+                        <td>{idx + 1}</td>
+                        <td>{rec.student}</td>
+                        <td>
+                          <span className={`far-status-pill status-${rec.status}`}>{rec.status}</span>
+                        </td>
+                        <td>{rec.time}</td>
+                        <td>✓ Verified</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="fd-modal-actions">
+                <button
+                  type="button"
+                  className="fd-btn-secondary"
+                  onClick={() => setSelectedHistorySession(null)}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="fd-btn-primary"
+                  onClick={() => handleExportCSV(selectedHistorySession)}
+                >
+                  <PaperclipIcon size={14} color="#FFFFFF" />
+                  <span>Download Session CSV</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2738,6 +4103,9 @@ export default function FacultyDashboardPage() {
             <TabAttendance
               liveData={liveData}
               onOpenQrModal={openQrModal}
+              user={user}
+              onNav={handleNav}
+              onShowToast={showToast}
             />
           )}
 
