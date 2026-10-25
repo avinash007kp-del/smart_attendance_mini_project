@@ -29,6 +29,7 @@ import {
   PlayIcon,
   PaperclipIcon,
   TrophyIcon,
+  BellIcon,
 } from './FacultyDashboardIcons';
 import './FacultyDashboardPage.css';
 
@@ -111,6 +112,179 @@ const REFERENCE_ASSIGNMENTS = [
     marks: '100',
     faculty: 'Avinash K P',
     created_at: '2026-05-19T08:00:00Z',
+  },
+];
+
+// Reference records for Today's Class Schedule
+const REFERENCE_TODAY_SCHEDULE = [
+  {
+    id: 'sched-1',
+    time: '09:00–10:00 AM',
+    courseCode: 'CS101',
+    subjectName: 'Data Structures',
+    classRoom: 'CS101 · Lab 3',
+    section: 'Semester 3 · Section A',
+    status: 'ongoing',
+  },
+  {
+    id: 'sched-2',
+    time: '11:00 AM–12:00 PM',
+    courseCode: 'CS205',
+    subjectName: 'Operating Systems',
+    classRoom: 'CS205 · Room 12',
+    section: 'Semester 4 · Section B',
+    status: 'upcoming',
+  },
+  {
+    id: 'sched-3',
+    time: '02:00–03:00 PM',
+    courseCode: 'CS312',
+    subjectName: 'Database Systems',
+    classRoom: 'CS312 · Room 7',
+    section: 'Semester 5 · Section A',
+    status: 'upcoming',
+  },
+];
+
+// Reference records for Assigned Subjects & Classes
+const REFERENCE_ASSIGNED_SUBJECTS = [
+  {
+    code: 'CS101',
+    name: 'Data Structures',
+    semester: 'Semester 3',
+    section: 'Section A',
+    studentsCount: 42,
+    nextClass: 'Today, 9:00 AM',
+    room: 'Lab 3',
+    status: 'Active Session',
+  },
+  {
+    code: 'CS205',
+    name: 'Operating Systems',
+    semester: 'Semester 4',
+    section: 'Section B',
+    studentsCount: 38,
+    nextClass: 'Today, 11:00 AM',
+    room: 'Room 12',
+    status: 'Scheduled',
+  },
+  {
+    code: 'CS312',
+    name: 'Database Systems',
+    semester: 'Semester 5',
+    section: 'Section A',
+    studentsCount: 35,
+    nextClass: 'Today, 2:00 PM',
+    room: 'Room 7',
+    status: 'Scheduled',
+  },
+];
+
+// Reference records for Attendance Summary Periods
+const ATTENDANCE_SUMMARY_PERIODS = {
+  today: {
+    total: 115,
+    present: 98,
+    absent: 17,
+    rate: 85.2,
+    courses: [
+      { code: 'CS101', present: 38, absent: 4, rate: 90.5 },
+      { code: 'CS205', present: 32, absent: 6, rate: 84.2 },
+      { code: 'CS312', present: 28, absent: 7, rate: 80.0 },
+    ],
+  },
+  week: {
+    total: 115,
+    present: 462,
+    absent: 58,
+    rate: 88.8,
+    courses: [
+      { code: 'CS101', present: 165, absent: 15, rate: 91.7 },
+      { code: 'CS205', present: 154, absent: 20, rate: 88.5 },
+      { code: 'CS312', present: 143, absent: 23, rate: 86.1 },
+    ],
+  },
+  month: {
+    total: 115,
+    present: 1840,
+    absent: 220,
+    rate: 89.3,
+    courses: [
+      { code: 'CS101', present: 660, absent: 62, rate: 91.4 },
+      { code: 'CS205', present: 610, absent: 76, rate: 88.9 },
+      { code: 'CS312', present: 570, absent: 82, rate: 87.4 },
+    ],
+  },
+};
+
+// Reference records for Upcoming Examinations & Assignments
+const REFERENCE_UPCOMING_EVENTS = [
+  {
+    id: 'ev-1',
+    title: 'Data Structures — Assignment 3',
+    type: 'assignment',
+    courseCode: 'CS101',
+    date: '28 October 2026',
+    classSection: 'Semester 3 · Section A',
+    statusText: 'Due in 3 days',
+  },
+  {
+    id: 'ev-2',
+    title: 'Operating Systems — Internal Examination',
+    type: 'examination',
+    courseCode: 'CS205',
+    date: '30 October 2026',
+    classSection: 'Semester 4 · Section B',
+    statusText: 'Upcoming in 5 days',
+  },
+  {
+    id: 'ev-3',
+    title: 'Database Systems — Lab Record Submission',
+    type: 'assignment',
+    courseCode: 'CS312',
+    date: '2 November 2026',
+    classSection: 'Semester 5 · Section A',
+    statusText: 'Upcoming',
+  },
+];
+
+// Reference records for Faculty Notifications & Messages
+const REFERENCE_NOTIFICATIONS = [
+  {
+    id: 'notif-1',
+    title: 'Assignment Submitted',
+    message: 'A student submitted Assignment 3 for CS101.',
+    timestamp: '10 minutes ago',
+    unread: true,
+    actionTarget: 'assignments',
+    actionLabel: 'View Assignment',
+  },
+  {
+    id: 'notif-2',
+    title: 'Attendance Session Completed',
+    message: 'The QR attendance session for CS205 has ended.',
+    timestamp: '35 minutes ago',
+    unread: true,
+    actionTarget: 'attendance',
+    actionLabel: 'View Attendance',
+  },
+  {
+    id: 'notif-3',
+    title: 'Timetable Updated',
+    message: 'A scheduled class was changed for Semester 4.',
+    timestamp: '2 hours ago',
+    unread: false,
+    actionTarget: 'timetable',
+    actionLabel: 'View Timetable',
+  },
+  {
+    id: 'notif-4',
+    title: 'New Faculty Message',
+    message: 'You have a new academic message regarding department review.',
+    timestamp: 'Today',
+    unread: false,
+    actionTarget: 'settings',
+    actionLabel: 'Open Message',
   },
 ];
 
@@ -461,60 +635,84 @@ function GenerateQRModal({ isOpen, onClose, onSessionStarted, defaultCourse = 'C
 // ═══════════════════════════════════════════════════════════════
 //  TAB: DASHBOARD
 // ═══════════════════════════════════════════════════════════════
-function TabDashboard({ user, onNav, liveData, onOpenQrModal }) {
+function TabDashboard({ user, onNav, liveData, onOpenQrModal, onShowToast }) {
   const { records, students, present, courseIds, loading } = liveData;
 
-  // Real or screenshot-aligned metric statistics
-  const statCourses = courseIds.length > 0 ? courseIds.length : 1;
-  const statPresent = present > 0 ? present : 10;
-  const statStudents = students.length > 0 ? students.length : 3;
-  const statScans = records.length > 0 ? records.length : 10;
-  const presentRate = statScans > 0 ? Math.round((statPresent / statScans) * 100) : 100;
+  // Selected reporting period for Attendance Summary ('today' | 'week' | 'month')
+  const [attendancePeriod, setAttendancePeriod] = useState('today');
 
-  // Active Course Sessions list
-  const activeCoursesList = useMemo(() => {
-    if (courseIds.length > 0) {
-      return courseIds.map(id => {
-        const count = records.filter(r => r.course_id === id && r.status === 'present').length;
-        return {
-          code: id,
-          desc: `${count} present scans recorded`,
-        };
-      });
+  // Notifications state
+  const [notifications, setNotifications] = useState(REFERENCE_NOTIFICATIONS);
+
+  // Send Notice Modal state
+  const [noticeModalOpen, setNoticeModalOpen] = useState(false);
+  const [noticeCourse, setNoticeCourse] = useState('All Classes');
+  const [noticeTitle, setNoticeTitle] = useState('');
+  const [noticeBody, setNoticeBody] = useState('');
+
+  // Attendance summary metrics based on period
+  const attendanceStats = useMemo(() => {
+    const pData = ATTENDANCE_SUMMARY_PERIODS[attendancePeriod] || ATTENDANCE_SUMMARY_PERIODS.today;
+    if (attendancePeriod === 'today' && records && records.length > 0) {
+      const livePres = present > 0 ? present : pData.present;
+      const liveTot = students.length > 0 ? Math.max(students.length * 35, 115) : pData.total;
+      const liveAbs = Math.max(0, liveTot - livePres);
+      const liveRate = liveTot > 0 ? Number(((livePres / liveTot) * 100).toFixed(1)) : pData.rate;
+      return {
+        ...pData,
+        total: liveTot,
+        present: livePres,
+        absent: liveAbs,
+        rate: liveRate,
+      };
     }
-    return [
-      { code: 'CS101', desc: '2 present scans recorded' }
-    ];
-  }, [courseIds, records]);
+    return pData;
+  }, [attendancePeriod, records, present, students]);
 
-  // Recent scan entries (merging live backend records with reference screenshot entries)
-  const recentScans = useMemo(() => {
-    if (records.length > 0) {
-      const formatted = records.slice(0, 5).map(r => {
-        let timeStr = '14/10/26, 5:30 am';
-        if (r.timestamp) {
-          const d = new Date(r.timestamp);
-          const dd = String(d.getDate()).padStart(2, '0');
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const yy = String(d.getFullYear()).slice(-2);
-          const hours = d.getHours() % 12 || 12;
-          const mins = String(d.getMinutes()).padStart(2, '0');
-          const ampm = d.getHours() >= 12 ? 'pm' : 'am';
-          timeStr = `${dd}/${mm}/${yy}, ${hours}:${mins} ${ampm}`;
-        }
-        return {
-          timestamp: timeStr,
-          student: r.student_id || 'iamajaykumartk@gmail.com',
-          method: r.method || 'qr',
-          status: r.status || 'present',
-        };
-      });
-      return formatted;
+  // Determine progress bar color based on institutional policy:
+  // Green >= 85%, Amber 75-84.9%, Red < 75%
+  const rateColor = useMemo(() => {
+    if (attendanceStats.rate >= 85) return 'var(--fd-green)';
+    if (attendanceStats.rate >= 75) return 'var(--fd-amber)';
+    return 'var(--fd-red)';
+  }, [attendanceStats.rate]);
+
+  // Mark all notifications as read
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    if (onShowToast) onShowToast('All notifications marked as read');
+  };
+
+  // Mark single notification read
+  const handleMarkRead = (id, target) => {
+    setNotifications(prev => prev.map(n => n.id === id ? ({ ...n, unread: false }) : n));
+    if (target && onNav) onNav(target);
+  };
+
+  // Handle notice submission
+  const handleSendNotice = (e) => {
+    e.preventDefault();
+    if (!noticeTitle.trim()) {
+      if (onShowToast) onShowToast('Please provide a notice title');
+      return;
     }
-    return REFERENCE_SCANS;
-  }, [records]);
+    const newNotif = {
+      id: `notice-${Date.now()}`,
+      title: noticeTitle.trim(),
+      message: noticeBody.trim() || `Official notice broadcasted to ${noticeCourse}.`,
+      timestamp: 'Just now',
+      unread: true,
+      actionTarget: 'timetable',
+      actionLabel: 'View Notice',
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+    if (onShowToast) onShowToast(`Notice broadcasted to ${noticeCourse}!`);
+    setNoticeTitle('');
+    setNoticeBody('');
+    setNoticeModalOpen(false);
+  };
 
-  // Dynamic Full Date for Header
+  // Dynamic Full Date for Header: e.g. "Saturday, 24 October 2026"
   const todayFormatted = useMemo(() => {
     const now = new Date();
     return now.toLocaleDateString('en-GB', {
@@ -529,7 +727,7 @@ function TabDashboard({ user, onNav, liveData, onOpenQrModal }) {
 
   return (
     <div className="fd-tab-content">
-      {/* ── Welcome Header ──────────────────────────────────── */}
+      {/* ── Dashboard Header ─────────────────────────────────── */}
       <div className="fd-welcome-section">
         <div className="fd-welcome-left">
           <h1 className="fd-welcome-title">
@@ -546,6 +744,7 @@ function TabDashboard({ user, onNav, liveData, onOpenQrModal }) {
             type="button"
             className="fd-btn-generate-qr"
             onClick={() => onOpenQrModal('CS101')}
+            title="Generate QR Attendance Session"
           >
             <QrCodeIcon size={16} color="#FFFFFF" />
             <span>Generate QR</span>
@@ -553,136 +752,554 @@ function TabDashboard({ user, onNav, liveData, onOpenQrModal }) {
         </div>
       </div>
 
-      {/* ── Statistics Row ──────────────────────────────────── */}
-      <div className="fd-stats-grid">
-        {/* Metric 1: Active Courses */}
-        <div className="fd-stat-col">
-          <div className="fd-stat-header">
-            <span className="fd-stat-label">Active Courses</span>
-            <BookOpenIcon size={16} color="var(--fd-text-secondary)" />
+      {/* ── 12-Column Responsive Workspace Grid ──────────────── */}
+      <div className="fd-workspace-grid">
+        {/* ── SECTION 1: Today's Class Schedule (span 7) ──────── */}
+        <section className="fd-card fd-grid-schedule" aria-labelledby="schedule-heading">
+          <div className="fd-card-header-bar">
+            <h2 id="schedule-heading" className="fd-card-title">Today's Class Schedule</h2>
+            <button
+              type="button"
+              className="fd-card-action-link"
+              onClick={() => onNav('timetable')}
+            >
+              <span>View Timetable</span>
+              <span className="fd-arrow">→</span>
+            </button>
           </div>
-          <div className="fd-stat-value">{loading ? '…' : statCourses}</div>
-          <div className="fd-stat-sub">From scans</div>
-        </div>
-
-        {/* Metric 2: Total Present */}
-        <div className="fd-stat-col">
-          <div className="fd-stat-header">
-            <span className="fd-stat-label">Total Present</span>
-            <CheckCircleIcon size={16} color="var(--fd-text-secondary)" />
-          </div>
-          <div className="fd-stat-value">{loading ? '…' : statPresent}</div>
-          <div className="fd-stat-sub">{presentRate}% rate</div>
-        </div>
-
-        {/* Metric 3: Students */}
-        <div className="fd-stat-col">
-          <div className="fd-stat-header">
-            <span className="fd-stat-label">Students</span>
-            <UsersIcon size={16} color="var(--fd-text-secondary)" />
-          </div>
-          <div className="fd-stat-value">{loading ? '…' : statStudents}</div>
-          <div className="fd-stat-sub">Registered</div>
-        </div>
-
-        {/* Metric 4: Total Scans */}
-        <div className="fd-stat-col">
-          <div className="fd-stat-header">
-            <span className="fd-stat-label">Total Scans</span>
-            <ScanFrameIcon size={16} color="var(--fd-text-secondary)" />
-          </div>
-          <div className="fd-stat-value">{loading ? '…' : statScans}</div>
-          <div className="fd-stat-sub">All time</div>
-        </div>
-      </div>
-
-      {/* ── Two-Column Main Content Grid ────────────────────── */}
-      <div className="fd-two-col-grid">
-        {/* Left Card: Active Course Sessions */}
-        <div className="fd-card">
-          <h2 className="fd-card-title">Active Course Sessions</h2>
           <hr className="fd-card-divider" />
-          <div className="fd-sessions-list">
-            {activeCoursesList.map((c, i) => (
+
+          {REFERENCE_TODAY_SCHEDULE.length === 0 ? (
+            <div className="fd-empty-schedule">No classes scheduled for today.</div>
+          ) : (
+            <div className="fd-schedule-table-wrap">
+              <table className="fd-schedule-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Subject</th>
+                    <th>Class / Room</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {REFERENCE_TODAY_SCHEDULE.map((item) => {
+                    const isOngoing = item.status === 'ongoing';
+                    return (
+                      <tr key={item.id} className={isOngoing ? 'fd-row-ongoing' : ''}>
+                        <td className="fd-sched-time">
+                          <span className="fd-time-badge">{item.time}</span>
+                        </td>
+                        <td className="fd-sched-subject">
+                          <div className="fd-subject-cell">
+                            <span className="fd-subject-strong">{item.subjectName}</span>
+                            <span className="fd-subject-sub">{item.section}</span>
+                          </div>
+                        </td>
+                        <td className="fd-sched-room">
+                          <span className="fd-room-pill">{item.classRoom}</span>
+                        </td>
+                        <td className="fd-sched-status">
+                          <span className={`fd-status-pill-v2 status-${item.status}`}>
+                            {isOngoing && <span className="fd-live-dot" />}
+                            <span>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</span>
+                          </span>
+                        </td>
+                        <td className="fd-sched-action" style={{ textAlign: 'right' }}>
+                          {isOngoing ? (
+                            <button
+                              type="button"
+                              className="fd-sched-btn-primary"
+                              onClick={() => onOpenQrModal(item.courseCode)}
+                              title="Start QR Session"
+                            >
+                              <QrCodeIcon size={13} color="#FFFFFF" />
+                              <span>Generate QR</span>
+                            </button>
+                          ) : item.status === 'completed' ? (
+                            <button
+                              type="button"
+                              className="fd-sched-btn-outline"
+                              onClick={() => onNav('attendance')}
+                            >
+                              View Attendance
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="fd-sched-btn-subtle"
+                              onClick={() => onNav('timetable')}
+                            >
+                              Details →
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* ── SECTION 3: Attendance Summary (span 5) ───────────── */}
+        <section className="fd-card fd-grid-attendance" aria-labelledby="attendance-heading">
+          <div className="fd-card-header-bar">
+            <h2 id="attendance-heading" className="fd-card-title">Attendance Summary</h2>
+            <button
+              type="button"
+              className="fd-card-action-link"
+              onClick={() => onNav('attendance')}
+            >
+              <span>View Attendance</span>
+              <span className="fd-arrow">→</span>
+            </button>
+          </div>
+          <hr className="fd-card-divider" />
+
+          {/* Reporting Period Filter */}
+          <div className="fd-period-selector" role="tablist" aria-label="Reporting Period">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={attendancePeriod === 'today'}
+              className={`fd-period-btn ${attendancePeriod === 'today' ? 'active' : ''}`}
+              onClick={() => setAttendancePeriod('today')}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={attendancePeriod === 'week'}
+              className={`fd-period-btn ${attendancePeriod === 'week' ? 'active' : ''}`}
+              onClick={() => setAttendancePeriod('week')}
+            >
+              This Week
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={attendancePeriod === 'month'}
+              className={`fd-period-btn ${attendancePeriod === 'month' ? 'active' : ''}`}
+              onClick={() => setAttendancePeriod('month')}
+            >
+              This Month
+            </button>
+          </div>
+
+          {/* 4 Statistics Metrics */}
+          <div className="fd-attend-stats-strip">
+            <div className="fd-attend-stat-box">
+              <span className="fd-stat-caption">Total Students</span>
+              <span className="fd-stat-number">{attendanceStats.total}</span>
+            </div>
+            <div className="fd-attend-stat-box">
+              <span className="fd-stat-caption">Present</span>
+              <span className="fd-stat-number green">{attendanceStats.present}</span>
+            </div>
+            <div className="fd-attend-stat-box">
+              <span className="fd-stat-caption">Absent</span>
+              <span className="fd-stat-number red">{attendanceStats.absent}</span>
+            </div>
+            <div className="fd-attend-stat-box">
+              <span className="fd-stat-caption">Attendance Rate</span>
+              <span className="fd-stat-number" style={{ color: rateColor }}>
+                {attendanceStats.rate}%
+              </span>
+            </div>
+          </div>
+
+          {/* Horizontal Progress Bar with 85% Benchmark */}
+          <div className="fd-progress-section">
+            <div className="fd-progress-track">
               <div
-                key={c.code + i}
-                className="fd-session-item"
-                onClick={() => onOpenQrModal(c.code)}
-                title={`Click to open QR session for ${c.code}`}
+                className="fd-progress-fill"
+                style={{
+                  width: `${Math.min(100, attendanceStats.rate)}%`,
+                  backgroundColor: rateColor,
+                }}
+              />
+              {/* Benchmark marker at 85% */}
+              <div
+                className="fd-benchmark-marker"
+                style={{ left: '85%' }}
+                title="Institutional Policy Threshold (85%)"
+              />
+            </div>
+            <div className="fd-progress-legend">
+              <span className="fd-legend-left">Institutional Benchmark: 85%</span>
+              <span className="fd-legend-right">
+                <span className="fd-legend-dot" style={{ backgroundColor: rateColor }} />
+                <span>
+                  {attendanceStats.rate >= 85 ? 'On Target' : attendanceStats.rate >= 75 ? 'Moderate' : 'Under Target'}
+                </span>
+              </span>
+            </div>
+          </div>
+
+          {/* Course-Level Summary Table */}
+          <div className="fd-course-summary-wrap">
+            <table className="fd-course-summary-table">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th style={{ textAlign: 'right' }}>Present</th>
+                  <th style={{ textAlign: 'right' }}>Absent</th>
+                  <th style={{ textAlign: 'right' }}>Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceStats.courses.map((c) => (
+                  <tr key={c.code} onClick={() => onNav('attendance')} className="fd-clickable-row">
+                    <td className="fd-course-code-cell">
+                      <strong>{c.code}</strong>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>{c.present}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--fd-text-secondary)' }}>{c.absent}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <span className={`fd-mini-rate-badge ${c.rate >= 85 ? 'green' : c.rate >= 75 ? 'amber' : 'red'}`}>
+                        {c.rate}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* ── SECTION 2: Assigned Subjects & Classes (span 6) ─── */}
+        <section className="fd-card fd-grid-subjects" aria-labelledby="subjects-heading">
+          <div className="fd-card-header-bar">
+            <h2 id="subjects-heading" className="fd-card-title">Assigned Subjects & Classes</h2>
+            <button
+              type="button"
+              className="fd-card-action-link"
+              onClick={() => onNav('timetable')}
+            >
+              <span>View All</span>
+              <span className="fd-arrow">→</span>
+            </button>
+          </div>
+          <hr className="fd-card-divider" />
+
+          <div className="fd-subjects-grid">
+            {REFERENCE_ASSIGNED_SUBJECTS.map((sub) => (
+              <div
+                key={sub.code}
+                className="fd-subject-card"
+                onClick={() => onNav('timetable')}
+                title={`Open details for ${sub.code}`}
               >
-                <div className="fd-session-left">
-                  <div className="fd-status-dot-green" />
-                  <div className="fd-session-info">
-                    <span className="fd-session-code">{c.code}</span>
-                    <span className="fd-session-meta">{c.desc}</span>
+                <div className="fd-subcard-top">
+                  <div>
+                    <span className="fd-subcard-code">{sub.code}</span>
+                    <h3 className="fd-subcard-title">{sub.name}</h3>
                   </div>
+                  <span className={`fd-subcard-badge ${sub.status === 'Active Session' ? 'active' : ''}`}>
+                    {sub.status}
+                  </span>
                 </div>
-                <span className="fd-qr-badge">QR</span>
+
+                <div className="fd-subcard-meta">
+                  <span className="fd-meta-pill">
+                    <BookOpenIcon size={12} color="var(--fd-text-secondary)" />
+                    <span>{sub.semester} · {sub.section}</span>
+                  </span>
+                  <span className="fd-meta-pill">
+                    <UsersIcon size={12} color="var(--fd-text-secondary)" />
+                    <span>{sub.studentsCount} enrolled</span>
+                  </span>
+                </div>
+
+                <div className="fd-subcard-footer">
+                  <div className="fd-next-class-info">
+                    <ClockIcon size={12} color="var(--fd-text-secondary)" />
+                    <span>{sub.nextClass} · {sub.room}</span>
+                  </div>
+                  <span className="fd-view-btn-text">Manage →</span>
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Right Card: Quick Actions */}
-        <div className="fd-card">
-          <h2 className="fd-card-title">Quick Actions</h2>
+        {/* ── SECTION 4: Upcoming Examinations & Assignments (span 6) ─ */}
+        <section className="fd-card fd-grid-events" aria-labelledby="events-heading">
+          <div className="fd-card-header-bar">
+            <h2 id="events-heading" className="fd-card-title">Upcoming Examinations & Assignments</h2>
+            <button
+              type="button"
+              className="fd-card-action-link"
+              onClick={() => onNav('assignments')}
+            >
+              <span>View All</span>
+              <span className="fd-arrow">→</span>
+            </button>
+          </div>
           <hr className="fd-card-divider" />
-          <div className="fd-actions-grid">
-            <div className="fd-actions-row">
-              <button
-                type="button"
-                className="fd-btn-action flex-1"
-                onClick={() => onOpenQrModal('CS101')}
-              >
-                <QrCodeIcon size={16} color="var(--fd-navy)" />
-                <span>Generate QR</span>
-              </button>
-              <button
-                type="button"
-                className="fd-btn-action flex-1"
-                onClick={() => onNav('attendance')}
-              >
-                <ClipboardListIcon size={16} color="var(--fd-navy)" />
-                <span>View Attendance</span>
-              </button>
+
+          <div className="fd-events-list">
+            {REFERENCE_UPCOMING_EVENTS.map((event) => {
+              const isExam = event.type === 'examination';
+              return (
+                <div
+                  key={event.id}
+                  className="fd-event-card"
+                  onClick={() => onNav(isExam ? 'timetable' : 'assignments')}
+                  title={`View ${event.title}`}
+                >
+                  <div className="fd-event-left">
+                    <div className="fd-event-header-row">
+                      <span className={`fd-event-type-badge ${event.type}`}>
+                        {isExam ? 'Examination' : 'Assignment'}
+                      </span>
+                      <span className="fd-event-course-pill">{event.courseCode}</span>
+                    </div>
+                    <h3 className="fd-event-heading">{event.title}</h3>
+                    <div className="fd-event-subtext">
+                      <span>{event.classSection}</span>
+                    </div>
+                  </div>
+
+                  <div className="fd-event-right">
+                    <span className="fd-event-date-text">{event.date}</span>
+                    <span className={`fd-event-status-pill ${event.type}`}>
+                      {event.statusText}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── SECTION 5: Notifications & Messages (span 7) ────── */}
+        <section className="fd-card fd-grid-notifications" aria-labelledby="notif-heading">
+          <div className="fd-card-header-bar">
+            <div className="fd-card-title-group">
+              <h2 id="notif-heading" className="fd-card-title">Notifications & Messages</h2>
+              {notifications.some(n => n.unread) && (
+                <span className="fd-unread-counter">
+                  {notifications.filter(n => n.unread).length} new
+                </span>
+              )}
             </div>
-            <div className="fd-actions-row">
+            <div className="fd-card-header-actions">
               <button
                 type="button"
-                className="fd-btn-action"
-                style={{ width: '49%' }}
+                className="fd-text-btn"
+                onClick={handleMarkAllRead}
+                title="Mark all notifications as read"
+              >
+                Mark all as read
+              </button>
+              <button
+                type="button"
+                className="fd-card-action-link"
                 onClick={() => onNav('settings')}
               >
-                <SettingsIcon size={16} color="var(--fd-navy)" />
-                <span>Settings</span>
+                <span>View All</span>
+                <span className="fd-arrow">→</span>
               </button>
             </div>
           </div>
-        </div>
+          <hr className="fd-card-divider" />
+
+          <div className="fd-notifications-list">
+            {notifications.map((item) => (
+              <div
+                key={item.id}
+                className={`fd-notification-item ${item.unread ? 'unread' : 'read'}`}
+                onClick={() => handleMarkRead(item.id, item.actionTarget)}
+              >
+                <div className="fd-notif-indicator-wrap">
+                  {item.unread ? (
+                    <span className="fd-notif-dot-unread" title="Unread" />
+                  ) : (
+                    <span className="fd-notif-dot-read" />
+                  )}
+                </div>
+
+                <div className="fd-notif-body">
+                  <div className="fd-notif-row-top">
+                    <h4 className="fd-notif-title">{item.title}</h4>
+                    <span className="fd-notif-time">{item.timestamp}</span>
+                  </div>
+                  <p className="fd-notif-message">{item.message}</p>
+                </div>
+
+                <button
+                  type="button"
+                  className="fd-notif-open-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMarkRead(item.id, item.actionTarget);
+                  }}
+                >
+                  {item.actionLabel || 'View'} →
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── SECTION 6: Quick Actions (span 5) ───────────────── */}
+        <section className="fd-card fd-grid-actions" aria-labelledby="actions-heading">
+          <div className="fd-card-header-bar">
+            <h2 id="actions-heading" className="fd-card-title">Quick Actions</h2>
+          </div>
+          <hr className="fd-card-divider" />
+
+          <div className="fd-actions-grid-v2">
+            {/* Action 1: Generate QR */}
+            <button
+              type="button"
+              className="fd-quick-action-btn"
+              onClick={() => onOpenQrModal('CS101')}
+            >
+              <QrCodeIcon size={16} color="var(--fd-navy)" />
+              <span>Generate QR</span>
+            </button>
+
+            {/* Action 2: View Attendance */}
+            <button
+              type="button"
+              className="fd-quick-action-btn"
+              onClick={() => onNav('attendance')}
+            >
+              <ClipboardListIcon size={16} color="var(--fd-navy)" />
+              <span>View Attendance</span>
+            </button>
+
+            {/* Action 3: Manage Assignments */}
+            <button
+              type="button"
+              className="fd-quick-action-btn"
+              onClick={() => onNav('assignments')}
+            >
+              <FilePenIcon size={16} color="var(--fd-navy)" />
+              <span>Manage Assignments</span>
+            </button>
+
+            {/* Action 4: View Timetable */}
+            <button
+              type="button"
+              className="fd-quick-action-btn"
+              onClick={() => onNav('timetable')}
+            >
+              <CalendarIcon size={16} color="var(--fd-navy)" />
+              <span>View Timetable</span>
+            </button>
+
+            {/* Action 5: View Classes */}
+            <button
+              type="button"
+              className="fd-quick-action-btn"
+              onClick={() => onNav('timetable')}
+            >
+              <UsersIcon size={16} color="var(--fd-navy)" />
+              <span>View Classes</span>
+            </button>
+
+            {/* Action 6: Send Notification */}
+            <button
+              type="button"
+              className="fd-quick-action-btn"
+              onClick={() => setNoticeModalOpen(true)}
+            >
+              <BellIcon size={16} color="var(--fd-navy)" />
+              <span>Send Notification</span>
+            </button>
+          </div>
+        </section>
       </div>
 
-      {/* ── Full-Width Recent Scans Card ────────────────────── */}
-      <div className="fd-scans-card">
-        <h2 className="fd-card-title">Recent Scans</h2>
-        <hr className="fd-card-divider" />
-        <div className="fd-scans-list">
-          {recentScans.map((s, i) => (
-            <div key={i} className="fd-scan-row">
-              <span className="fd-scan-time">{s.timestamp}</span>
-              <span className="fd-scan-student" title={s.student}>
-                {s.student}
-              </span>
-              <span className="fd-scan-method">{s.method}</span>
-              <div className="fd-scan-status-wrap">
-                <span className="fd-status-pill">
-                  <span className="fd-status-pill-dot" />
-                  <span>{s.status}</span>
-                </span>
+      {/* ── Send Notification Modal ──────────────────────────── */}
+      {noticeModalOpen && (
+        <div
+          className="fd-modal-backdrop"
+          onClick={() => setNoticeModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="notice-modal-title"
+        >
+          <div className="fd-modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="fd-modal-header">
+              <div className="fd-modal-header-text">
+                <span className="fd-modal-kicker">Faculty Broadcast</span>
+                <h3 id="notice-modal-title" className="fd-modal-title">
+                  Send Academic Notification
+                </h3>
               </div>
+              <button
+                type="button"
+                className="fd-modal-close-btn"
+                onClick={() => setNoticeModalOpen(false)}
+                title="Close modal"
+              >
+                <XIcon size={18} />
+              </button>
             </div>
-          ))}
+
+            <form onSubmit={handleSendNotice} className="fd-modal-body">
+              <div className="fd-form-group">
+                <label className="fd-form-label">Target Class / Subject</label>
+                <select
+                  className="fd-form-input"
+                  value={noticeCourse}
+                  onChange={(e) => setNoticeCourse(e.target.value)}
+                >
+                  <option value="All Classes">All Assigned Classes</option>
+                  <option value="CS101 — Data Structures">CS101 — Data Structures (Sem 3)</option>
+                  <option value="CS205 — Operating Systems">CS205 — Operating Systems (Sem 4)</option>
+                  <option value="CS312 — Database Systems">CS312 — Database Systems (Sem 5)</option>
+                </select>
+              </div>
+
+              <div className="fd-form-group">
+                <label className="fd-form-label">Notification Title</label>
+                <input
+                  type="text"
+                  className="fd-form-input"
+                  placeholder="e.g. Lab assignment deadline extended"
+                  value={noticeTitle}
+                  onChange={(e) => setNoticeTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="fd-form-group">
+                <label className="fd-form-label">Message Details</label>
+                <textarea
+                  className="fd-form-textarea"
+                  rows={4}
+                  placeholder="Provide complete instructions or announcement details for enrolled students..."
+                  value={noticeBody}
+                  onChange={(e) => setNoticeBody(e.target.value)}
+                />
+              </div>
+
+              <div className="fd-modal-actions">
+                <button
+                  type="button"
+                  className="fd-btn-secondary"
+                  onClick={() => setNoticeModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="fd-btn-primary">
+                  <SendIcon size={14} color="#FFFFFF" />
+                  <span>Broadcast Notice</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -2113,6 +2730,7 @@ export default function FacultyDashboardPage() {
               onNav={handleNav}
               liveData={liveData}
               onOpenQrModal={openQrModal}
+              onShowToast={showToast}
             />
           )}
 

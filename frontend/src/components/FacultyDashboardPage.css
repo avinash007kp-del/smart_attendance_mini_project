@@ -2040,3 +2040,961 @@
   color: var(--fd-text-secondary);
   font-size: 13px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   UPGRADED FACULTY WORKSPACE DASHBOARD (6 SECTIONS)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 12-Column Responsive Workspace Grid ──────────────────── */
+.fd-workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.fd-grid-schedule {
+  grid-column: span 7;
+}
+
+.fd-grid-attendance {
+  grid-column: span 5;
+}
+
+.fd-grid-subjects {
+  grid-column: span 6;
+}
+
+.fd-grid-events {
+  grid-column: span 6;
+}
+
+.fd-grid-notifications {
+  grid-column: span 7;
+}
+
+.fd-grid-actions {
+  grid-column: span 5;
+}
+
+/* ── Card Header Bars & Actions ────────────────────────────── */
+.fd-card-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fd-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fd-unread-counter {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 99px;
+  background-color: rgba(85, 126, 109, 0.12);
+  color: var(--fd-green);
+}
+
+.fd-card-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  font-family: var(--fd-font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.fd-card-action-link:hover {
+  color: var(--fd-green);
+  transform: translateX(2px);
+}
+
+.fd-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fd-text-btn {
+  background: none;
+  border: none;
+  font-family: var(--fd-font-sans);
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 3px;
+  transition: color 0.15s ease;
+}
+
+.fd-text-btn:hover {
+  color: var(--fd-navy);
+}
+
+/* ── SECTION 1: Today's Class Schedule ─────────────────────── */
+.fd-schedule-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fd-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--fd-font-sans);
+}
+
+.fd-schedule-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fd-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 10px 10px 10px;
+  border-bottom: 1px solid var(--fd-border);
+}
+
+.fd-schedule-table td {
+  padding: 13px 10px;
+  border-bottom: 1px solid #ECEEEA;
+  vertical-align: middle;
+  font-size: 12.5px;
+}
+
+.fd-schedule-table tr:last-child td {
+  border-bottom: none;
+}
+
+.fd-row-ongoing {
+  background-color: rgba(85, 126, 109, 0.04);
+}
+
+.fd-time-badge {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  white-space: nowrap;
+}
+
+.fd-subject-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-subject-strong {
+  font-weight: 500;
+  color: var(--fd-navy);
+}
+
+.fd-subject-sub {
+  font-size: 11px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-room-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: #F0F2EF;
+  color: var(--fd-navy);
+  font-size: 11.5px;
+  font-weight: 450;
+  white-space: nowrap;
+}
+
+.fd-status-pill-v2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.fd-status-pill-v2.status-ongoing {
+  background-color: rgba(85, 126, 109, 0.12);
+  color: #3D6B57;
+  border: 1px solid rgba(85, 126, 109, 0.25);
+}
+
+.fd-status-pill-v2.status-upcoming {
+  background-color: #EEF0ED;
+  color: var(--fd-text-secondary);
+}
+
+.fd-status-pill-v2.status-completed {
+  background-color: #EEF0ED;
+  color: var(--fd-text-secondary);
+}
+
+.fd-status-pill-v2.status-cancelled {
+  background-color: rgba(195, 102, 91, 0.12);
+  color: #C3665B;
+}
+
+.fd-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #557E6D;
+  box-shadow: 0 0 0 2px rgba(85, 126, 109, 0.25);
+  animation: fdPulseDot 1.8s infinite;
+}
+
+@keyframes fdPulseDot {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.fd-sched-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: var(--fd-navy);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.fd-sched-btn-primary:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.fd-sched-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  background-color: transparent;
+  color: var(--fd-navy);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.fd-sched-btn-outline:hover {
+  background-color: #EEF0ED;
+}
+
+.fd-sched-btn-subtle {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: none;
+  color: var(--fd-text-secondary);
+  border: none;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.fd-sched-btn-subtle:hover {
+  color: var(--fd-navy);
+}
+
+.fd-empty-schedule {
+  padding: 36px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--fd-text-secondary);
+  background-color: #FAFAF7;
+  border: 1px dashed var(--fd-border);
+  border-radius: 4px;
+}
+
+/* ── SECTION 3: Attendance Summary ─────────────────────────── */
+.fd-period-selector {
+  display: flex;
+  align-items: center;
+  background-color: #F0F2EF;
+  padding: 3px;
+  border-radius: 6px;
+  gap: 3px;
+  margin-bottom: 18px;
+  width: fit-content;
+}
+
+.fd-period-btn {
+  background: transparent;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--fd-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.fd-period-btn.active {
+  background-color: #FFFFFF;
+  color: var(--fd-navy);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.fd-attend-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ECEEEA;
+  margin-bottom: 16px;
+}
+
+.fd-attend-stat-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.fd-stat-caption {
+  font-size: 11px;
+  color: var(--fd-text-secondary);
+  margin-bottom: 4px;
+  font-weight: 400;
+}
+
+.fd-stat-number {
+  font-family: var(--fd-font-serif);
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  line-height: 1.1;
+}
+
+.fd-stat-number.green {
+  color: var(--fd-green);
+}
+
+.fd-stat-number.red {
+  color: var(--fd-red);
+}
+
+.fd-progress-section {
+  margin-bottom: 18px;
+}
+
+.fd-progress-track {
+  height: 8px;
+  background-color: #ECEEEA;
+  border-radius: 99px;
+  position: relative;
+  overflow: visible;
+  margin-bottom: 8px;
+}
+
+.fd-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease, background-color 0.3s ease;
+}
+
+.fd-benchmark-marker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background-color: var(--fd-navy);
+  border-radius: 1px;
+}
+
+.fd-progress-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-legend-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fd-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.fd-course-summary-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fd-course-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--fd-font-sans);
+}
+
+.fd-course-summary-table th {
+  padding: 6px 8px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--fd-text-secondary);
+  text-transform: uppercase;
+  border-bottom: 1px solid #ECEEEA;
+}
+
+.fd-course-summary-table td {
+  padding: 8px 8px;
+  border-bottom: 1px solid #F0F2EF;
+}
+
+.fd-course-summary-table tr:last-child td {
+  border-bottom: none;
+}
+
+.fd-clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.fd-clickable-row:hover {
+  background-color: #F7F8F5;
+}
+
+.fd-mini-rate-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.fd-mini-rate-badge.green {
+  background-color: rgba(85, 126, 109, 0.12);
+  color: #3D6B57;
+}
+
+.fd-mini-rate-badge.amber {
+  background-color: rgba(181, 130, 44, 0.12);
+  color: #B5822C;
+}
+
+.fd-mini-rate-badge.red {
+  background-color: rgba(195, 102, 91, 0.12);
+  color: #C3665B;
+}
+
+/* ── SECTION 2: Assigned Subjects & Classes ────────────────── */
+.fd-subjects-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.fd-subject-card {
+  padding: 14px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #ECEEEA;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.fd-subject-card:hover {
+  border-color: var(--fd-border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transform: translateY(-1px);
+}
+
+.fd-subcard-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fd-subcard-code {
+  font-family: var(--fd-font-serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  margin-right: 6px;
+}
+
+.fd-subcard-title {
+  font-family: var(--fd-font-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 2px 0 0 0;
+  display: inline-block;
+}
+
+.fd-subcard-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 500;
+  background-color: #F0F2EF;
+  color: var(--fd-text-secondary);
+}
+
+.fd-subcard-badge.active {
+  background-color: rgba(85, 126, 109, 0.12);
+  color: #3D6B57;
+  border: 1px solid rgba(85, 126, 109, 0.2);
+}
+
+.fd-subcard-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.fd-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-subcard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid #F2F4F0;
+  font-size: 11.5px;
+}
+
+.fd-next-class-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-view-btn-text {
+  font-weight: 500;
+  color: var(--fd-navy);
+}
+
+/* ── SECTION 4: Upcoming Examinations & Assignments ────────── */
+.fd-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fd-event-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #ECEEEA;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  gap: 14px;
+}
+
+.fd-event-card:hover {
+  border-color: var(--fd-border);
+  background-color: #FAFBF9;
+}
+
+.fd-event-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fd-event-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fd-event-type-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.fd-event-type-badge.assignment {
+  background-color: #EAEFEA;
+  color: #3D6B57;
+}
+
+.fd-event-type-badge.examination {
+  background-color: #FAF2E4;
+  color: #96661C;
+}
+
+.fd-event-course-pill {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fd-navy);
+}
+
+.fd-event-heading {
+  font-family: var(--fd-font-serif);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.fd-event-subtext {
+  font-size: 11px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-event-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fd-event-date-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-navy);
+}
+
+.fd-event-status-pill {
+  font-size: 10.5px;
+  color: var(--fd-text-secondary);
+}
+
+/* ── SECTION 5: Notifications & Messages ───────────────────── */
+.fd-notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fd-notification-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  background-color: #FFFFFF;
+  border: 1px solid #ECEEEA;
+  border-radius: 4px;
+  gap: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.fd-notification-item:hover {
+  background-color: #FAFBF9;
+  border-color: var(--fd-border);
+}
+
+.fd-notification-item.unread {
+  background-color: rgba(85, 126, 109, 0.03);
+  border-left: 3px solid var(--fd-green);
+}
+
+.fd-notif-indicator-wrap {
+  width: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fd-notif-dot-unread {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--fd-green);
+}
+
+.fd-notif-dot-read {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #D9DEDA;
+}
+
+.fd-notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.fd-notif-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.fd-notif-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  margin: 0;
+}
+
+.fd-notif-time {
+  font-size: 11px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-notif-message {
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fd-notif-open-btn {
+  background: none;
+  border: none;
+  font-family: var(--fd-font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 4px 6px;
+  transition: color 0.15s ease;
+}
+
+.fd-notif-open-btn:hover {
+  color: var(--fd-green);
+}
+
+/* ── SECTION 6: Quick Actions ──────────────────────────────── */
+.fd-actions-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.fd-quick-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px;
+  background-color: #FCFBF9;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  color: var(--fd-navy);
+  font-family: var(--fd-font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  text-align: left;
+}
+
+.fd-quick-action-btn:hover {
+  background-color: #F0F3F1;
+  border-color: #C0C8C3;
+  transform: translateY(-1px);
+}
+
+.fd-quick-action-btn:active {
+  transform: translateY(0);
+}
+
+.fd-quick-action-btn svg {
+  color: var(--fd-navy);
+  flex-shrink: 0;
+}
+
+/* ── Modal Dialog Styles ───────────────────────────────────── */
+.fd-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(22, 47, 68, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.fd-modal-dialog {
+  background-color: #FCFBF9;
+  border: 1px solid var(--fd-border);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  animation: fdModalFadeIn 0.2s ease-out;
+}
+
+@keyframes fdModalFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.fd-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 24px 16px 24px;
+  border-bottom: 1px solid var(--fd-border);
+}
+
+.fd-modal-kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fd-text-secondary);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.fd-modal-title {
+  font-family: var(--fd-font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+}
+
+.fd-modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--fd-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.fd-modal-close-btn:hover {
+  color: var(--fd-navy);
+}
+
+.fd-modal-body {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fd-form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 13px;
+  color: var(--fd-navy);
+  background-color: #FFFFFF;
+  resize: vertical;
+  transition: border-color 0.15s ease;
+}
+
+.fd-form-textarea:focus {
+  outline: none;
+  border-color: var(--fd-navy);
+}
+
+.fd-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* ── Responsive Adaptations ────────────────────────────────── */
+@media (max-width: 1024px) {
+  .fd-grid-schedule,
+  .fd-grid-attendance,
+  .fd-grid-subjects,
+  .fd-grid-events,
+  .fd-grid-notifications,
+  .fd-grid-actions {
+    grid-column: span 12;
+  }
+
+  .fd-attend-stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .fd-welcome-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fd-welcome-title {
+    font-size: 32px;
+  }
+
+  .fd-welcome-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .fd-actions-grid-v2 {
+    grid-template-columns: 1fr;
+  }
+
+  .fd-event-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fd-event-right {
+    align-items: flex-start;
+    margin-top: 6px;
+  }
+}
