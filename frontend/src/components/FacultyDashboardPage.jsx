@@ -35,6 +35,10 @@ import {
   EditIcon,
   HistoryIcon,
   ShieldCheckIcon,
+  GraduationCapIcon,
+  CameraIcon,
+  EyeIcon,
+  FilterIcon,
 } from './FacultyDashboardIcons';
 import './FacultyDashboardPage.css';
 
@@ -42,6 +46,7 @@ import './FacultyDashboardPage.css';
 const NAV_ITEMS = [
   { id: 'dashboard',   icon: GridIcon,          label: 'Dashboard'   },
   { id: 'attendance',  icon: ClipboardListIcon, label: 'Attendance'  },
+  { id: 'students',    icon: GraduationCapIcon, label: 'Students'    },
   { id: 'qr',          icon: QrCodeIcon,        label: 'QR Code'     },
   { id: 'timetable',   icon: CalendarIcon,      label: 'Timetable'   },
   { id: 'assignments', icon: FilePenIcon,       label: 'Assignments' },
@@ -209,6 +214,400 @@ const REFERENCE_QR_SESSIONS = [
     duration: '20 min',
     scanned: '40/42',
     status: 'ended',
+  },
+];
+
+// ─── Reference Students Dataset (Faculty Student Management) ───
+const REFERENCE_STUDENTS = [
+  {
+    id: 'STU-042',
+    registerNumber: '21CS042',
+    name: 'Ajay Kumar T K',
+    email: 'iamajaykumartk@gmail.com',
+    department: 'Computer Science & Engineering',
+    deptCode: 'CS',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech CSE - 3rd Year',
+    section: 'Section A',
+    batch: '2023 - 2027',
+    mentor: 'Dr. Sarah Jenkins',
+    contactPhone: '+91 98471 20485',
+    guardian: 'K. Vijayaraghavan',
+    avatarColor: '#557E6D',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '12 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 44,
+    lateClasses: 2,
+    absentClasses: 2,
+    attendancePercentage: 91.7,
+    isLowAttendance: false,
+    status: 'Good Standing',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 18, total: 20, pct: 90.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 15, total: 16, pct: 93.8 },
+      { code: 'CS312', name: 'Database Systems', attended: 11, total: 12, pct: 91.7 },
+    ],
+    attendanceHistory: [
+      { id: 'h-101', date: '25 Oct 2026', time: '09:05 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (98.5%)', note: 'On-time verification' },
+      { id: 'h-102', date: '23 Oct 2026', time: '11:15 AM', course: 'CS205', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Standard scan' },
+      { id: 'h-103', date: '21 Oct 2026', time: '09:04 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (99.1%)', note: 'Biometric pass' },
+      { id: 'h-104', date: '19 Oct 2026', time: '02:00 PM', course: 'CS312', method: 'QR Token', status: 'present', verification: 'Verified (97.8%)', note: 'Lab session scan' },
+      { id: 'h-105', date: '16 Oct 2026', time: '11:20 AM', course: 'CS205', method: 'QR Token', status: 'late', verification: 'Late (+20m)', note: 'Delayed transit' },
+      { id: 'h-106', date: '14 Oct 2026', time: '09:05 AM', course: 'CS101', method: 'QR Token', status: 'present', verification: 'Verified (98.5%)', note: 'Morning lecture' },
+    ],
+  },
+  {
+    id: 'STU-019',
+    registerNumber: '21CS019',
+    name: 'Goutham M S',
+    email: 'gouthamms997@gmail.com',
+    department: 'Computer Science & Engineering',
+    deptCode: 'CS',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech CSE - 3rd Year',
+    section: 'Section A',
+    batch: '2023 - 2027',
+    mentor: 'Dr. Sarah Jenkins',
+    contactPhone: '+91 94462 77109',
+    guardian: 'M. S. Somasekharan',
+    avatarColor: '#162F44',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '11 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 41,
+    lateClasses: 4,
+    absentClasses: 3,
+    attendancePercentage: 85.4,
+    isLowAttendance: false,
+    status: 'Good Standing',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 17, total: 20, pct: 85.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 14, total: 16, pct: 87.5 },
+      { code: 'CS312', name: 'Database Systems', attended: 10, total: 12, pct: 83.3 },
+    ],
+    attendanceHistory: [
+      { id: 'h-201', date: '25 Oct 2026', time: '09:12 AM', course: 'CS101', method: 'Face Recognition', status: 'late', verification: 'Late (+12m)', note: 'Flagged late' },
+      { id: 'h-202', date: '23 Oct 2026', time: '11:00 AM', course: 'CS205', method: 'Manual Override', status: 'absent', verification: 'Excused', note: 'Medical absence confirmed' },
+      { id: 'h-203', date: '21 Oct 2026', time: '09:08 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (96.8%)', note: 'Face biometric pass' },
+      { id: 'h-204', date: '19 Oct 2026', time: '02:02 PM', course: 'CS312', method: 'QR Token', status: 'present', verification: 'Verified (99.0%)', note: 'Normal check-in' },
+      { id: 'h-205', date: '13 Oct 2026', time: '05:33 PM', course: 'CS205', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Evening review' },
+    ],
+  },
+  {
+    id: 'STU-028',
+    registerNumber: '21CS028',
+    name: 'Ishal V',
+    email: 'ishalv00@gmail.com',
+    department: 'Computer Science & Engineering',
+    deptCode: 'CS',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech CSE - 3rd Year',
+    section: 'Section B',
+    batch: '2023 - 2027',
+    mentor: 'Prof. Suresh R.',
+    contactPhone: '+91 94472 88102',
+    guardian: 'M. Varghese',
+    avatarColor: '#B5822C',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '10 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 34,
+    lateClasses: 4,
+    absentClasses: 10,
+    attendancePercentage: 70.8,
+    isLowAttendance: true,
+    status: 'At Risk (< 75%)',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 14, total: 20, pct: 70.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 12, total: 16, pct: 75.0 },
+      { code: 'CS312', name: 'Database Systems', attended: 8, total: 12, pct: 66.7 },
+    ],
+    attendanceHistory: [
+      { id: 'h-301', date: '25 Oct 2026', time: '09:14 AM', course: 'CS101', method: 'Face Recognition', status: 'late', verification: 'Low Confidence (68.2%)', note: 'Low light angle review' },
+      { id: 'h-302', date: '23 Oct 2026', time: '11:00 AM', course: 'CS205', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'No scan' },
+      { id: 'h-303', date: '21 Oct 2026', time: '09:00 AM', course: 'CS101', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'No scan' },
+      { id: 'h-304', date: '19 Oct 2026', time: '02:04 PM', course: 'CS312', method: 'QR Token', status: 'present', verification: 'Pending Review (78.4%)', note: 'Scanned late' },
+      { id: 'h-305', date: '17 Oct 2026', time: '11:00 AM', course: 'CS205', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'Absent' },
+    ],
+  },
+  {
+    id: 'STU-007',
+    registerNumber: '21CS007',
+    name: 'Arjun P',
+    email: 'ajn2562004@gmail.com',
+    department: 'Computer Science & Engineering',
+    deptCode: 'CS',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech CSE - 3rd Year',
+    section: 'Section A',
+    batch: '2023 - 2027',
+    mentor: 'Dr. Sarah Jenkins',
+    contactPhone: '+91 97441 55021',
+    guardian: 'P. Narayanan',
+    avatarColor: '#557E6D',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '08 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 45,
+    lateClasses: 1,
+    absentClasses: 2,
+    attendancePercentage: 93.8,
+    isLowAttendance: false,
+    status: 'Good Standing',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 19, total: 20, pct: 95.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 15, total: 16, pct: 93.8 },
+      { code: 'CS312', name: 'Database Systems', attended: 11, total: 12, pct: 91.7 },
+    ],
+    attendanceHistory: [
+      { id: 'h-401', date: '25 Oct 2026', time: '09:01 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (99.4%)', note: 'Face biometric pass' },
+      { id: 'h-402', date: '23 Oct 2026', time: '11:02 AM', course: 'CS205', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Standard check-in' },
+      { id: 'h-403', date: '19 Oct 2026', time: '09:20 AM', course: 'CS101', method: 'Manual Entry', status: 'present', verification: 'Faculty Verified', note: 'Physical lab attendance verified' },
+      { id: 'h-404', date: '17 Oct 2026', time: '02:01 PM', course: 'CS312', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Standard scan' },
+    ],
+  },
+  {
+    id: 'STU-012',
+    registerNumber: '21CS012',
+    name: 'Avinash V',
+    email: 'avvviva0@gmail.com',
+    department: 'Computer Science & Engineering',
+    deptCode: 'CS',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech CSE - 3rd Year',
+    section: 'Section B',
+    batch: '2023 - 2027',
+    mentor: 'Prof. Meera Iyer',
+    contactPhone: '+91 97455 11983',
+    guardian: 'P. Venugopal',
+    avatarColor: '#C3665B',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '15 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 29,
+    lateClasses: 3,
+    absentClasses: 16,
+    attendancePercentage: 60.4,
+    isLowAttendance: true,
+    status: 'Critical Shortage Warning',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 11, total: 20, pct: 55.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 10, total: 16, pct: 62.5 },
+      { code: 'CS312', name: 'Database Systems', attended: 8, total: 12, pct: 66.7 },
+    ],
+    attendanceHistory: [
+      { id: 'h-501', date: '25 Oct 2026', time: '09:00 AM', course: 'CS101', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'No scan recorded' },
+      { id: 'h-502', date: '23 Oct 2026', time: '11:18 AM', course: 'CS205', method: 'QR Token', status: 'late', verification: 'Verified (99.1%)', note: 'Late entry' },
+      { id: 'h-503', date: '21 Oct 2026', time: '09:00 AM', course: 'CS101', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'Absent' },
+      { id: 'h-504', date: '19 Oct 2026', time: '02:00 PM', course: 'CS312', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'Absent' },
+      { id: 'h-505', date: '17 Oct 2026', time: '11:00 AM', course: 'CS205', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'Absent' },
+    ],
+  },
+  {
+    id: 'STU-056',
+    registerNumber: '21CS056',
+    name: 'Rahul Verma',
+    email: 'rahul.v@attentify.ac.in',
+    department: 'Computer Science & Engineering',
+    deptCode: 'CS',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech CSE - 3rd Year',
+    section: 'Section A',
+    batch: '2023 - 2027',
+    mentor: 'Dr. Sarah Jenkins',
+    contactPhone: '+91 98950 44123',
+    guardian: 'S. K. Verma',
+    avatarColor: '#557E6D',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '09 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 43,
+    lateClasses: 2,
+    absentClasses: 3,
+    attendancePercentage: 89.6,
+    isLowAttendance: false,
+    status: 'Good Standing',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 18, total: 20, pct: 90.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 14, total: 16, pct: 87.5 },
+      { code: 'CS312', name: 'Database Systems', attended: 11, total: 12, pct: 91.7 },
+    ],
+    attendanceHistory: [
+      { id: 'h-601', date: '25 Oct 2026', time: '09:03 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (98.9%)', note: 'Normal pass' },
+      { id: 'h-602', date: '23 Oct 2026', time: '11:04 AM', course: 'CS205', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Standard check-in' },
+      { id: 'h-603', date: '21 Oct 2026', time: '09:02 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (99.5%)', note: 'Biometric pass' },
+    ],
+  },
+  {
+    id: 'STU-062',
+    registerNumber: '21CS062',
+    name: 'Priya Singh',
+    email: 'priya.s@attentify.ac.in',
+    department: 'Computer Science & Engineering',
+    deptCode: 'CS',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech CSE - 3rd Year',
+    section: 'Section B',
+    batch: '2023 - 2027',
+    mentor: 'Prof. Suresh R.',
+    contactPhone: '+91 98463 33190',
+    guardian: 'R. K. Singh',
+    avatarColor: '#C3665B',
+    faceRegistered: false,
+    facePhotoUrl: null,
+    faceEnrollDate: null,
+    totalClasses: 48,
+    attendedClasses: 31,
+    lateClasses: 3,
+    absentClasses: 14,
+    attendancePercentage: 64.6,
+    isLowAttendance: true,
+    status: 'Critical Shortage Warning',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 12, total: 20, pct: 60.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 11, total: 16, pct: 68.8 },
+      { code: 'CS312', name: 'Database Systems', attended: 8, total: 12, pct: 66.7 },
+    ],
+    attendanceHistory: [
+      { id: 'h-701', date: '25 Oct 2026', time: '09:00 AM', course: 'CS101', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'No scan recorded' },
+      { id: 'h-702', date: '23 Oct 2026', time: '11:00 AM', course: 'CS205', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'Absent' },
+      { id: 'h-703', date: '21 Oct 2026', time: '09:15 AM', course: 'CS101', method: 'QR Token', status: 'late', verification: 'Late (+15m)', note: 'Delayed arrival' },
+      { id: 'h-704', date: '19 Oct 2026', time: '02:00 PM', course: 'CS312', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'Absent' },
+    ],
+  },
+  {
+    id: 'STU-078',
+    registerNumber: '21CS078',
+    name: 'Sneha Menon',
+    email: 'sneha.menon@attentify.ac.in',
+    department: 'Computer Science & Engineering',
+    deptCode: 'CS',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech CSE - 3rd Year',
+    section: 'Section A',
+    batch: '2023 - 2027',
+    mentor: 'Dr. Sarah Jenkins',
+    contactPhone: '+91 97460 11244',
+    guardian: 'G. Menon',
+    avatarColor: '#557E6D',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '07 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 46,
+    lateClasses: 0,
+    absentClasses: 2,
+    attendancePercentage: 95.8,
+    isLowAttendance: false,
+    status: 'Exemplary Attendance',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 19, total: 20, pct: 95.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 16, total: 16, pct: 100.0 },
+      { code: 'CS312', name: 'Database Systems', attended: 11, total: 12, pct: 91.7 },
+    ],
+    attendanceHistory: [
+      { id: 'h-801', date: '25 Oct 2026', time: '08:58 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (99.8%)', note: 'Early check-in' },
+      { id: 'h-802', date: '23 Oct 2026', time: '10:59 AM', course: 'CS205', method: 'Face Recognition', status: 'present', verification: 'Verified (99.4%)', note: 'On-time verification' },
+      { id: 'h-803', date: '21 Oct 2026', time: '08:59 AM', course: 'CS101', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Standard scan' },
+    ],
+  },
+  {
+    id: 'STU-034',
+    registerNumber: '21EC034',
+    name: 'Kavya Nair',
+    email: 'kavya.n@attentify.ac.in',
+    department: 'Electronics & Communication',
+    deptCode: 'EC',
+    degree: 'B.Tech',
+    year: 3,
+    semester: 'Semester 6',
+    className: 'B.Tech ECE - 3rd Year',
+    section: 'Section A',
+    batch: '2023 - 2027',
+    mentor: 'Prof. Meera Iyer',
+    contactPhone: '+91 94950 88712',
+    guardian: 'K. Unnikrishnan',
+    avatarColor: '#6B8294',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '14 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 38,
+    lateClasses: 3,
+    absentClasses: 7,
+    attendancePercentage: 79.2,
+    isLowAttendance: false,
+    status: 'Good Standing',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 16, total: 20, pct: 80.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 13, total: 16, pct: 81.3 },
+      { code: 'CS312', name: 'Database Systems', attended: 9, total: 12, pct: 75.0 },
+    ],
+    attendanceHistory: [
+      { id: 'h-901', date: '25 Oct 2026', time: '09:06 AM', course: 'CS101', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Lecture scan' },
+      { id: 'h-902', date: '23 Oct 2026', time: '11:05 AM', course: 'CS205', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Lecture scan' },
+      { id: 'h-903', date: '21 Oct 2026', time: '09:00 AM', course: 'CS101', method: 'Absent', status: 'absent', verification: 'Unexcused', note: 'Absent' },
+    ],
+  },
+  {
+    id: 'STU-015',
+    registerNumber: '21BT015',
+    name: 'Ananya Roy',
+    email: 'ananya.r@attentify.ac.in',
+    department: 'Biotechnology',
+    deptCode: 'BT',
+    degree: 'B.Tech',
+    year: 2,
+    semester: 'Semester 4',
+    className: 'B.Tech BT - 2nd Year',
+    section: 'Section A',
+    batch: '2024 - 2028',
+    mentor: 'Dr. Priya Nair',
+    contactPhone: '+91 94470 66501',
+    guardian: 'A. Roy',
+    avatarColor: '#557E6D',
+    faceRegistered: true,
+    facePhotoUrl: null,
+    faceEnrollDate: '16 Sep 2026',
+    totalClasses: 48,
+    attendedClasses: 44,
+    lateClasses: 1,
+    absentClasses: 3,
+    attendancePercentage: 91.7,
+    isLowAttendance: false,
+    status: 'Good Standing',
+    subjectBreakdown: [
+      { code: 'CS101', name: 'Data Structures', attended: 19, total: 20, pct: 95.0 },
+      { code: 'CS205', name: 'Operating Systems', attended: 14, total: 16, pct: 87.5 },
+      { code: 'CS312', name: 'Database Systems', attended: 11, total: 12, pct: 91.7 },
+    ],
+    attendanceHistory: [
+      { id: 'h-1001', date: '25 Oct 2026', time: '09:04 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (99.0%)', note: 'Morning biometric check' },
+      { id: 'h-1002', date: '23 Oct 2026', time: '11:03 AM', course: 'CS205', method: 'QR Token', status: 'present', verification: 'Verified (100%)', note: 'Standard scan' },
+    ],
   },
 ];
 
@@ -1306,14 +1705,14 @@ function TabDashboard({ user, onNav, liveData, onOpenQrModal, onShowToast }) {
               <span>View Timetable</span>
             </button>
 
-            {/* Action 5: View Classes */}
+            {/* Action 5: Student Management */}
             <button
               type="button"
               className="fd-quick-action-btn"
-              onClick={() => onNav('timetable')}
+              onClick={() => onNav('students')}
             >
-              <UsersIcon size={16} color="var(--fd-navy)" />
-              <span>View Classes</span>
+              <GraduationCapIcon size={16} color="var(--fd-navy)" />
+              <span>Student Management</span>
             </button>
 
             {/* Action 6: Send Notification */}
@@ -2858,6 +3257,1705 @@ function TabAttendance({ liveData, onOpenQrModal, user, onNav, onShowToast }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  TAB: STUDENT MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+// Helpers for Attendance Percentage Coloring
+function getStudentPctColor(pct) {
+  if (pct >= 85) return '#557E6D';
+  if (pct >= 75) return '#6B8E7D';
+  if (pct >= 65) return '#B5822C';
+  return '#C3665B';
+}
+
+function getStudentPctBadgeClass(pct) {
+  if (pct >= 85) return 'green';
+  if (pct >= 75) return 'subtle-green';
+  if (pct >= 65) return 'amber';
+  return 'red';
+}
+
+// ─── Modal 1: Student Profile Modal ───────────────────────────
+function StudentProfileModal({
+  student,
+  onClose,
+  onOpenHistory,
+  onOpenWarning,
+  onOpenPhoto,
+  onShowToast,
+}) {
+  if (!student) return null;
+
+  const isLow = student.attendancePercentage < 75;
+  const isCritical = student.attendancePercentage < 65;
+  const pctColor = getStudentPctColor(student.attendancePercentage);
+  const initials = student.name
+    .split(' ')
+    .map(p => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  // SVG Gauge calculations
+  const radius = 56;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - Math.min(100, Math.max(0, student.attendancePercentage)) / 100);
+
+  const handleExportCSV = () => {
+    const headers = ['Session Date', 'Time', 'Course', 'Method', 'Status', 'Verification', 'Notes'];
+    const rows = (student.attendanceHistory || []).map(h => [
+      h.date,
+      h.time,
+      h.course,
+      h.method,
+      h.status,
+      `"${h.verification || ''}"`,
+      `"${h.note || ''}"`,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `${student.registerNumber}_Attendance_Record.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (onShowToast) onShowToast(`📄 Exported attendance report for ${student.name}`);
+  };
+
+  return (
+    <div className="fd-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="fd-modal-container fd-student-profile-modal" onClick={e => e.stopPropagation()}>
+        {/* Modal Top Header */}
+        <div className="fd-modal-header-bar">
+          <div className="fd-student-modal-title-wrap">
+            <span className="fd-reg-badge-large">{student.registerNumber}</span>
+            <div>
+              <h2 className="fd-modal-title">{student.name}</h2>
+              <p className="fd-modal-sub">{student.className} · {student.section} · {student.department}</p>
+            </div>
+          </div>
+          <button type="button" className="fd-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <XIcon size={18} color="var(--fd-text-secondary)" />
+          </button>
+        </div>
+
+        <div className="fd-student-profile-body">
+          {/* Left Column: Photo & Academic Identity */}
+          <div className="fd-student-left-col">
+            <div className="fd-profile-photo-card">
+              <div className="fd-student-photo-wrapper" onClick={() => onOpenPhoto(student)} title="Click to inspect face photo">
+                {student.facePhotoUrl ? (
+                  <img src={student.facePhotoUrl} alt={student.name} className="fd-student-large-photo" />
+                ) : (
+                  <div className="fd-student-large-avatar" style={{ background: student.avatarColor || '#162F44' }}>
+                    {initials}
+                  </div>
+                )}
+                <div className="fd-photo-hover-tag">
+                  <CameraIcon size={14} color="#FFFFFF" />
+                  <span>View Face Profile</span>
+                </div>
+              </div>
+
+              <div className="fd-student-bio-center">
+                <h3 className="fd-student-bio-name">{student.name}</h3>
+                <span className="fd-student-bio-email">{student.email}</span>
+                <div className="fd-bio-tag-row">
+                  <span className="fd-bio-badge sec">{student.section}</span>
+                  <span className="fd-bio-badge deg">{student.degree}</span>
+                  <span className="fd-bio-badge batch">{student.batch}</span>
+                </div>
+              </div>
+
+              {/* Biometric Status Pill */}
+              <div className="fd-biometric-status-box">
+                <div className="fd-biometric-header">
+                  <ShieldCheckIcon size={16} color={student.faceRegistered ? 'var(--fd-success)' : 'var(--fd-text-secondary)'} />
+                  <span className="fd-biometric-title">
+                    {student.faceRegistered ? 'Face Biometric Enrolled' : 'Face Registration Pending'}
+                  </span>
+                </div>
+                <p className="fd-biometric-desc">
+                  {student.faceRegistered
+                    ? `DeepFace SFace Embedding enrolled on ${student.faceEnrollDate || 'Semester commencement'}. Anti-spoofing liveness verified.`
+                    : 'Student has not completed face enrollment in the terminal system.'}
+                </p>
+                {student.faceRegistered && (
+                  <button
+                    type="button"
+                    className="fd-btn-photo-inspect"
+                    onClick={() => onOpenPhoto(student)}
+                  >
+                    <EyeIcon size={13} color="var(--fd-navy)" />
+                    <span>Inspect Face Profile</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Key Academic Metadata */}
+              <div className="fd-academic-details-list">
+                <div className="fd-detail-row">
+                  <span className="fd-detail-label">Register Number:</span>
+                  <span className="fd-detail-value font-mono">{student.registerNumber}</span>
+                </div>
+                <div className="fd-detail-row">
+                  <span className="fd-detail-label">Department:</span>
+                  <span className="fd-detail-value">{student.department}</span>
+                </div>
+                <div className="fd-detail-row">
+                  <span className="fd-detail-label">Class & Year:</span>
+                  <span className="fd-detail-value">{student.className}</span>
+                </div>
+                <div className="fd-detail-row">
+                  <span className="fd-detail-label">Section:</span>
+                  <span className="fd-detail-value">{student.section}</span>
+                </div>
+                <div className="fd-detail-row">
+                  <span className="fd-detail-label">Faculty Mentor:</span>
+                  <span className="fd-detail-value">{student.mentor || 'Dr. Sarah Jenkins'}</span>
+                </div>
+                <div className="fd-detail-row">
+                  <span className="fd-detail-label">Guardian:</span>
+                  <span className="fd-detail-value">{student.guardian || 'N/A'}</span>
+                </div>
+                <div className="fd-detail-row">
+                  <span className="fd-detail-label">Contact:</span>
+                  <span className="fd-detail-value font-mono">{student.contactPhone || '+91 98400 00000'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Attendance Statistics & Subjects */}
+          <div className="fd-student-right-col">
+            {/* Low Attendance Warning Alert if < 75% */}
+            {isLow && (
+              <div className={`fd-profile-warning-alert ${isCritical ? 'critical' : 'warning'}`}>
+                <AlertTriangleIcon size={20} color={isCritical ? 'var(--fd-error)' : '#B5822C'} />
+                <div className="fd-alert-text">
+                  <h4 className="fd-alert-heading">
+                    {isCritical ? 'Critical Attendance Shortage Notice (< 65%)' : 'Attendance Shortage Alert (< 75%)'}
+                  </h4>
+                  <p className="fd-alert-desc">
+                    Current attendance is <strong>{student.attendancePercentage}%</strong>, which is{' '}
+                    <strong>{(75 - student.attendancePercentage).toFixed(1)}% below</strong> the university mandatory
+                    75% requirement. Student is at risk of exam condonation/detention.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="fd-btn-issue-notice"
+                  onClick={() => {
+                    onClose();
+                    onOpenWarning(student);
+                  }}
+                >
+                  <SendIcon size={13} color="#FFFFFF" />
+                  <span>Issue Notice</span>
+                </button>
+              </div>
+            )}
+
+            {/* Attendance Gauge Card */}
+            <div className="fd-attendance-gauge-card">
+              <div className="fd-gauge-ring-side">
+                <svg width="130" height="130" className="fd-svg-ring" viewBox="0 0 130 130">
+                  <circle
+                    cx="65"
+                    cy="65"
+                    r={radius}
+                    stroke="var(--fd-border)"
+                    strokeWidth="10"
+                    fill="none"
+                  />
+                  <circle
+                    cx="65"
+                    cy="65"
+                    r={radius}
+                    stroke={pctColor}
+                    strokeWidth="10"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    fill="none"
+                    transform="rotate(-90 65 65)"
+                    style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                  />
+                </svg>
+                <div className="fd-gauge-inside">
+                  <span className="fd-gauge-pct" style={{ color: pctColor }}>
+                    {student.attendancePercentage}%
+                  </span>
+                  <span className="fd-gauge-label">Overall</span>
+                </div>
+              </div>
+
+              <div className="fd-gauge-metrics-side">
+                <div className="fd-gauge-status-row">
+                  <span className="fd-gauge-status-title">Attendance Standing:</span>
+                  <span className={`fd-student-status-badge ${getStudentPctBadgeClass(student.attendancePercentage)}`}>
+                    {student.status || (isLow ? 'Shortage Alert' : 'Good Standing')}
+                  </span>
+                </div>
+
+                <div className="fd-stats-mini-grid">
+                  <div className="fd-stat-mini-box">
+                    <span className="fd-stat-mini-val">{student.totalClasses}</span>
+                    <span className="fd-stat-mini-lbl">Conducted</span>
+                  </div>
+                  <div className="fd-stat-mini-box">
+                    <span className="fd-stat-mini-val" style={{ color: 'var(--fd-success)' }}>
+                      {student.attendedClasses}
+                    </span>
+                    <span className="fd-stat-mini-lbl">Present</span>
+                  </div>
+                  <div className="fd-stat-mini-box">
+                    <span className="fd-stat-mini-val" style={{ color: '#B5822C' }}>
+                      {student.lateClasses}
+                    </span>
+                    <span className="fd-stat-mini-lbl">Late</span>
+                  </div>
+                  <div className="fd-stat-mini-box">
+                    <span className="fd-stat-mini-val" style={{ color: 'var(--fd-error)' }}>
+                      {student.absentClasses}
+                    </span>
+                    <span className="fd-stat-mini-lbl">Absent</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Subject-wise Attendance Breakdown */}
+            <div className="fd-subject-breakdown-card">
+              <div className="fd-subcard-header">
+                <h4 className="fd-subcard-title">Subject-wise Attendance Breakdown</h4>
+                <span className="fd-subcard-note">Active Semester Courses</span>
+              </div>
+
+              <div className="fd-subject-breakdown-table-wrap">
+                <table className="fd-subject-breakdown-table">
+                  <thead>
+                    <tr>
+                      <th>Subject</th>
+                      <th>Attended / Total</th>
+                      <th>Percentage</th>
+                      <th style={{ textAlign: 'right' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(student.subjectBreakdown || []).map((sub) => {
+                      const subColor = getStudentPctColor(sub.pct);
+                      return (
+                        <tr key={sub.code}>
+                          <td>
+                            <div className="fd-sub-name-cell">
+                              <span className="fd-sub-code-pill">{sub.code}</span>
+                              <span className="fd-sub-title-text">{sub.name}</span>
+                            </div>
+                          </td>
+                          <td className="font-mono">{sub.attended} / {sub.total} sessions</td>
+                          <td>
+                            <div className="fd-pct-bar-wrap">
+                              <div className="fd-pct-bar-bg">
+                                <div
+                                  className="fd-pct-bar-fill"
+                                  style={{ width: `${Math.min(100, sub.pct)}%`, background: subColor }}
+                                />
+                              </div>
+                              <span className="fd-pct-num" style={{ color: subColor }}>{sub.pct}%</span>
+                            </div>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <span className={`fd-mini-status-pill ${getStudentPctBadgeClass(sub.pct)}`}>
+                              {sub.pct >= 75 ? 'Safe' : 'Shortage'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Recent Attendance Session Snip */}
+            <div className="fd-recent-history-snip">
+              <div className="fd-snip-header">
+                <h4 className="fd-subcard-title">Recent Attendance Logs</h4>
+                <button
+                  type="button"
+                  className="fd-snip-view-all"
+                  onClick={() => {
+                    onClose();
+                    onOpenHistory(student);
+                  }}
+                >
+                  <span>View Full History ({student.attendanceHistory?.length || 0})</span>
+                  <span>→</span>
+                </button>
+              </div>
+
+              <div className="fd-snip-list">
+                {(student.attendanceHistory || []).slice(0, 3).map((item) => (
+                  <div key={item.id} className="fd-snip-row">
+                    <div className="fd-snip-left">
+                      <span className={`fd-history-status-dot ${item.status}`} />
+                      <span className="fd-snip-course">{item.course}</span>
+                      <span className="fd-snip-date">{item.date}, {item.time}</span>
+                    </div>
+                    <div className="fd-snip-right">
+                      <span className="fd-snip-method">{item.method}</span>
+                      <span className={`fd-mini-status-pill ${item.status}`}>{item.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Footer Controls */}
+        <div className="fd-modal-footer">
+          <div className="fd-footer-left">
+            <button
+              type="button"
+              className="fd-btn-secondary"
+              onClick={handleExportCSV}
+              title="Download full student attendance sheet as CSV"
+            >
+              <PaperclipIcon size={14} color="var(--fd-navy)" />
+              <span>Export Student CSV</span>
+            </button>
+            <button
+              type="button"
+              className="fd-btn-secondary"
+              onClick={() => {
+                onClose();
+                onOpenHistory(student);
+              }}
+            >
+              <HistoryIcon size={14} color="var(--fd-navy)" />
+              <span>Attendance History</span>
+            </button>
+          </div>
+
+          <div className="fd-footer-right">
+            {isLow && (
+              <button
+                type="button"
+                className="fd-btn-warning-notice"
+                onClick={() => {
+                  onClose();
+                  onOpenWarning(student);
+                }}
+              >
+                <AlertTriangleIcon size={14} color="#FFFFFF" />
+                <span>Send Shortage Notice</span>
+              </button>
+            )}
+            <button type="button" className="fd-btn-primary" onClick={onClose}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal 2: Student Attendance History Modal ────────────────
+function StudentHistoryModal({ student, onClose, onShowToast }) {
+  const [courseFilter, setCourseFilter] = useState('all');
+
+  if (!student) return null;
+
+  const history = student.attendanceHistory || [];
+  const filteredHistory = courseFilter === 'all'
+    ? history
+    : history.filter(h => h.course === courseFilter);
+
+  const handleExportCSV = () => {
+    const headers = ['Session Date', 'Time', 'Course', 'Method', 'Status', 'Verification', 'Faculty Notes'];
+    const rows = filteredHistory.map(h => [
+      h.date,
+      h.time,
+      h.course,
+      h.method,
+      h.status,
+      `"${h.verification || ''}"`,
+      `"${h.note || ''}"`,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `${student.registerNumber}_Attendance_History.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (onShowToast) onShowToast(`📄 Exported attendance history for ${student.name}`);
+  };
+
+  return (
+    <div className="fd-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="fd-modal-container fd-history-modal" onClick={e => e.stopPropagation()}>
+        <div className="fd-modal-header-bar">
+          <div className="fd-student-modal-title-wrap">
+            <span className="fd-reg-badge-large">{student.registerNumber}</span>
+            <div>
+              <h2 className="fd-modal-title">Attendance History: {student.name}</h2>
+              <p className="fd-modal-sub">{student.className} · {student.section} · Cumulative Attendance: {student.attendancePercentage}%</p>
+            </div>
+          </div>
+          <button type="button" className="fd-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <XIcon size={18} color="var(--fd-text-secondary)" />
+          </button>
+        </div>
+
+        {/* History Toolbar */}
+        <div className="fd-history-toolbar">
+          <div className="fd-history-filters">
+            <span className="fd-filter-label">Filter by Course:</span>
+            {['all', 'CS101', 'CS205', 'CS312'].map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`fd-history-filter-pill ${courseFilter === c ? 'active' : ''}`}
+                onClick={() => setCourseFilter(c)}
+              >
+                {c === 'all' ? 'All Courses' : c}
+              </button>
+            ))}
+          </div>
+
+          <div className="fd-history-stats-pill">
+            <span>Showing {filteredHistory.length} sessions</span>
+          </div>
+        </div>
+
+        {/* History Records Table */}
+        <div className="fd-history-table-wrap">
+          {filteredHistory.length === 0 ? (
+            <div className="fd-empty-history">No attendance records found for this filter.</div>
+          ) : (
+            <table className="fd-history-table">
+              <thead>
+                <tr>
+                  <th>Session Date & Time</th>
+                  <th>Course</th>
+                  <th>Attendance Mode</th>
+                  <th>Status</th>
+                  <th>Biometric Verification</th>
+                  <th>Faculty Notes / Override</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredHistory.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="fd-history-date-cell">
+                        <span className="fd-hist-date">{item.date}</span>
+                        <span className="fd-hist-time">{item.time}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="fd-sub-code-pill">{item.course}</span>
+                    </td>
+                    <td>
+                      <span className="fd-hist-method">{item.method}</span>
+                    </td>
+                    <td>
+                      <span className={`fd-status-pill-v2 status-${item.status}`}>
+                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="fd-hist-verif-cell">
+                        <ShieldCheckIcon size={14} color="var(--fd-success)" />
+                        <span>{item.verification || 'Standard verified'}</span>
+                      </div>
+                    </td>
+                    <td className="fd-hist-notes">
+                      {item.note || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="fd-modal-footer">
+          <button
+            type="button"
+            className="fd-btn-secondary"
+            onClick={handleExportCSV}
+          >
+            <PaperclipIcon size={14} color="var(--fd-navy)" />
+            <span>Export History CSV</span>
+          </button>
+          <button type="button" className="fd-btn-primary" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal 3: Issue Shortage Warning Modal ────────────────────
+function StudentWarningModal({ student, onClose, onShowToast }) {
+  const [warningType, setWarningType] = useState('shortage');
+  const [sendSMS, setSendSMS] = useState(true);
+  const [notifyMentor, setNotifyMentor] = useState(true);
+  const [customNote, setCustomNote] = useState('');
+
+  if (!student) return null;
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (onShowToast) {
+      onShowToast(`⚠️ Official shortage warning dispatched to ${student.name} (${student.email})`);
+    }
+    onClose();
+  };
+
+  const defaultMessage = `Dear ${student.name} (Reg No: ${student.registerNumber}), this is an official academic attendance alert from the Faculty Coordinator. Your cumulative attendance currently stands at ${student.attendancePercentage}%, which is below the mandatory 75% institutional requirement. You are advised to meet with your faculty advisor (${student.mentor || 'Dr. Sarah Jenkins'}) to prevent examination condonation or detention.`;
+
+  return (
+    <div className="fd-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="fd-modal-container fd-warning-notice-modal" onClick={e => e.stopPropagation()}>
+        <div className="fd-modal-header-bar">
+          <div className="fd-student-modal-title-wrap">
+            <span className="fd-reg-badge-large red">{student.registerNumber}</span>
+            <div>
+              <h2 className="fd-modal-title">Issue Attendance Shortage Warning</h2>
+              <p className="fd-modal-sub">Student: {student.name} · Current Attendance: {student.attendancePercentage}%</p>
+            </div>
+          </div>
+          <button type="button" className="fd-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <XIcon size={18} color="var(--fd-text-secondary)" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSend} className="fd-warning-form">
+          <div className="fd-warning-summary-strip">
+            <AlertTriangleIcon size={18} color="var(--fd-error)" />
+            <div>
+              <strong>Mandatory Threshold: 75%</strong>
+              <span>Deficit: {(75 - student.attendancePercentage).toFixed(1)}% ({student.absentClasses} absences out of {student.totalClasses} classes)</span>
+            </div>
+          </div>
+
+          <div className="fd-form-group">
+            <label className="fd-form-label">Notice Classification</label>
+            <div className="fd-radio-options-row">
+              <label className="fd-radio-item">
+                <input
+                  type="radio"
+                  name="warnType"
+                  value="shortage"
+                  checked={warningType === 'shortage'}
+                  onChange={() => setWarningType('shortage')}
+                />
+                <span>Standard Shortage Alert (&lt; 75%)</span>
+              </label>
+              <label className="fd-radio-item">
+                <input
+                  type="radio"
+                  name="warnType"
+                  value="detention"
+                  checked={warningType === 'detention'}
+                  onChange={() => setWarningType('detention')}
+                />
+                <span>Critical Detention Warning (&lt; 65%)</span>
+              </label>
+              <label className="fd-radio-item">
+                <input
+                  type="radio"
+                  name="warnType"
+                  value="counseling"
+                  checked={warningType === 'counseling'}
+                  onChange={() => setWarningType('counseling')}
+                />
+                <span>Advisory Counseling Call</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="fd-form-group">
+            <label className="fd-form-label">Notice Message Text</label>
+            <textarea
+              className="fd-form-textarea"
+              rows={4}
+              defaultValue={defaultMessage}
+              onChange={e => setCustomNote(e.target.value)}
+            />
+          </div>
+
+          <div className="fd-form-group">
+            <label className="fd-form-label">Dispatch Channels</label>
+            <div className="fd-checkboxes-col">
+              <label className="fd-checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={sendSMS}
+                  onChange={e => setSendSMS(e.target.checked)}
+                />
+                <span>Send SMS to Guardian ({student.contactPhone || '+91 98400 00000'})</span>
+              </label>
+              <label className="fd-checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={notifyMentor}
+                  onChange={e => setNotifyMentor(e.target.checked)}
+                />
+                <span>CC Academic Mentor ({student.mentor || 'Dr. Sarah Jenkins'}) &amp; HOD</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="fd-modal-footer">
+            <button type="button" className="fd-btn-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="fd-btn-danger">
+              <SendIcon size={14} color="#FFFFFF" />
+              <span>Broadcast Notice</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal 4: Bulk Defaulters Warning Modal ────────────────────
+function BulkWarningModal({ defaulters = [], onClose, onShowToast }) {
+  if (defaulters.length === 0) return null;
+
+  const handleBroadcastAll = () => {
+    if (onShowToast) {
+      onShowToast(`📢 Official shortage notices broadcasted to all ${defaulters.length} identified defaulters.`);
+    }
+    onClose();
+  };
+
+  return (
+    <div className="fd-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="fd-modal-container fd-bulk-warning-modal" onClick={e => e.stopPropagation()}>
+        <div className="fd-modal-header-bar">
+          <div>
+            <h2 className="fd-modal-title">Broadcast Notice to All Defaulters ({defaulters.length})</h2>
+            <p className="fd-modal-sub">Students with attendance below 75% institutional requirement</p>
+          </div>
+          <button type="button" className="fd-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <XIcon size={18} color="var(--fd-text-secondary)" />
+          </button>
+        </div>
+
+        <div className="fd-bulk-defaulters-list">
+          {defaulters.map((s) => (
+            <div key={s.id} className="fd-bulk-defaulter-row">
+              <div className="fd-bdr-left">
+                <span className="fd-bdr-reg font-mono">{s.registerNumber}</span>
+                <span className="fd-bdr-name">{s.name}</span>
+                <span className="fd-bdr-meta">{s.section} · {s.email}</span>
+              </div>
+              <div className="fd-bdr-right">
+                <span className="fd-pct-badge red">{s.attendancePercentage}%</span>
+                <span className="fd-bdr-deficit">{(75 - s.attendancePercentage).toFixed(1)}% deficit</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="fd-modal-footer">
+          <button type="button" className="fd-btn-secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="fd-btn-danger" onClick={handleBroadcastAll}>
+            <SendIcon size={14} color="#FFFFFF" />
+            <span>Send Notice to All {defaulters.length} Students</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal 5: Student Face Photo Preview Modal ─────────────────
+function StudentPhotoModal({ student, onClose }) {
+  if (!student) return null;
+
+  const initials = student.name
+    .split(' ')
+    .map(p => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  return (
+    <div className="fd-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="fd-modal-container fd-photo-inspect-modal" onClick={e => e.stopPropagation()}>
+        <div className="fd-modal-header-bar">
+          <div>
+            <h2 className="fd-modal-title">Biometric Face Profile: {student.name}</h2>
+            <p className="fd-modal-sub">Register No: {student.registerNumber} · {student.className} · {student.section}</p>
+          </div>
+          <button type="button" className="fd-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <XIcon size={18} color="var(--fd-text-secondary)" />
+          </button>
+        </div>
+
+        <div className="fd-photo-inspect-body">
+          <div className="fd-photo-inspect-image-frame">
+            {student.facePhotoUrl ? (
+              <img src={student.facePhotoUrl} alt={student.name} className="fd-inspect-large-img" />
+            ) : (
+              <div className="fd-inspect-avatar-fallback" style={{ background: student.avatarColor || '#162F44' }}>
+                <span className="fd-inspect-fallback-initials">{initials}</span>
+                <span className="fd-inspect-fallback-caption">Registered Biometric Avatar</span>
+              </div>
+            )}
+            <div className="fd-photo-verif-overlay">
+              <ShieldCheckIcon size={18} color="var(--fd-success)" />
+              <span>DeepFace SFace Embedding Registered</span>
+            </div>
+          </div>
+
+          <div className="fd-photo-metadata-card">
+            <h4 className="fd-meta-title">Biometric Identification Data</h4>
+            <div className="fd-meta-grid">
+              <div className="fd-meta-item">
+                <span className="fd-meta-item-label">Student ID:</span>
+                <span className="fd-meta-item-value font-mono">{student.registerNumber}</span>
+              </div>
+              <div className="fd-meta-item">
+                <span className="fd-meta-item-label">Email:</span>
+                <span className="fd-meta-item-value">{student.email}</span>
+              </div>
+              <div className="fd-meta-item">
+                <span className="fd-meta-item-label">Recognition Model:</span>
+                <span className="fd-meta-item-value">DeepFace SFace (128D)</span>
+              </div>
+              <div className="fd-meta-item">
+                <span className="fd-meta-item-label">Anti-Spoofing:</span>
+                <span className="fd-meta-item-value" style={{ color: 'var(--fd-success)' }}>Active (Liveness Challenge Passed)</span>
+              </div>
+              <div className="fd-meta-item">
+                <span className="fd-meta-item-label">Enrollment Date:</span>
+                <span className="fd-meta-item-value">{student.faceEnrollDate || '12 Sep 2026'}</span>
+              </div>
+              <div className="fd-meta-item">
+                <span className="fd-meta-item-label">Cumulative Attendance:</span>
+                <span className="fd-meta-item-value font-bold" style={{ color: getStudentPctColor(student.attendancePercentage) }}>
+                  {student.attendancePercentage}% ({student.status})
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="fd-modal-footer">
+          <button type="button" className="fd-btn-primary" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MAIN COMPONENT: TAB STUDENTS (STUDENT MANAGEMENT)
+// ═══════════════════════════════════════════════════════════════
+function TabStudents({ user, onNav, onShowToast, liveData }) {
+  // Master Student dataset
+  const [students, setStudents] = useState(REFERENCE_STUDENTS);
+
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'low' | 'good' | 'critical'
+  const [sectionFilter, setSectionFilter] = useState('all'); // 'all' | 'Section A' | 'Section B'
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [classFilter, setClassFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('pct_asc'); // default lowest attendance first to easily spot at-risk
+  const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
+
+  // Modals state
+  const [selectedProfileStudent, setSelectedProfileStudent] = useState(null);
+  const [selectedHistoryStudent, setSelectedHistoryStudent] = useState(null);
+  const [selectedWarningStudent, setSelectedWarningStudent] = useState(null);
+  const [selectedPhotoStudent, setSelectedPhotoStudent] = useState(null);
+  const [bulkWarningOpen, setBulkWarningOpen] = useState(false);
+
+  // Load real student users & real face photos from MongoDB backend if available
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveStudentsAndFaces = async () => {
+      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      try {
+        // 1. Fetch users from backend
+        const res = await fetch(`${apiUrl}/auth/users`);
+        if (res.ok) {
+          const liveUsers = await res.json();
+          const liveStudentUsers = liveUsers.filter(u => u.role === 'student');
+
+          if (liveStudentUsers.length > 0 && isMounted) {
+            setStudents(prev => {
+              // Merge live student users with existing reference students
+              const updated = [...prev];
+              liveStudentUsers.forEach((lUser, idx) => {
+                const existingIdx = updated.findIndex(s => s.email.toLowerCase() === lUser.email.toLowerCase());
+                if (existingIdx === -1) {
+                  // Add as new student
+                  const regNo = `21CS0${50 + idx}`;
+                  updated.push({
+                    id: `STU-LIVE-${idx}`,
+                    registerNumber: regNo,
+                    name: lUser.name || lUser.email.split('@')[0],
+                    email: lUser.email,
+                    department: lUser.dept === 'CS' ? 'Computer Science & Engineering' : 'Engineering Department',
+                    deptCode: lUser.dept || 'CS',
+                    degree: 'B.Tech',
+                    year: 3,
+                    semester: 'Semester 6',
+                    className: 'B.Tech CSE - 3rd Year',
+                    section: idx % 2 === 0 ? 'Section A' : 'Section B',
+                    batch: '2023 - 2027',
+                    mentor: 'Dr. Sarah Jenkins',
+                    contactPhone: '+91 98400 00000',
+                    guardian: 'N/A',
+                    avatarColor: '#162F44',
+                    faceRegistered: true,
+                    facePhotoUrl: null,
+                    faceEnrollDate: 'Recently Enrolled',
+                    totalClasses: 48,
+                    attendedClasses: 42,
+                    lateClasses: 2,
+                    absentClasses: 4,
+                    attendancePercentage: 87.5,
+                    isLowAttendance: false,
+                    status: 'Good Standing',
+                    subjectBreakdown: [
+                      { code: 'CS101', name: 'Data Structures', attended: 18, total: 20, pct: 90.0 },
+                      { code: 'CS205', name: 'Operating Systems', attended: 14, total: 16, pct: 87.5 },
+                      { code: 'CS312', name: 'Database Systems', attended: 10, total: 12, pct: 83.3 },
+                    ],
+                    attendanceHistory: [
+                      { id: `lh-${idx}-1`, date: '25 Oct 2026', time: '09:00 AM', course: 'CS101', method: 'Face Recognition', status: 'present', verification: 'Verified (98.2%)', note: 'Live database entry' },
+                    ],
+                  });
+                }
+              });
+              return updated;
+            });
+          }
+        }
+
+        // 2. Try fetching face photos for all students
+        students.forEach(async (st) => {
+          try {
+            const faceRes = await fetch(`${apiUrl}/attendance/face/${encodeURIComponent(st.email)}`);
+            if (faceRes.ok) {
+              const faceData = await faceRes.json();
+              if (faceData.image_base64 && isMounted) {
+                setStudents(prev => prev.map(s => {
+                  if (s.email.toLowerCase() === st.email.toLowerCase()) {
+                    return {
+                      ...s,
+                      facePhotoUrl: `data:image/jpeg;base64,${faceData.image_base64}`,
+                      faceRegistered: true,
+                    };
+                  }
+                  return s;
+                }));
+              }
+            }
+          } catch {
+            // Ignore individual face fetch errors
+          }
+        });
+      } catch {
+        // Backend not reachable, keep rich fallback students
+      }
+    };
+
+    fetchLiveStudentsAndFaces();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Compute key cohort statistics
+  const totalStudents = students.length;
+  const lowAttendanceStudents = students.filter(s => s.attendancePercentage < 75);
+  const criticalDefaulters = students.filter(s => s.attendancePercentage < 65);
+  const goodStandingStudents = students.filter(s => s.attendancePercentage >= 75);
+  const cohortAverage = totalStudents > 0
+    ? Math.round(students.reduce((acc, s) => acc + s.attendancePercentage, 0) / totalStudents * 10) / 10
+    : 0;
+
+  const secACount = students.filter(s => s.section === 'Section A').length;
+  const secBCount = students.filter(s => s.section === 'Section B').length;
+
+  // Filter and Sort Pipeline
+  const filteredStudents = useMemo(() => {
+    let result = [...students];
+
+    // 1. Text Search (by name, registerNumber, or email)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.registerNumber.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q)
+      );
+    }
+
+    // 2. Status Filter
+    if (statusFilter === 'low') {
+      result = result.filter(s => s.attendancePercentage < 75);
+    } else if (statusFilter === 'critical') {
+      result = result.filter(s => s.attendancePercentage < 65);
+    } else if (statusFilter === 'good') {
+      result = result.filter(s => s.attendancePercentage >= 75);
+    }
+
+    // 3. Section Filter
+    if (sectionFilter !== 'all') {
+      result = result.filter(s => s.section === sectionFilter);
+    }
+
+    // 4. Department Filter
+    if (deptFilter !== 'all') {
+      result = result.filter(s => s.deptCode === deptFilter);
+    }
+
+    // 5. Class Filter
+    if (classFilter !== 'all') {
+      result = result.filter(s => s.semester === classFilter);
+    }
+
+    // 6. Sorting
+    result.sort((a, b) => {
+      if (sortBy === 'pct_asc') return a.attendancePercentage - b.attendancePercentage;
+      if (sortBy === 'pct_desc') return b.attendancePercentage - a.attendancePercentage;
+      if (sortBy === 'name_asc') return a.name.localeCompare(b.name);
+      if (sortBy === 'reg_asc') return a.registerNumber.localeCompare(b.registerNumber);
+      return 0;
+    });
+
+    return result;
+  }, [students, searchQuery, statusFilter, sectionFilter, deptFilter, classFilter, sortBy]);
+
+  // Handle Export All Roster CSV
+  const handleExportAllRoster = () => {
+    const headers = ['Register Number', 'Student Name', 'Email', 'Department', 'Class', 'Section', 'Attendance %', 'Attended', 'Late', 'Absent', 'Total Classes', 'Status', 'Face Biometric'];
+    const rows = filteredStudents.map(s => [
+      s.registerNumber,
+      `"${s.name}"`,
+      s.email,
+      `"${s.department}"`,
+      s.semester,
+      s.section,
+      `${s.attendancePercentage}%`,
+      s.attendedClasses,
+      s.lateClasses,
+      s.absentClasses,
+      s.totalClasses,
+      `"${s.status}"`,
+      s.faceRegistered ? 'Enrolled' : 'Pending',
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Student_Roster_Attendance_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (onShowToast) onShowToast(`📄 Exported roster data for ${filteredStudents.length} students`);
+  };
+
+  return (
+    <div className="fd-tab-content fd-students-page-wrap">
+      {/* ── Page Header Bar ──────────────────────────────────── */}
+      <div className="fd-page-header-bar">
+        <div className="fd-header-left">
+          <span className="fd-context-pill">ACADEMIC COHORT &amp; ROSTER</span>
+          <h1 className="fd-heading-serif">Student Management</h1>
+          <p className="fd-sub-serif">
+            Monitor student profiles, facial biometric registrations, class &amp; section allocations, individual attendance percentages, and shortage warnings.
+          </p>
+        </div>
+
+        <div className="fd-header-actions-right">
+          <button
+            type="button"
+            className="fd-btn-secondary"
+            onClick={handleExportAllRoster}
+            title="Download active student roster as CSV"
+          >
+            <PaperclipIcon size={14} color="var(--fd-navy)" />
+            <span>Export Roster CSV</span>
+          </button>
+          {lowAttendanceStudents.length > 0 && (
+            <button
+              type="button"
+              className="fd-btn-warning-action"
+              onClick={() => setBulkWarningOpen(true)}
+              title="Broadcast shortage alert to all students below 75%"
+            >
+              <AlertTriangleIcon size={14} color="#FFFFFF" />
+              <span>Broadcast Notice ({lowAttendanceStudents.length})</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── 4 KPI Summary Metric Cards ───────────────────────── */}
+      <div className="fd-students-kpi-grid">
+        {/* Card 1: Total Students */}
+        <div className="fd-student-kpi-card">
+          <div className="fd-kpi-header">
+            <span className="fd-kpi-label">Total Enrolled</span>
+            <UsersIcon size={16} color="var(--fd-navy)" />
+          </div>
+          <div className="fd-kpi-value">{totalStudents}</div>
+          <div className="fd-kpi-footer">
+            <span className="fd-kpi-sub">Active Students Across All Sections</span>
+          </div>
+        </div>
+
+        {/* Card 2: Good Standing (>= 75%) */}
+        <div className="fd-student-kpi-card safe">
+          <div className="fd-kpi-header">
+            <span className="fd-kpi-label">Good Standing (≥ 75%)</span>
+            <CheckCircleIcon size={16} color="var(--fd-success)" />
+          </div>
+          <div className="fd-kpi-value" style={{ color: 'var(--fd-success)' }}>
+            {goodStandingStudents.length}
+          </div>
+          <div className="fd-kpi-footer">
+            <span className="fd-kpi-trend green">
+              {Math.round((goodStandingStudents.length / (totalStudents || 1)) * 100)}% Exam Eligible
+            </span>
+          </div>
+        </div>
+
+        {/* Card 3: At Risk / Defaulters (< 75%) */}
+        <div
+          className={`fd-student-kpi-card ${lowAttendanceStudents.length > 0 ? 'warning' : ''}`}
+          onClick={() => setStatusFilter(statusFilter === 'low' ? 'all' : 'low')}
+          style={{ cursor: 'pointer' }}
+          title="Click to filter low-attendance students"
+        >
+          <div className="fd-kpi-header">
+            <span className="fd-kpi-label">At-Risk Defaulters (&lt; 75%)</span>
+            <AlertTriangleIcon size={16} color="var(--fd-error)" />
+          </div>
+          <div className="fd-kpi-value" style={{ color: 'var(--fd-error)' }}>
+            {lowAttendanceStudents.length}
+          </div>
+          <div className="fd-kpi-footer">
+            <span className="fd-kpi-trend red">
+              {criticalDefaulters.length} Critical (&lt; 65%) · Click to Filter
+            </span>
+          </div>
+        </div>
+
+        {/* Card 4: Cohort Average Attendance */}
+        <div className="fd-student-kpi-card">
+          <div className="fd-kpi-header">
+            <span className="fd-kpi-label">Cohort Attendance Rate</span>
+            <ScanFrameIcon size={16} color="var(--fd-navy)" />
+          </div>
+          <div className="fd-kpi-value" style={{ color: getStudentPctColor(cohortAverage) }}>
+            {cohortAverage}%
+          </div>
+          <div className="fd-kpi-footer">
+            <span className="fd-kpi-sub">Institutional Threshold: 75.0%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Low Attendance Alert Banner ──────────────────────── */}
+      {lowAttendanceStudents.length > 0 && statusFilter !== 'good' && (
+        <div className="fd-students-alert-banner">
+          <div className="fd-banner-left">
+            <div className="fd-banner-icon-circle">
+              <AlertTriangleIcon size={20} color="var(--fd-error)" />
+            </div>
+            <div>
+              <h3 className="fd-banner-title">
+                {lowAttendanceStudents.length} Students Identified with Low Attendance (&lt; 75%)
+              </h3>
+              <p className="fd-banner-desc">
+                Institutional policies mandate a minimum of <strong>75% cumulative attendance</strong> to qualify for end-semester examinations.
+                Currently, {criticalDefaulters.length} student(s) have fallen below the critical 65% detention threshold.
+              </p>
+            </div>
+          </div>
+          <div className="fd-banner-right">
+            <button
+              type="button"
+              className="fd-btn-filter-defaulters"
+              onClick={() => setStatusFilter(statusFilter === 'low' ? 'all' : 'low')}
+            >
+              {statusFilter === 'low' ? 'Show All Students' : 'Filter Defaulters Only'}
+            </button>
+            <button
+              type="button"
+              className="fd-btn-banner-action"
+              onClick={() => setBulkWarningOpen(true)}
+            >
+              <SendIcon size={13} color="#FFFFFF" />
+              <span>Broadcast Warnings</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Comprehensive Search & Filter Toolbar ────────────── */}
+      <div className="fd-students-toolbar-card">
+        <div className="fd-toolbar-top-row">
+          {/* Real-time Search Box */}
+          <div className="fd-search-box-wrap">
+            <SearchIcon size={16} color="var(--fd-text-secondary)" />
+            <input
+              type="text"
+              className="fd-student-search-input"
+              placeholder="Search by student name, register number (e.g. 21CS042), or email..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="fd-search-clear-btn"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
+                <XIcon size={14} color="var(--fd-text-secondary)" />
+              </button>
+            )}
+          </div>
+
+          {/* Quick Filter Status Pills */}
+          <div className="fd-filter-pills-row">
+            <button
+              type="button"
+              className={`fd-status-filter-pill ${statusFilter === 'all' && sectionFilter === 'all' ? 'active' : ''}`}
+              onClick={() => {
+                setStatusFilter('all');
+                setSectionFilter('all');
+              }}
+            >
+              All Students ({totalStudents})
+            </button>
+            <button
+              type="button"
+              className={`fd-status-filter-pill warning ${statusFilter === 'low' ? 'active' : ''}`}
+              onClick={() => setStatusFilter(statusFilter === 'low' ? 'all' : 'low')}
+            >
+              <AlertTriangleIcon size={12} color={statusFilter === 'low' ? '#FFFFFF' : 'var(--fd-error)'} />
+              <span>Low Attendance ({lowAttendanceStudents.length})</span>
+            </button>
+            <button
+              type="button"
+              className={`fd-status-filter-pill safe ${statusFilter === 'good' ? 'active' : ''}`}
+              onClick={() => setStatusFilter(statusFilter === 'good' ? 'all' : 'good')}
+            >
+              <span>Good Standing ({goodStandingStudents.length})</span>
+            </button>
+            <button
+              type="button"
+              className={`fd-status-filter-pill ${sectionFilter === 'Section A' ? 'active' : ''}`}
+              onClick={() => setSectionFilter(sectionFilter === 'Section A' ? 'all' : 'Section A')}
+            >
+              Section A ({secACount})
+            </button>
+            <button
+              type="button"
+              className={`fd-status-filter-pill ${sectionFilter === 'Section B' ? 'active' : ''}`}
+              onClick={() => setSectionFilter(sectionFilter === 'Section B' ? 'all' : 'Section B')}
+            >
+              Section B ({secBCount})
+            </button>
+          </div>
+        </div>
+
+        {/* Secondary Filters & Sort Dropdowns */}
+        <div className="fd-toolbar-bottom-row">
+          <div className="fd-dropdowns-group">
+            {/* Class & Section Select */}
+            <div className="fd-select-wrap">
+              <label className="fd-select-lbl">Section:</label>
+              <select
+                className="fd-toolbar-select"
+                value={sectionFilter}
+                onChange={e => setSectionFilter(e.target.value)}
+              >
+                <option value="all">All Sections</option>
+                <option value="Section A">Section A</option>
+                <option value="Section B">Section B</option>
+              </select>
+            </div>
+
+            {/* Department Select */}
+            <div className="fd-select-wrap">
+              <label className="fd-select-lbl">Department:</label>
+              <select
+                className="fd-toolbar-select"
+                value={deptFilter}
+                onChange={e => setDeptFilter(e.target.value)}
+              >
+                <option value="all">All Departments</option>
+                <option value="CS">Computer Science (CS)</option>
+                <option value="EC">Electronics (EC)</option>
+                <option value="BT">Biotechnology (BT)</option>
+              </select>
+            </div>
+
+            {/* Sort Select */}
+            <div className="fd-select-wrap">
+              <label className="fd-select-lbl">Sort By:</label>
+              <select
+                className="fd-toolbar-select"
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+              >
+                <option value="pct_asc">Attendance % (Lowest First - Defaulters)</option>
+                <option value="pct_desc">Attendance % (Highest First)</option>
+                <option value="name_asc">Student Name (A – Z)</option>
+                <option value="reg_asc">Register Number (Ascending)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* View Mode Switcher (Table vs Cards) */}
+          <div className="fd-view-switcher">
+            <button
+              type="button"
+              className={`fd-view-btn ${viewMode === 'table' ? 'active' : ''}`}
+              onClick={() => setViewMode('table')}
+              title="Table View"
+            >
+              <ClipboardListIcon size={15} color={viewMode === 'table' ? '#162F44' : 'var(--fd-text-secondary)'} />
+              <span>Table</span>
+            </button>
+            <button
+              type="button"
+              className={`fd-view-btn ${viewMode === 'cards' ? 'active' : ''}`}
+              onClick={() => setViewMode('cards')}
+              title="Cards Grid View"
+            >
+              <GridIcon size={15} color={viewMode === 'cards' ? '#162F44' : 'var(--fd-text-secondary)'} />
+              <span>Cards</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Result Status Count */}
+      <div className="fd-students-count-bar">
+        <span>
+          Showing <strong>{filteredStudents.length}</strong> of <strong>{totalStudents}</strong> students
+          {statusFilter === 'low' && ' (Filtered: Low Attendance < 75%)'}
+          {sectionFilter !== 'all' && ` · ${sectionFilter}`}
+        </span>
+      </div>
+
+      {/* ── VIEW 1: Table View ────────────────────────────────── */}
+      {viewMode === 'table' && (
+        <div className="fd-students-table-card">
+          {filteredStudents.length === 0 ? (
+            <div className="fd-empty-students">
+              <p>No students match your search or filter criteria.</p>
+              <button
+                type="button"
+                className="fd-btn-secondary"
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('all');
+                  setSectionFilter('all');
+                  setDeptFilter('all');
+                }}
+              >
+                Reset All Filters
+              </button>
+            </div>
+          ) : (
+            <div className="fd-students-table-wrap">
+              <table className="fd-students-table">
+                <thead>
+                  <tr>
+                    <th>Student Profile</th>
+                    <th>Register No.</th>
+                    <th>Class &amp; Section</th>
+                    <th>Attendance %</th>
+                    <th>Attended / Total</th>
+                    <th>Face Biometric</th>
+                    <th>Standing</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStudents.map((st) => {
+                    const isLow = st.attendancePercentage < 75;
+                    const pctColor = getStudentPctColor(st.attendancePercentage);
+                    const initials = st.name
+                      .split(' ')
+                      .map(p => p[0])
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase();
+
+                    return (
+                      <tr key={st.id} className={isLow ? 'fd-row-low-attendance' : ''}>
+                        {/* Student Cell */}
+                        <td>
+                          <div className="fd-student-profile-cell">
+                            <div
+                              className="fd-student-avatar-thumb"
+                              onClick={() => setSelectedPhotoStudent(st)}
+                              title="Click to view face photo"
+                            >
+                              {st.facePhotoUrl ? (
+                                <img src={st.facePhotoUrl} alt={st.name} className="fd-avatar-img" />
+                              ) : (
+                                <div className="fd-avatar-initials" style={{ background: st.avatarColor || '#162F44' }}>
+                                  {initials}
+                                </div>
+                              )}
+                              {st.faceRegistered && (
+                                <span className="fd-avatar-verified-badge" title="Face Registered">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+                            <div className="fd-student-info">
+                              <span
+                                className="fd-student-name-link"
+                                onClick={() => setSelectedProfileStudent(st)}
+                              >
+                                {st.name}
+                              </span>
+                              <span className="fd-student-email-text">{st.email}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Register Number */}
+                        <td>
+                          <span className="fd-reg-badge">{st.registerNumber}</span>
+                        </td>
+
+                        {/* Class & Section Details */}
+                        <td>
+                          <div className="fd-class-section-cell">
+                            <span className="fd-section-pill">{st.section}</span>
+                            <span className="fd-class-name-text">{st.className}</span>
+                          </div>
+                        </td>
+
+                        {/* Individual Attendance Percentage & Progress Bar */}
+                        <td>
+                          <div className="fd-pct-cell">
+                            <div className="fd-pct-header-row">
+                              <span className={`fd-pct-badge ${getStudentPctBadgeClass(st.attendancePercentage)}`}>
+                                {st.attendancePercentage}%
+                              </span>
+                              {isLow && (
+                                <span className="fd-shortage-alert-tag" title="Below 75% threshold">
+                                  Shortage
+                                </span>
+                              )}
+                            </div>
+                            <div className="fd-pct-progress-bg">
+                              <div
+                                className="fd-pct-progress-fill"
+                                style={{
+                                  width: `${Math.min(100, st.attendancePercentage)}%`,
+                                  background: pctColor,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Attended / Total Classes */}
+                        <td>
+                          <div className="fd-classes-count-cell">
+                            <span className="fd-attended-count font-mono">
+                              <strong>{st.attendedClasses}</strong> / {st.totalClasses}
+                            </span>
+                            <span className="fd-late-absent-sub">
+                              {st.lateClasses} late · {st.absentClasses} absent
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Face Biometric Status */}
+                        <td>
+                          <div
+                            className="fd-face-status-cell"
+                            onClick={() => setSelectedPhotoStudent(st)}
+                            style={{ cursor: 'pointer' }}
+                            title="Click to inspect face registration photo"
+                          >
+                            <ShieldCheckIcon
+                              size={14}
+                              color={st.faceRegistered ? 'var(--fd-success)' : 'var(--fd-text-secondary)'}
+                            />
+                            <span className={`fd-face-status-text ${st.faceRegistered ? 'enrolled' : 'pending'}`}>
+                              {st.faceRegistered ? 'Enrolled' : 'Pending'}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Standing Badge */}
+                        <td>
+                          <span className={`fd-student-status-badge ${getStudentPctBadgeClass(st.attendancePercentage)}`}>
+                            {st.status || (isLow ? 'Shortage Alert' : 'Good Standing')}
+                          </span>
+                        </td>
+
+                        {/* Action Buttons */}
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="fd-student-actions-row">
+                            <button
+                              type="button"
+                              className="fd-action-btn-sm"
+                              onClick={() => setSelectedProfileStudent(st)}
+                              title="View full student profile"
+                            >
+                              <EyeIcon size={13} color="var(--fd-navy)" />
+                              <span>Profile</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              className="fd-action-btn-sm"
+                              onClick={() => setSelectedHistoryStudent(st)}
+                              title="View student attendance history"
+                            >
+                              <HistoryIcon size={13} color="var(--fd-navy)" />
+                              <span>History</span>
+                            </button>
+
+                            {isLow && (
+                              <button
+                                type="button"
+                                className="fd-action-btn-sm warning"
+                                onClick={() => setSelectedWarningStudent(st)}
+                                title="Issue attendance shortage warning notice"
+                              >
+                                <AlertTriangleIcon size={13} color="var(--fd-error)" />
+                                <span>Warn</span>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── VIEW 2: Cards Grid View ───────────────────────────── */}
+      {viewMode === 'cards' && (
+        <div className="fd-students-cards-grid">
+          {filteredStudents.map((st) => {
+            const isLow = st.attendancePercentage < 75;
+            const pctColor = getStudentPctColor(st.attendancePercentage);
+            const initials = st.name
+              .split(' ')
+              .map(p => p[0])
+              .filter(Boolean)
+              .slice(0, 2)
+              .join('')
+              .toUpperCase();
+
+            // Arc radius
+            const cardRadius = 38;
+            const cardCircum = 2 * Math.PI * cardRadius;
+            const cardOffset = cardCircum * (1 - Math.min(100, Math.max(0, st.attendancePercentage)) / 100);
+
+            return (
+              <div key={st.id} className={`fd-student-roster-card ${isLow ? 'low-attendance' : ''}`}>
+                {/* Card Top Header */}
+                <div className="fd-card-top-header">
+                  <span className="fd-reg-badge">{st.registerNumber}</span>
+                  <span className="fd-section-pill">{st.section}</span>
+                </div>
+
+                {/* Card Avatar & Bio */}
+                <div className="fd-card-center-bio">
+                  <div
+                    className="fd-card-avatar-wrap"
+                    onClick={() => setSelectedPhotoStudent(st)}
+                    title="Click to view face photo"
+                  >
+                    {st.facePhotoUrl ? (
+                      <img src={st.facePhotoUrl} alt={st.name} className="fd-card-photo" />
+                    ) : (
+                      <div className="fd-card-initials-avatar" style={{ background: st.avatarColor || '#162F44' }}>
+                        {initials}
+                      </div>
+                    )}
+                    {st.faceRegistered && (
+                      <span className="fd-card-verified-dot" title="Face Biometric Enrolled">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+
+                  <h3
+                    className="fd-card-student-name"
+                    onClick={() => setSelectedProfileStudent(st)}
+                  >
+                    {st.name}
+                  </h3>
+                  <span className="fd-card-student-email">{st.email}</span>
+                  <span className="fd-card-class-desc">{st.className}</span>
+                </div>
+
+                {/* Attendance Gauge Circle */}
+                <div className="fd-card-gauge-box">
+                  <div className="fd-mini-gauge-wrap">
+                    <svg width="90" height="90" viewBox="0 0 90 90">
+                      <circle
+                        cx="45"
+                        cy="45"
+                        r={cardRadius}
+                        stroke="var(--fd-border)"
+                        strokeWidth="7"
+                        fill="none"
+                      />
+                      <circle
+                        cx="45"
+                        cy="45"
+                        r={cardRadius}
+                        stroke={pctColor}
+                        strokeWidth="7"
+                        strokeDasharray={cardCircum}
+                        strokeDashoffset={cardOffset}
+                        strokeLinecap="round"
+                        fill="none"
+                        transform="rotate(-90 45 45)"
+                      />
+                    </svg>
+                    <div className="fd-mini-gauge-text">
+                      <span className="fd-mini-pct-val" style={{ color: pctColor }}>
+                        {st.attendancePercentage}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="fd-card-gauge-right">
+                    <span className={`fd-student-status-badge ${getStudentPctBadgeClass(st.attendancePercentage)}`}>
+                      {st.status || (isLow ? 'Shortage Alert' : 'Good Standing')}
+                    </span>
+                    <div className="fd-card-classes-row font-mono">
+                      <span><strong>{st.attendedClasses}</strong> / {st.totalClasses} classes</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Action Footer */}
+                <div className="fd-card-actions-footer">
+                  <button
+                    type="button"
+                    className="fd-card-btn"
+                    onClick={() => setSelectedProfileStudent(st)}
+                  >
+                    <EyeIcon size={13} color="var(--fd-navy)" />
+                    <span>Profile</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="fd-card-btn"
+                    onClick={() => setSelectedHistoryStudent(st)}
+                  >
+                    <HistoryIcon size={13} color="var(--fd-navy)" />
+                    <span>History</span>
+                  </button>
+
+                  {isLow && (
+                    <button
+                      type="button"
+                      className="fd-card-btn warning"
+                      onClick={() => setSelectedWarningStudent(st)}
+                      title="Send shortage warning"
+                    >
+                      <AlertTriangleIcon size={13} color="var(--fd-error)" />
+                      <span>Warn</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Active Modals ────────────────────────────────────── */}
+      {selectedProfileStudent && (
+        <StudentProfileModal
+          student={selectedProfileStudent}
+          onClose={() => setSelectedProfileStudent(null)}
+          onOpenHistory={(s) => setSelectedHistoryStudent(s)}
+          onOpenWarning={(s) => setSelectedWarningStudent(s)}
+          onOpenPhoto={(s) => setSelectedPhotoStudent(s)}
+          onShowToast={onShowToast}
+        />
+      )}
+
+      {selectedHistoryStudent && (
+        <StudentHistoryModal
+          student={selectedHistoryStudent}
+          onClose={() => setSelectedHistoryStudent(null)}
+          onShowToast={onShowToast}
+        />
+      )}
+
+      {selectedWarningStudent && (
+        <StudentWarningModal
+          student={selectedWarningStudent}
+          onClose={() => setSelectedWarningStudent(null)}
+          onShowToast={onShowToast}
+        />
+      )}
+
+      {bulkWarningOpen && (
+        <BulkWarningModal
+          defaulters={lowAttendanceStudents}
+          onClose={() => setBulkWarningOpen(false)}
+          onShowToast={onShowToast}
+        />
+      )}
+
+      {selectedPhotoStudent && (
+        <StudentPhotoModal
+          student={selectedPhotoStudent}
+          onClose={() => setSelectedPhotoStudent(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  TAB: QR CODE SESSION MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 function TabQR({ onShowToast, liveData, user }) {
@@ -3931,7 +6029,7 @@ export default function FacultyDashboardPage() {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search);
       const t = p.get('tab');
-      if (t && ['dashboard', 'attendance', 'qr', 'timetable', 'assignments', 'settings'].includes(t)) {
+      if (t && ['dashboard', 'attendance', 'students', 'qr', 'timetable', 'assignments', 'settings'].includes(t)) {
         return t;
       }
     }
@@ -4106,6 +6204,15 @@ export default function FacultyDashboardPage() {
               user={user}
               onNav={handleNav}
               onShowToast={showToast}
+            />
+          )}
+
+          {activeTab === 'students' && (
+            <TabStudents
+              user={user}
+              onNav={handleNav}
+              onShowToast={showToast}
+              liveData={liveData}
             />
           )}
 

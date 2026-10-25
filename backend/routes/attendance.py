@@ -325,3 +325,11 @@ def get_student_attendance(student_id: str, db: Database = Depends(get_db)):
         if isinstance(d.get("timestamp"), datetime.datetime):
             d["timestamp"] = d["timestamp"].isoformat()
     return docs
+
+@router.get("/face/{student_id}")
+def get_student_face_profile(student_id: str, db: Database = Depends(get_db)):
+    profile = db["face_profiles"].find_one({"student_id": student_id})
+    if not profile or "image_base64" not in profile:
+        raise HTTPException(status_code=404, detail="No face profile found for this student")
+    return {"student_id": student_id, "image_base64": profile["image_base64"]}
+
