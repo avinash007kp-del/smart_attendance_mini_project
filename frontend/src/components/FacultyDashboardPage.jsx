@@ -39,6 +39,11 @@ import {
   CameraIcon,
   EyeIcon,
   FilterIcon,
+  BarChartIcon,
+  PrinterIcon,
+  FileTextIcon,
+  DownloadIcon,
+  FileSpreadsheetIcon,
 } from './FacultyDashboardIcons';
 import './FacultyDashboardPage.css';
 
@@ -47,6 +52,7 @@ const NAV_ITEMS = [
   { id: 'dashboard',   icon: GridIcon,          label: 'Dashboard'   },
   { id: 'attendance',  icon: ClipboardListIcon, label: 'Attendance'  },
   { id: 'students',    icon: GraduationCapIcon, label: 'Students'    },
+  { id: 'reports',     icon: BarChartIcon,      label: 'Reports'     },
   { id: 'qr',          icon: QrCodeIcon,        label: 'QR Code'     },
   { id: 'timetable',   icon: CalendarIcon,      label: 'Timetable'   },
   { id: 'assignments', icon: FilePenIcon,       label: 'Assignments' },
@@ -4956,6 +4962,1801 @@ function TabStudents({ user, onNav, onShowToast, liveData }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  TAB: ATTENDANCE REPORTS & ANALYTICS
+// ═══════════════════════════════════════════════════════════════
+
+// Reference data for Daily Sessions and Attendance
+const DAILY_SESSIONS_MAP = {
+  '2026-10-25': [
+    {
+      id: 'ds-25-1',
+      time: '09:00 AM – 10:00 AM',
+      course: 'CS101',
+      courseName: 'Data Structures',
+      room: 'Lab 3',
+      section: 'Section A',
+      totalEnrolled: 42,
+      present: 38,
+      late: 2,
+      absent: 2,
+      rate: 90.5,
+      records: [
+        { reg: '21CS042', name: 'Ajay Kumar T K', email: 'iamajaykumartk@gmail.com', time: '09:05 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (98.5%)', note: 'On-time biometric check' },
+        { reg: '21CS019', name: 'Goutham M S', email: 'gouthamms997@gmail.com', time: '09:12 AM', method: 'Face Recognition', status: 'late', verif: 'Late (+12m)', note: 'Delayed entry' },
+        { reg: '21CS007', name: 'Arjun P', email: 'ajn2562004@gmail.com', time: '09:01 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.4%)', note: 'On-time check-in' },
+        { reg: '21CS056', name: 'Rahul Verma', email: 'rahul.v@attentify.ac.in', time: '09:03 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (98.9%)', note: 'Standard pass' },
+        { reg: '21CS078', name: 'Sneha Menon', email: 'sneha.menon@attentify.ac.in', time: '08:58 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.8%)', note: 'Early biometric pass' },
+        { reg: '21CS015', name: 'Ananya Roy', email: 'ananya.r@attentify.ac.in', time: '09:04 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.0%)', note: 'Standard scan' },
+        { reg: '21CS034', name: 'Kavya Nair', email: 'kavya.n@attentify.ac.in', time: '09:06 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS028', name: 'Ishal V', email: 'ishalv00@gmail.com', time: '09:14 AM', method: 'Face Recognition', status: 'late', verif: 'Low Confidence (68.2%)', note: 'Flagged late' },
+        { reg: '21CS062', name: 'Priya Singh', email: 'priya.s@attentify.ac.in', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'No scan recorded' },
+        { reg: '21CS012', name: 'Avinash V', email: 'avvviva0@gmail.com', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'No scan recorded' },
+      ],
+    },
+    {
+      id: 'ds-25-2',
+      time: '11:00 AM – 12:00 PM',
+      course: 'CS205',
+      courseName: 'Operating Systems',
+      room: 'Room 12',
+      section: 'Section A & B',
+      totalEnrolled: 38,
+      present: 34,
+      late: 1,
+      absent: 3,
+      rate: 89.5,
+      records: [
+        { reg: '21CS042', name: 'Ajay Kumar T K', email: 'iamajaykumartk@gmail.com', time: '11:02 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS007', name: 'Arjun P', email: 'ajn2562004@gmail.com', time: '11:01 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'On-time check' },
+        { reg: '21CS078', name: 'Sneha Menon', email: 'sneha.menon@attentify.ac.in', time: '10:59 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.4%)', note: 'Early biometric pass' },
+        { reg: '21CS056', name: 'Rahul Verma', email: 'rahul.v@attentify.ac.in', time: '11:04 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS019', name: 'Goutham M S', email: 'gouthamms997@gmail.com', time: '11:00 AM', method: 'Manual Override', status: 'absent', verif: 'Medical Excused', note: 'Medical note verified' },
+        { reg: '21CS034', name: 'Kavya Nair', email: 'kavya.n@attentify.ac.in', time: '11:05 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS015', name: 'Ananya Roy', email: 'ananya.r@attentify.ac.in', time: '11:03 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS012', name: 'Avinash V', email: 'avvviva0@gmail.com', time: '11:18 AM', method: 'QR Token', status: 'late', verif: 'Late Entry (+18m)', note: 'Delayed arrival' },
+        { reg: '21CS028', name: 'Ishal V', email: 'ishalv00@gmail.com', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+        { reg: '21CS062', name: 'Priya Singh', email: 'priya.s@attentify.ac.in', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+      ],
+    },
+    {
+      id: 'ds-25-3',
+      time: '02:00 PM – 03:00 PM',
+      course: 'CS312',
+      courseName: 'Database Systems',
+      room: 'Room 7',
+      section: 'Section B',
+      totalEnrolled: 35,
+      present: 31,
+      late: 2,
+      absent: 2,
+      rate: 88.6,
+      records: [
+        { reg: '21CS042', name: 'Ajay Kumar T K', email: 'iamajaykumartk@gmail.com', time: '02:00 PM', method: 'QR Token', status: 'present', verif: 'Verified (97.8%)', note: 'Standard scan' },
+        { reg: '21CS007', name: 'Arjun P', email: 'ajn2562004@gmail.com', time: '02:01 PM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'On-time check' },
+        { reg: '21CS078', name: 'Sneha Menon', email: 'sneha.menon@attentify.ac.in', time: '01:58 PM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.5%)', note: 'Early biometric pass' },
+        { reg: '21CS056', name: 'Rahul Verma', email: 'rahul.v@attentify.ac.in', time: '02:04 PM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS019', name: 'Goutham M S', email: 'gouthamms997@gmail.com', time: '02:02 PM', method: 'QR Token', status: 'present', verif: 'Verified (99.0%)', note: 'Normal check-in' },
+        { reg: '21CS028', name: 'Ishal V', email: 'ishalv00@gmail.com', time: '02:04 PM', method: 'QR Token', status: 'present', verif: 'Pending Review (78.4%)', note: 'Late scan' },
+        { reg: '21CS034', name: 'Kavya Nair', email: 'kavya.n@attentify.ac.in', time: '02:15 PM', method: 'QR Token', status: 'late', verif: 'Late Entry (+15m)', note: 'Delayed transit' },
+        { reg: '21CS015', name: 'Ananya Roy', email: 'ananya.r@attentify.ac.in', time: '02:02 PM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS012', name: 'Avinash V', email: 'avvviva0@gmail.com', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+        { reg: '21CS062', name: 'Priya Singh', email: 'priya.s@attentify.ac.in', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+      ],
+    },
+  ],
+  '2026-10-24': [
+    {
+      id: 'ds-24-1',
+      time: '09:00 AM – 10:00 AM',
+      course: 'CS101',
+      courseName: 'Data Structures',
+      room: 'Lab 3',
+      section: 'Section A',
+      totalEnrolled: 42,
+      present: 37,
+      late: 2,
+      absent: 3,
+      rate: 92.8,
+      records: [
+        { reg: '21CS042', name: 'Ajay Kumar T K', email: 'iamajaykumartk@gmail.com', time: '09:03 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard pass' },
+        { reg: '21CS007', name: 'Arjun P', email: 'ajn2562004@gmail.com', time: '09:02 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.1%)', note: 'Biometric pass' },
+        { reg: '21CS078', name: 'Sneha Menon', email: 'sneha.menon@attentify.ac.in', time: '08:59 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.8%)', note: 'Early biometric pass' },
+        { reg: '21CS056', name: 'Rahul Verma', email: 'rahul.v@attentify.ac.in', time: '09:04 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard pass' },
+        { reg: '21CS019', name: 'Goutham M S', email: 'gouthamms997@gmail.com', time: '09:08 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (97.0%)', note: 'Biometric pass' },
+        { reg: '21CS015', name: 'Ananya Roy', email: 'ananya.r@attentify.ac.in', time: '09:03 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.2%)', note: 'Biometric pass' },
+        { reg: '21CS034', name: 'Kavya Nair', email: 'kavya.n@attentify.ac.in', time: '09:16 AM', method: 'QR Token', status: 'late', verif: 'Late (+16m)', note: 'Delayed arrival' },
+        { reg: '21CS028', name: 'Ishal V', email: 'ishalv00@gmail.com', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+        { reg: '21CS012', name: 'Avinash V', email: 'avvviva0@gmail.com', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+        { reg: '21CS062', name: 'Priya Singh', email: 'priya.s@attentify.ac.in', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+      ],
+    },
+  ],
+  '2026-10-23': [
+    {
+      id: 'ds-23-1',
+      time: '11:00 AM – 12:00 PM',
+      course: 'CS205',
+      courseName: 'Operating Systems',
+      room: 'Room 12',
+      section: 'Section A & B',
+      totalEnrolled: 38,
+      present: 32,
+      late: 2,
+      absent: 4,
+      rate: 89.4,
+      records: [
+        { reg: '21CS042', name: 'Ajay Kumar T K', email: 'iamajaykumartk@gmail.com', time: '11:15 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS007', name: 'Arjun P', email: 'ajn2562004@gmail.com', time: '11:02 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'On-time check' },
+        { reg: '21CS078', name: 'Sneha Menon', email: 'sneha.menon@attentify.ac.in', time: '10:59 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.4%)', note: 'Early biometric check' },
+        { reg: '21CS056', name: 'Rahul Verma', email: 'rahul.v@attentify.ac.in', time: '11:04 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS019', name: 'Goutham M S', email: 'gouthamms997@gmail.com', time: '11:00 AM', method: 'Manual Override', status: 'absent', verif: 'Medical Excused', note: 'Medical note verified' },
+        { reg: '21CS034', name: 'Kavya Nair', email: 'kavya.n@attentify.ac.in', time: '11:05 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard scan' },
+        { reg: '21CS012', name: 'Avinash V', email: 'avvviva0@gmail.com', time: '11:18 AM', method: 'QR Token', status: 'late', verif: 'Verified (99.1%)', note: 'Late entry' },
+        { reg: '21CS028', name: 'Ishal V', email: 'ishalv00@gmail.com', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+        { reg: '21CS062', name: 'Priya Singh', email: 'priya.s@attentify.ac.in', time: '—', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+      ],
+    },
+  ],
+  '2026-10-21': [
+    {
+      id: 'ds-21-1',
+      time: '09:00 AM – 10:00 AM',
+      course: 'CS101',
+      courseName: 'Data Structures',
+      room: 'Lab 3',
+      section: 'Section A',
+      totalEnrolled: 42,
+      present: 39,
+      late: 1,
+      absent: 2,
+      rate: 95.2,
+      records: [
+        { reg: '21CS042', name: 'Ajay Kumar T K', email: 'iamajaykumartk@gmail.com', time: '09:04 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.1%)', note: 'Biometric pass' },
+        { reg: '21CS007', name: 'Arjun P', email: 'ajn2562004@gmail.com', time: '09:01 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.4%)', note: 'Biometric pass' },
+        { reg: '21CS078', name: 'Sneha Menon', email: 'sneha.menon@attentify.ac.in', time: '08:59 AM', method: 'QR Token', status: 'present', verif: 'Verified (100%)', note: 'Standard check' },
+        { reg: '21CS056', name: 'Rahul Verma', email: 'rahul.v@attentify.ac.in', time: '09:02 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (99.5%)', note: 'Biometric pass' },
+        { reg: '21CS019', name: 'Goutham M S', email: 'gouthamms997@gmail.com', time: '09:08 AM', method: 'Face Recognition', status: 'present', verif: 'Verified (96.8%)', note: 'Face biometric pass' },
+        { reg: '21CS034', name: 'Kavya Nair', email: 'kavya.n@attentify.ac.in', time: '09:00 AM', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+        { reg: '21CS028', name: 'Ishal V', email: 'ishalv00@gmail.com', time: '09:00 AM', method: 'Absent', status: 'absent', verif: 'Unexcused', note: 'Absent' },
+      ],
+    },
+  ],
+};
+
+// Subject-Wise Aggregates
+const SUBJECT_REPORTS_DATA = [
+  {
+    code: 'CS101',
+    name: 'Data Structures',
+    faculty: 'Dr. Sarah Jenkins',
+    room: 'Lab 3',
+    semester: 'Semester 6',
+    totalSessions: 20,
+    totalEnrolled: 42,
+    avgAttendance: 89.2,
+    safeCount: 40,
+    defaultersCount: 2,
+    students: [
+      { reg: '21CS078', name: 'Sneha Menon', section: 'Section A', attended: 19, total: 20, pct: 95.0, status: 'Safe' },
+      { reg: '21CS007', name: 'Arjun P', section: 'Section A', attended: 19, total: 20, pct: 95.0, status: 'Safe' },
+      { reg: '21CS015', name: 'Ananya Roy', section: 'Section A', attended: 19, total: 20, pct: 95.0, status: 'Safe' },
+      { reg: '21CS042', name: 'Ajay Kumar T K', section: 'Section A', attended: 18, total: 20, pct: 90.0, status: 'Safe' },
+      { reg: '21CS056', name: 'Rahul Verma', section: 'Section A', attended: 18, total: 20, pct: 90.0, status: 'Safe' },
+      { reg: '21CS019', name: 'Goutham M S', section: 'Section A', attended: 17, total: 20, pct: 85.0, status: 'Safe' },
+      { reg: '21CS034', name: 'Kavya Nair', section: 'Section A', attended: 16, total: 20, pct: 80.0, status: 'Safe' },
+      { reg: '21CS028', name: 'Ishal V', section: 'Section B', attended: 14, total: 20, pct: 70.0, status: 'Shortage Alert' },
+      { reg: '21CS062', name: 'Priya Singh', section: 'Section B', attended: 12, total: 20, pct: 60.0, status: 'Critical Shortage' },
+      { reg: '21CS012', name: 'Avinash V', section: 'Section B', attended: 11, total: 20, pct: 55.0, status: 'Critical Shortage' },
+    ],
+  },
+  {
+    code: 'CS205',
+    name: 'Operating Systems',
+    faculty: 'Dr. Sarah Jenkins',
+    room: 'Room 12',
+    semester: 'Semester 6',
+    totalSessions: 16,
+    totalEnrolled: 38,
+    avgAttendance: 85.8,
+    safeCount: 35,
+    defaultersCount: 3,
+    students: [
+      { reg: '21CS078', name: 'Sneha Menon', section: 'Section A', attended: 16, total: 16, pct: 100.0, status: 'Safe' },
+      { reg: '21CS042', name: 'Ajay Kumar T K', section: 'Section A', attended: 15, total: 16, pct: 93.8, status: 'Safe' },
+      { reg: '21CS007', name: 'Arjun P', section: 'Section A', attended: 15, total: 16, pct: 93.8, status: 'Safe' },
+      { reg: '21CS056', name: 'Rahul Verma', section: 'Section A', attended: 14, total: 16, pct: 87.5, status: 'Safe' },
+      { reg: '21CS019', name: 'Goutham M S', section: 'Section A', attended: 14, total: 16, pct: 87.5, status: 'Safe' },
+      { reg: '21CS015', name: 'Ananya Roy', section: 'Section A', attended: 14, total: 16, pct: 87.5, status: 'Safe' },
+      { reg: '21CS034', name: 'Kavya Nair', section: 'Section A', attended: 13, total: 16, pct: 81.3, status: 'Safe' },
+      { reg: '21CS028', name: 'Ishal V', section: 'Section B', attended: 12, total: 16, pct: 75.0, status: 'Safe' },
+      { reg: '21CS062', name: 'Priya Singh', section: 'Section B', attended: 11, total: 16, pct: 68.8, status: 'Shortage Alert' },
+      { reg: '21CS012', name: 'Avinash V', section: 'Section B', attended: 10, total: 16, pct: 62.5, status: 'Critical Shortage' },
+    ],
+  },
+  {
+    code: 'CS312',
+    name: 'Database Systems',
+    faculty: 'Dr. Sarah Jenkins',
+    room: 'Room 7',
+    semester: 'Semester 6',
+    totalSessions: 12,
+    totalEnrolled: 35,
+    avgAttendance: 83.4,
+    safeCount: 33,
+    defaultersCount: 2,
+    students: [
+      { reg: '21CS078', name: 'Sneha Menon', section: 'Section A', attended: 11, total: 12, pct: 91.7, status: 'Safe' },
+      { reg: '21CS042', name: 'Ajay Kumar T K', section: 'Section A', attended: 11, total: 12, pct: 91.7, status: 'Safe' },
+      { reg: '21CS007', name: 'Arjun P', section: 'Section A', attended: 11, total: 12, pct: 91.7, status: 'Safe' },
+      { reg: '21CS056', name: 'Rahul Verma', section: 'Section A', attended: 11, total: 12, pct: 91.7, status: 'Safe' },
+      { reg: '21CS015', name: 'Ananya Roy', section: 'Section A', attended: 11, total: 12, pct: 91.7, status: 'Safe' },
+      { reg: '21CS019', name: 'Goutham M S', section: 'Section A', attended: 10, total: 12, pct: 83.3, status: 'Safe' },
+      { reg: '21CS034', name: 'Kavya Nair', section: 'Section A', attended: 9, total: 12, pct: 75.0, status: 'Safe' },
+      { reg: '21CS028', name: 'Ishal V', section: 'Section B', attended: 8, total: 12, pct: 66.7, status: 'Shortage Alert' },
+      { reg: '21CS062', name: 'Priya Singh', section: 'Section B', attended: 8, total: 12, pct: 66.7, status: 'Shortage Alert' },
+      { reg: '21CS012', name: 'Avinash V', section: 'Section B', attended: 8, total: 12, pct: 66.7, status: 'Shortage Alert' },
+    ],
+  },
+];
+
+// ─── Modal: Individual Student Attendance Transcript ──────────
+function StudentTranscriptModal({ student, onClose, onPrint }) {
+  if (!student) return null;
+
+  const isLow = student.attendancePercentage < 75;
+  const pctColor = getStudentPctColor(student.attendancePercentage);
+  const initials = student.name
+    .split(' ')
+    .map(p => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  return (
+    <div className="fd-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="fd-modal-container fd-transcript-modal" onClick={e => e.stopPropagation()}>
+        <div className="fd-modal-header-bar fd-no-print">
+          <div>
+            <h2 className="fd-modal-title">Official Student Attendance Transcript</h2>
+            <p className="fd-modal-sub">Institutional Report · University Examination Verification</p>
+          </div>
+          <button type="button" className="fd-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <XIcon size={18} color="var(--fd-text-secondary)" />
+          </button>
+        </div>
+
+        {/* Printable Transcript Document */}
+        <div className="fd-transcript-sheet" id="fd-student-transcript-doc">
+          {/* Official Letterhead */}
+          <div className="fd-doc-letterhead">
+            <div className="fd-doc-brand">
+              <AttentifyLogo size={24} color="#162F44" />
+              <div className="fd-doc-brand-text">
+                <span className="fd-doc-institution">ATTENTIFY ACADEMIC RECORD SYSTEM</span>
+                <span className="fd-doc-sub-inst">Office of the Controller of Examinations &amp; Academic Dean</span>
+              </div>
+            </div>
+            <div className="fd-doc-meta-right">
+              <span className="fd-doc-meta-item"><strong>Date:</strong> 26 October 2026</span>
+              <span className="fd-doc-meta-item"><strong>Term:</strong> Autumn Semester 2026</span>
+              <span className="fd-doc-meta-item"><strong>Audit ID:</strong> TR-{student.registerNumber}-2026</span>
+            </div>
+          </div>
+
+          <div className="fd-doc-divider-thick" />
+
+          {/* Student Profile Identity Grid */}
+          <div className="fd-doc-student-grid">
+            <div className="fd-doc-avatar-box">
+              {student.facePhotoUrl ? (
+                <img src={student.facePhotoUrl} alt={student.name} className="fd-doc-photo" />
+              ) : (
+                <div className="fd-doc-initials" style={{ background: student.avatarColor || '#162F44' }}>
+                  {initials}
+                </div>
+              )}
+              <span className="fd-doc-biometric-badge">Biometric Verified</span>
+            </div>
+
+            <div className="fd-doc-details-cols">
+              <div className="fd-doc-info-item">
+                <span className="fd-doc-label">STUDENT NAME</span>
+                <span className="fd-doc-value font-bold">{student.name}</span>
+              </div>
+              <div className="fd-doc-info-item">
+                <span className="fd-doc-label">REGISTER NUMBER</span>
+                <span className="fd-doc-value font-mono font-bold">{student.registerNumber}</span>
+              </div>
+              <div className="fd-doc-info-item">
+                <span className="fd-doc-label">DEGREE &amp; PROGRAM</span>
+                <span className="fd-doc-value">{student.degree} Computer Science &amp; Engineering</span>
+              </div>
+              <div className="fd-doc-info-item">
+                <span className="fd-doc-label">CLASS / SEMESTER</span>
+                <span className="fd-doc-value">{student.semester} ({student.section})</span>
+              </div>
+              <div className="fd-doc-info-item">
+                <span className="fd-doc-label">UNIVERSITY EMAIL</span>
+                <span className="fd-doc-value font-mono">{student.email}</span>
+              </div>
+              <div className="fd-doc-info-item">
+                <span className="fd-doc-label">ACADEMIC MENTOR</span>
+                <span className="fd-doc-value">{student.mentor || 'Dr. Sarah Jenkins'}</span>
+              </div>
+            </div>
+
+            <div className="fd-doc-gauge-summary">
+              <span className="fd-doc-gauge-label">OVERALL ATTENDANCE</span>
+              <span className="fd-doc-gauge-val" style={{ color: pctColor }}>
+                {student.attendancePercentage}%
+              </span>
+              <span className={`fd-doc-status-pill ${getStudentPctBadgeClass(student.attendancePercentage)}`}>
+                {isLow ? '⚠️ SHORTAGE ALERT' : '✓ ELIGIBLE FOR EXAMS'}
+              </span>
+              <span className="fd-doc-subtext">{student.attendedClasses} / {student.totalClasses} Conducted Sessions</span>
+            </div>
+          </div>
+
+          {/* Subject Breakdown Table */}
+          <div className="fd-doc-section-block">
+            <h4 className="fd-doc-section-title">SUBJECT-WISE ATTENDANCE RECORD</h4>
+            <table className="fd-doc-table">
+              <thead>
+                <tr>
+                  <th>Course Code</th>
+                  <th>Course Title</th>
+                  <th>Faculty Instructor</th>
+                  <th>Attended / Total</th>
+                  <th>Attendance Rate</th>
+                  <th>Exam Eligibility</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(student.subjectBreakdown || []).map((sub) => {
+                  const sPct = sub.pct;
+                  const sColor = getStudentPctColor(sPct);
+                  return (
+                    <tr key={sub.code}>
+                      <td className="font-mono font-bold">{sub.code}</td>
+                      <td>{sub.name}</td>
+                      <td>Dr. Sarah Jenkins</td>
+                      <td className="font-mono">{sub.attended} / {sub.total}</td>
+                      <td className="font-bold" style={{ color: sColor }}>{sPct}%</td>
+                      <td>
+                        <span className={`fd-mini-status-pill ${getStudentPctBadgeClass(sPct)}`}>
+                          {sPct >= 75 ? 'Qualified' : 'Shortage'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Institutional Statutory Statement */}
+          <div className="fd-doc-statutory-box">
+            <strong>Institutional Academic Notice:</strong> Minimum 75% attendance is mandatory in each theory and laboratory
+            course under university bylaws. A condonation waiver is required for attendance between 65% and 74.9% with certified medical
+            documentation. Below 65%, students are strictly detained from end-semester examinations.
+          </div>
+
+          {/* Signatures Block */}
+          <div className="fd-doc-signatures-row">
+            <div className="fd-doc-sig-box">
+              <div className="fd-doc-sig-line" />
+              <span className="fd-doc-sig-title">Dr. Sarah Jenkins</span>
+              <span className="fd-doc-sig-subtitle">Course Faculty Coordinator</span>
+            </div>
+            <div className="fd-doc-sig-box">
+              <div className="fd-doc-sig-line" />
+              <span className="fd-doc-sig-title">Dr. Rajan Kumar</span>
+              <span className="fd-doc-sig-subtitle">Head of Department (CSE)</span>
+            </div>
+            <div className="fd-doc-sig-box">
+              <div className="fd-doc-sig-line" />
+              <span className="fd-doc-sig-title">Controller of Examinations</span>
+              <span className="fd-doc-sig-subtitle">University Academic Board</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Controls */}
+        <div className="fd-modal-footer fd-no-print">
+          <button type="button" className="fd-btn-secondary" onClick={onClose}>
+            Close
+          </button>
+          <button
+            type="button"
+            className="fd-btn-primary"
+            onClick={() => onPrint(student)}
+          >
+            <PrinterIcon size={14} color="#FFFFFF" />
+            <span>Print Student Transcript</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal: Official Print & PDF Preview ───────────────────────
+function PrintPreviewModal({ reportMeta, reportType, onClose, onConfirmPrint, onExportPDF }) {
+  return (
+    <div className="fd-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="fd-modal-container fd-print-preview-modal" onClick={e => e.stopPropagation()}>
+        <div className="fd-modal-header-bar fd-no-print">
+          <div>
+            <h2 className="fd-modal-title">Print &amp; PDF Export Preview</h2>
+            <p className="fd-modal-sub">Attentify Official Academic Report Document</p>
+          </div>
+          <button type="button" className="fd-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <XIcon size={18} color="var(--fd-text-secondary)" />
+          </button>
+        </div>
+
+        <div className="fd-preview-notice fd-no-print">
+          <PrinterIcon size={16} color="var(--fd-navy)" />
+          <span>
+            This report is formatted with official university letterhead, signature approval lines, and pagination.
+            Click <strong>Print Report</strong> to open the printer dialog, or <strong>Save as PDF</strong>.
+          </span>
+        </div>
+
+        <div className="fd-preview-viewport">
+          <div className="fd-preview-paper" id="fd-preview-paper-content">
+            {/* Header */}
+            <div className="fd-doc-letterhead">
+              <div className="fd-doc-brand">
+                <AttentifyLogo size={24} color="#162F44" />
+                <div className="fd-doc-brand-text">
+                  <span className="fd-doc-institution">ATTENTIFY ACADEMIC ATTENDANCE MANAGEMENT SYSTEM</span>
+                  <span className="fd-doc-sub-inst">Department of Computer Science &amp; Engineering · Faculty of Engineering</span>
+                </div>
+              </div>
+              <div className="fd-doc-meta-right">
+                <span className="fd-doc-meta-item"><strong>Date:</strong> 26 Oct 2026</span>
+                <span className="fd-doc-meta-item"><strong>Generated By:</strong> Avinash K P</span>
+                <span className="fd-doc-meta-item"><strong>Scope:</strong> {reportMeta.title}</span>
+              </div>
+            </div>
+
+            <div className="fd-doc-divider-thick" />
+
+            <div className="fd-doc-title-block">
+              <h2 className="fd-doc-main-heading">{reportMeta.title.toUpperCase()}</h2>
+              <p className="fd-doc-sub-heading">Academic Term: Autumn Semester 2026 · Course Coordinator: Dr. Sarah Jenkins</p>
+            </div>
+
+            {/* Summary Statistics Strip */}
+            <div className="fd-doc-stats-strip">
+              <div className="fd-doc-stat-pill">
+                <span className="fd-doc-sp-label">Total Students:</span>
+                <span className="fd-doc-sp-val">{reportMeta.totalStudents || 10}</span>
+              </div>
+              <div className="fd-doc-stat-pill">
+                <span className="fd-doc-sp-label">Sessions Conducted:</span>
+                <span className="fd-doc-sp-val">{reportMeta.totalSessions || 48}</span>
+              </div>
+              <div className="fd-doc-stat-pill">
+                <span className="fd-doc-sp-label">Cohort Attendance:</span>
+                <span className="fd-doc-sp-val">{reportMeta.avgRate || '85.4%'}</span>
+              </div>
+              <div className="fd-doc-stat-pill">
+                <span className="fd-doc-sp-label">Shortage Defaulters (&lt; 75%):</span>
+                <span className="fd-doc-sp-val" style={{ color: 'var(--fd-error)' }}>{reportMeta.defaultersCount || 3}</span>
+              </div>
+            </div>
+
+            {/* Document Table Preview */}
+            <table className="fd-doc-table">
+              <thead>
+                <tr>
+                  <th>Reg No.</th>
+                  <th>Student Name</th>
+                  <th>Class / Section</th>
+                  <th>Attendance %</th>
+                  <th>Attended / Total</th>
+                  <th>Standing</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(reportMeta.previewRows || []).slice(0, 10).map((r, idx) => (
+                  <tr key={idx}>
+                    <td className="font-mono font-bold">{r.reg}</td>
+                    <td>{r.name}</td>
+                    <td>{r.section || 'Section A'}</td>
+                    <td className="font-bold">{r.pct}%</td>
+                    <td className="font-mono">{r.attended || 44} / {r.total || 48}</td>
+                    <td>{r.pct >= 75 ? 'Qualified' : '⚠️ Shortage'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Statutory Signatures */}
+            <div className="fd-doc-signatures-row" style={{ marginTop: '40px' }}>
+              <div className="fd-doc-sig-box">
+                <div className="fd-doc-sig-line" />
+                <span className="fd-doc-sig-title">Avinash K P</span>
+                <span className="fd-doc-sig-subtitle">Faculty / Course Instructor</span>
+              </div>
+              <div className="fd-doc-sig-box">
+                <div className="fd-doc-sig-line" />
+                <span className="fd-doc-sig-title">Dr. Rajan Kumar</span>
+                <span className="fd-doc-sig-subtitle">Head of Department (CSE)</span>
+              </div>
+              <div className="fd-doc-sig-box">
+                <div className="fd-doc-sig-line" />
+                <span className="fd-doc-sig-title">Dean of Academic Affairs</span>
+                <span className="fd-doc-sig-subtitle">Institutional Verification Board</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="fd-modal-footer fd-no-print">
+          <button type="button" className="fd-btn-secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="fd-btn-secondary"
+            onClick={onExportPDF}
+          >
+            <FileTextIcon size={14} color="var(--fd-navy)" />
+            <span>Save / Download PDF</span>
+          </button>
+          <button
+            type="button"
+            className="fd-btn-primary"
+            onClick={onConfirmPrint}
+          >
+            <PrinterIcon size={14} color="#FFFFFF" />
+            <span>Send to Printer</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MAIN COMPONENT: TAB REPORTS
+// ═══════════════════════════════════════════════════════════════
+function TabReports({ user, onNav, onShowToast, liveData }) {
+  // Report mode tabs
+  const [reportType, setReportType] = useState('daily'); // 'daily' | 'subject' | 'student' | 'daterange'
+
+  // Filter criteria
+  const [selectedCourse, setSelectedCourse] = useState('all');
+  const [selectedSection, setSelectedSection] = useState('all');
+  const [selectedTier, setSelectedTier] = useState('all'); // 'all' | 'safe' | 'shortage' | 'critical'
+  const [selectedDate, setSelectedDate] = useState('2026-10-25');
+  const [fromDate, setFromDate] = useState('2026-10-01');
+  const [toDate, setToDate] = useState('2026-10-26');
+  const [datePreset, setDatePreset] = useState('month');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [selectedSubjectCode, setSelectedSubjectCode] = useState('CS101');
+
+  // Modals state
+  const [transcriptStudent, setTranscriptStudent] = useState(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+
+  // Active dataset references
+  const studentsList = REFERENCE_STUDENTS;
+  const facultyName = user?.name || 'Avinash K P';
+
+  // 1. Daily Report Sessions
+  const dailySessions = useMemo(() => {
+    return DAILY_SESSIONS_MAP[selectedDate] || [];
+  }, [selectedDate]);
+
+  // Daily records list filtered by course / section
+  const dailyRecords = useMemo(() => {
+    let recs = [];
+    dailySessions.forEach(s => {
+      if (selectedCourse === 'all' || s.course === selectedCourse) {
+        if (selectedSection === 'all' || s.section.includes(selectedSection)) {
+          recs = [...recs, ...s.records.map(r => ({ ...r, course: s.course, sessionTime: s.time, room: s.room }))];
+        }
+      }
+    });
+
+    if (selectedTier === 'safe') {
+      recs = recs.filter(r => r.status === 'present');
+    } else if (selectedTier === 'shortage') {
+      recs = recs.filter(r => r.status === 'late' || r.status === 'absent');
+    } else if (selectedTier === 'critical') {
+      recs = recs.filter(r => r.status === 'absent');
+    }
+
+    return recs;
+  }, [dailySessions, selectedCourse, selectedSection, selectedTier]);
+
+  // 2. Subject-wise active report
+  const activeSubjectData = useMemo(() => {
+    return SUBJECT_REPORTS_DATA.find(s => s.code === selectedSubjectCode) || SUBJECT_REPORTS_DATA[0];
+  }, [selectedSubjectCode]);
+
+  const filteredSubjectStudents = useMemo(() => {
+    let list = activeSubjectData.students || [];
+    if (selectedSection !== 'all') {
+      list = list.filter(s => s.section === selectedSection);
+    }
+    if (selectedTier === 'safe') {
+      list = list.filter(s => s.pct >= 75);
+    } else if (selectedTier === 'shortage') {
+      list = list.filter(s => s.pct < 75);
+    } else if (selectedTier === 'critical') {
+      list = list.filter(s => s.pct < 65);
+    }
+    return list;
+  }, [activeSubjectData, selectedSection, selectedTier]);
+
+  // 3. Student-wise filtered list
+  const filteredStudentWise = useMemo(() => {
+    let list = [...studentsList];
+    if (studentSearch.trim()) {
+      const q = studentSearch.toLowerCase().trim();
+      list = list.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.registerNumber.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q)
+      );
+    }
+    if (selectedSection !== 'all') {
+      list = list.filter(s => s.section === selectedSection);
+    }
+    if (selectedTier === 'safe') {
+      list = list.filter(s => s.attendancePercentage >= 75);
+    } else if (selectedTier === 'shortage') {
+      list = list.filter(s => s.attendancePercentage < 75);
+    } else if (selectedTier === 'critical') {
+      list = list.filter(s => s.attendancePercentage < 65);
+    }
+    return list;
+  }, [studentsList, studentSearch, selectedSection, selectedTier]);
+
+  // 4. Date-Range Aggregated Sessions
+  const dateRangeSessions = useMemo(() => {
+    const dates = Object.keys(DAILY_SESSIONS_MAP).filter(d => d >= fromDate && d <= toDate);
+    let all = [];
+    dates.forEach(d => {
+      DAILY_SESSIONS_MAP[d].forEach(s => {
+        if (selectedCourse === 'all' || s.course === selectedCourse) {
+          if (selectedSection === 'all' || s.section.includes(selectedSection)) {
+            all.push({ ...s, date: d });
+          }
+        }
+      });
+    });
+    return all;
+  }, [fromDate, toDate, selectedCourse, selectedSection]);
+
+  // Quick Preset Handlers
+  const handleApplyPreset = (preset) => {
+    setDatePreset(preset);
+    if (preset === 'today') {
+      setFromDate('2026-10-25');
+      setToDate('2026-10-25');
+    } else if (preset === 'week') {
+      setFromDate('2026-10-19');
+      setToDate('2026-10-25');
+    } else if (preset === 'month') {
+      setFromDate('2026-10-01');
+      setToDate('2026-10-26');
+    } else if (preset === 'semester') {
+      setFromDate('2026-08-01');
+      setToDate('2026-10-26');
+    }
+  };
+
+  // ─── Export to Excel / CSV ────────────────────────────────────
+  const handleExportExcelCSV = () => {
+    let headers = [];
+    let rows = [];
+    let filename = '';
+
+    if (reportType === 'daily') {
+      headers = ['Date', 'Period / Time', 'Course Code', 'Room', 'Register No.', 'Student Name', 'Email', 'Method', 'Status', 'Verification', 'Notes'];
+      rows = dailyRecords.map(r => [
+        selectedDate,
+        `"${r.sessionTime}"`,
+        r.course,
+        r.room,
+        r.reg,
+        `"${r.name}"`,
+        r.email,
+        r.method,
+        r.status,
+        `"${r.verif}"`,
+        `"${r.note || ''}"`,
+      ]);
+      filename = `Daily_Attendance_Report_${selectedDate}.csv`;
+    } else if (reportType === 'subject') {
+      headers = ['Register No.', 'Student Name', 'Section', 'Course Code', 'Course Title', 'Attended', 'Total Sessions', 'Attendance %', 'Status'];
+      rows = filteredSubjectStudents.map(s => [
+        s.reg,
+        `"${s.name}"`,
+        s.section,
+        activeSubjectData.code,
+        `"${activeSubjectData.name}"`,
+        s.attended,
+        s.total,
+        `${s.pct}%`,
+        `"${s.status}"`,
+      ]);
+      filename = `${activeSubjectData.code}_Subject_Attendance_Report.csv`;
+    } else if (reportType === 'student') {
+      headers = ['Register No.', 'Student Name', 'Email', 'Department', 'Class', 'Section', 'CS101 %', 'CS205 %', 'CS312 %', 'Overall %', 'Attended', 'Late', 'Absent', 'Total', 'Standing'];
+      rows = filteredStudentWise.map(s => {
+        const cs101 = s.subjectBreakdown?.find(b => b.code === 'CS101')?.pct || 0;
+        const cs205 = s.subjectBreakdown?.find(b => b.code === 'CS205')?.pct || 0;
+        const cs312 = s.subjectBreakdown?.find(b => b.code === 'CS312')?.pct || 0;
+        return [
+          s.registerNumber,
+          `"${s.name}"`,
+          s.email,
+          `"${s.department}"`,
+          s.semester,
+          s.section,
+          `${cs101}%`,
+          `${cs205}%`,
+          `${cs312}%`,
+          `${s.attendancePercentage}%`,
+          s.attendedClasses,
+          s.lateClasses,
+          s.absentClasses,
+          s.totalClasses,
+          `"${s.status}"`,
+        ];
+      });
+      filename = `Student_Wise_Attendance_Master_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+    } else {
+      headers = ['Session Date', 'Time Slot', 'Course Code', 'Course Name', 'Room', 'Section', 'Total Enrolled', 'Present', 'Late', 'Absent', 'Attendance Rate %'];
+      rows = dateRangeSessions.map(s => [
+        s.date,
+        `"${s.time}"`,
+        s.course,
+        `"${s.courseName}"`,
+        s.room,
+        s.section,
+        s.totalEnrolled,
+        s.present,
+        s.late,
+        s.absent,
+        `${s.rate}%`,
+      ]);
+      filename = `Date_Range_Attendance_Report_${fromDate}_to_${toDate}.csv`;
+    }
+
+    // Add UTF-8 BOM so Excel opens with proper encoding
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    if (onShowToast) onShowToast(`📊 Excel/CSV report downloaded: ${filename}`);
+  };
+
+  // ─── Print Report Direct ─────────────────────────────────────
+  const handlePrintReport = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
+      if (onShowToast) onShowToast('🖨️ Opening browser print / PDF export dialog');
+    }
+  };
+
+  // ─── Export to PDF ───────────────────────────────────────────
+  const handleExportPDF = () => {
+    // Open preview modal which has the formatted document layout
+    setPreviewModalOpen(true);
+  };
+
+  const getReportMeta = () => {
+    let title = 'Daily Attendance Audit Report';
+    let previewRows = [];
+
+    if (reportType === 'daily') {
+      title = `Daily Attendance Report (${selectedDate})`;
+      previewRows = dailyRecords.map(r => ({ reg: r.reg, name: r.name, section: r.room, pct: r.status === 'present' ? 100 : r.status === 'late' ? 50 : 0 }));
+    } else if (reportType === 'subject') {
+      title = `${activeSubjectData.code}: ${activeSubjectData.name} Course Report`;
+      previewRows = filteredSubjectStudents.map(s => ({ reg: s.reg, name: s.name, section: s.section, pct: s.pct, attended: s.attended, total: s.total }));
+    } else if (reportType === 'student') {
+      title = 'Student-Wise Master Attendance Audit Ledger';
+      previewRows = filteredStudentWise.map(s => ({ reg: s.registerNumber, name: s.name, section: s.section, pct: s.attendancePercentage, attended: s.attendedClasses, total: s.totalClasses }));
+    } else {
+      title = `Attendance Audit Report (${fromDate} to ${toDate})`;
+      previewRows = dateRangeSessions.map(s => ({ reg: s.course, name: s.courseName, section: s.section, pct: s.rate, attended: s.present, total: s.totalEnrolled }));
+    }
+
+    return {
+      title,
+      totalStudents: studentsList.length,
+      totalSessions: reportType === 'daily' ? dailySessions.length : 48,
+      avgRate: reportType === 'subject' ? `${activeSubjectData.avgAttendance}%` : '85.4%',
+      defaultersCount: studentsList.filter(s => s.attendancePercentage < 75).length,
+      previewRows,
+    };
+  };
+
+  return (
+    <div className="fd-tab-content fd-reports-page-wrap">
+      {/* ── Official Letterhead for Print/PDF Engine (@media print only) ── */}
+      <div className="fd-printable-report" id="fd-printable-area">
+        <div className="fd-doc-letterhead">
+          <div className="fd-doc-brand">
+            <AttentifyLogo size={26} color="#162F44" />
+            <div className="fd-doc-brand-text">
+              <span className="fd-doc-institution">ATTENTIFY ACADEMIC ATTENDANCE MANAGEMENT SYSTEM</span>
+              <span className="fd-doc-sub-inst">Department of Computer Science &amp; Engineering · Faculty of Engineering</span>
+            </div>
+          </div>
+          <div className="fd-doc-meta-right">
+            <span className="fd-doc-meta-item"><strong>Date:</strong> 26 Oct 2026</span>
+            <span className="fd-doc-meta-item"><strong>Generated By:</strong> {facultyName}</span>
+            <span className="fd-doc-meta-item"><strong>Academic Term:</strong> Autumn Semester 2026</span>
+          </div>
+        </div>
+
+        <div className="fd-doc-divider-thick" />
+
+        <div className="fd-doc-title-block">
+          <h2 className="fd-doc-main-heading">
+            {reportType === 'daily' && `DAILY ATTENDANCE AUDIT REPORT (${selectedDate})`}
+            {reportType === 'subject' && `SUBJECT ATTENDANCE REPORT: ${activeSubjectData.code} - ${activeSubjectData.name.toUpperCase()}`}
+            {reportType === 'student' && 'STUDENT-WISE MASTER ATTENDANCE REPORT'}
+            {reportType === 'daterange' && `DATE-RANGE ATTENDANCE AUDIT (${fromDate} TO ${toDate})`}
+          </h2>
+          <p className="fd-doc-sub-heading">Official Attendance Verification Record for University Examination Board</p>
+        </div>
+
+        {/* Print Summary Strip */}
+        <div className="fd-doc-stats-strip">
+          <div className="fd-doc-stat-pill">
+            <span className="fd-doc-sp-label">Total Cohort Students:</span>
+            <span className="fd-doc-sp-val">{studentsList.length}</span>
+          </div>
+          <div className="fd-doc-stat-pill">
+            <span className="fd-doc-sp-label">Sessions Evaluated:</span>
+            <span className="fd-doc-sp-val">{reportType === 'daily' ? dailySessions.length : 48}</span>
+          </div>
+          <div className="fd-doc-stat-pill">
+            <span className="fd-doc-sp-label">Average Attendance Rate:</span>
+            <span className="fd-doc-sp-val">{reportType === 'subject' ? `${activeSubjectData.avgAttendance}%` : '85.4%'}</span>
+          </div>
+          <div className="fd-doc-stat-pill">
+            <span className="fd-doc-sp-label">Defaulters (&lt; 75%):</span>
+            <span className="fd-doc-sp-val" style={{ color: 'var(--fd-error)' }}>
+              {studentsList.filter(s => s.attendancePercentage < 75).length} Students
+            </span>
+          </div>
+        </div>
+
+        {/* Print Table */}
+        <table className="fd-doc-table">
+          <thead>
+            {reportType === 'daily' && (
+              <tr>
+                <th>Reg No.</th>
+                <th>Student Name</th>
+                <th>Course</th>
+                <th>Time</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Verification Note</th>
+              </tr>
+            )}
+            {reportType === 'subject' && (
+              <tr>
+                <th>Reg No.</th>
+                <th>Student Name</th>
+                <th>Section</th>
+                <th>Attended</th>
+                <th>Total</th>
+                <th>Percentage</th>
+                <th>Exam Eligibility</th>
+              </tr>
+            )}
+            {reportType === 'student' && (
+              <tr>
+                <th>Reg No.</th>
+                <th>Student Name</th>
+                <th>Section</th>
+                <th>CS101</th>
+                <th>CS205</th>
+                <th>CS312</th>
+                <th>Cumulative %</th>
+                <th>Exam Standing</th>
+              </tr>
+            )}
+            {reportType === 'daterange' && (
+              <tr>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>Course Code</th>
+                <th>Room</th>
+                <th>Enrolled</th>
+                <th>Present</th>
+                <th>Late</th>
+                <th>Absent</th>
+                <th>Rate %</th>
+              </tr>
+            )}
+          </thead>
+          <tbody>
+            {reportType === 'daily' && dailyRecords.map((r, i) => (
+              <tr key={i}>
+                <td className="font-mono font-bold">{r.reg}</td>
+                <td>{r.name}</td>
+                <td>{r.course}</td>
+                <td>{r.sessionTime}</td>
+                <td>{r.method}</td>
+                <td>{r.status.toUpperCase()}</td>
+                <td>{r.verif}</td>
+              </tr>
+            ))}
+            {reportType === 'subject' && filteredSubjectStudents.map((s, i) => (
+              <tr key={i}>
+                <td className="font-mono font-bold">{s.reg}</td>
+                <td>{s.name}</td>
+                <td>{s.section}</td>
+                <td className="font-mono">{s.attended}</td>
+                <td className="font-mono">{s.total}</td>
+                <td className="font-bold">{s.pct}%</td>
+                <td>{s.pct >= 75 ? 'Qualified' : '⚠️ Condonation Required'}</td>
+              </tr>
+            ))}
+            {reportType === 'student' && filteredStudentWise.map((s, i) => {
+              const cs101 = s.subjectBreakdown?.find(b => b.code === 'CS101')?.pct || 0;
+              const cs205 = s.subjectBreakdown?.find(b => b.code === 'CS205')?.pct || 0;
+              const cs312 = s.subjectBreakdown?.find(b => b.code === 'CS312')?.pct || 0;
+              return (
+                <tr key={i}>
+                  <td className="font-mono font-bold">{s.registerNumber}</td>
+                  <td>{s.name}</td>
+                  <td>{s.section}</td>
+                  <td>{cs101}%</td>
+                  <td>{cs205}%</td>
+                  <td>{cs312}%</td>
+                  <td className="font-bold">{s.attendancePercentage}%</td>
+                  <td>{s.attendancePercentage >= 75 ? 'Eligible' : 'Shortage Warning'}</td>
+                </tr>
+              );
+            })}
+            {reportType === 'daterange' && dateRangeSessions.map((s, i) => (
+              <tr key={i}>
+                <td className="font-mono">{s.date}</td>
+                <td>{s.time}</td>
+                <td className="font-bold">{s.course}</td>
+                <td>{s.room}</td>
+                <td className="font-mono">{s.totalEnrolled}</td>
+                <td className="font-mono">{s.present}</td>
+                <td className="font-mono">{s.late}</td>
+                <td className="font-mono">{s.absent}</td>
+                <td className="font-bold">{s.rate}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Print Signatures */}
+        <div className="fd-doc-signatures-row">
+          <div className="fd-doc-sig-box">
+            <div className="fd-doc-sig-line" />
+            <span className="fd-doc-sig-title">{facultyName}</span>
+            <span className="fd-doc-sig-subtitle">Course Faculty Coordinator</span>
+          </div>
+          <div className="fd-doc-sig-box">
+            <div className="fd-doc-sig-line" />
+            <span className="fd-doc-sig-title">Dr. Rajan Kumar</span>
+            <span className="fd-doc-sig-subtitle">Head of Department (CSE)</span>
+          </div>
+          <div className="fd-doc-sig-box">
+            <div className="fd-doc-sig-line" />
+            <span className="fd-doc-sig-title">Dean of Academic Affairs</span>
+            <span className="fd-doc-sig-subtitle">Controller of Examinations</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Screen Page Header Bar ────────────────────────────── */}
+      <div className="fd-page-header-bar fd-no-print">
+        <div className="fd-header-left">
+          <span className="fd-context-pill">INSTITUTIONAL AUDIT &amp; ANALYTICS</span>
+          <h1 className="fd-heading-serif">Attendance Reports Hub</h1>
+          <p className="fd-sub-serif">
+            Generate, analyze, export, and print daily, subject-wise, student-wise, and date-range attendance reports with university verification.
+          </p>
+        </div>
+
+        {/* Master Actions: Print, PDF, Excel/CSV */}
+        <div className="fd-header-actions-right">
+          <button
+            type="button"
+            className="fd-btn-secondary"
+            onClick={handleExportExcelCSV}
+            title="Download formatted Excel/CSV spreadsheet"
+          >
+            <FileSpreadsheetIcon size={14} color="var(--fd-navy)" />
+            <span>Export Excel / CSV</span>
+          </button>
+
+          <button
+            type="button"
+            className="fd-btn-secondary"
+            onClick={handleExportPDF}
+            title="Export official printable PDF report"
+          >
+            <FileTextIcon size={14} color="var(--fd-navy)" />
+            <span>Export PDF</span>
+          </button>
+
+          <button
+            type="button"
+            className="fd-btn-primary"
+            onClick={handlePrintReport}
+            title="Print attendance report directly"
+          >
+            <PrinterIcon size={14} color="#FFFFFF" />
+            <span>Print Report</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Report Type Switcher Tabs ─────────────────────────── */}
+      <div className="fd-report-tabs-card fd-no-print">
+        <div className="fd-report-tabs-row">
+          <button
+            type="button"
+            className={`fd-report-tab-btn ${reportType === 'daily' ? 'active' : ''}`}
+            onClick={() => setReportType('daily')}
+          >
+            <CalendarIcon size={15} color={reportType === 'daily' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Daily Attendance Reports</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-report-tab-btn ${reportType === 'subject' ? 'active' : ''}`}
+            onClick={() => setReportType('subject')}
+          >
+            <BookOpenIcon size={15} color={reportType === 'subject' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Subject-Wise Reports</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-report-tab-btn ${reportType === 'student' ? 'active' : ''}`}
+            onClick={() => setReportType('student')}
+          >
+            <GraduationCapIcon size={15} color={reportType === 'student' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Student-Wise Reports</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-report-tab-btn ${reportType === 'daterange' ? 'active' : ''}`}
+            onClick={() => setReportType('daterange')}
+          >
+            <ClockIcon size={15} color={reportType === 'daterange' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Date-Range Reports</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Report Configuration & Filter Bar ─────────────────── */}
+      <div className="fd-reports-config-card fd-no-print">
+        <div className="fd-config-row">
+          {/* Sub-Filter 1: Daily Date Picker */}
+          {reportType === 'daily' && (
+            <div className="fd-config-item">
+              <label className="fd-config-lbl">Select Date:</label>
+              <input
+                type="date"
+                className="fd-config-date-input"
+                value={selectedDate}
+                onChange={e => setSelectedDate(e.target.value)}
+              />
+            </div>
+          )}
+
+          {/* Sub-Filter 2: Date Range Pickers */}
+          {reportType === 'daterange' && (
+            <>
+              <div className="fd-config-item">
+                <label className="fd-config-lbl">From Date:</label>
+                <input
+                  type="date"
+                  className="fd-config-date-input"
+                  value={fromDate}
+                  onChange={e => setFromDate(e.target.value)}
+                />
+              </div>
+
+              <div className="fd-config-item">
+                <label className="fd-config-lbl">To Date:</label>
+                <input
+                  type="date"
+                  className="fd-config-date-input"
+                  value={toDate}
+                  onChange={e => setToDate(e.target.value)}
+                />
+              </div>
+
+              <div className="fd-config-presets-row">
+                <button
+                  type="button"
+                  className={`fd-preset-pill ${datePreset === 'today' ? 'active' : ''}`}
+                  onClick={() => handleApplyPreset('today')}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  className={`fd-preset-pill ${datePreset === 'week' ? 'active' : ''}`}
+                  onClick={() => handleApplyPreset('week')}
+                >
+                  Last 7 Days
+                </button>
+                <button
+                  type="button"
+                  className={`fd-preset-pill ${datePreset === 'month' ? 'active' : ''}`}
+                  onClick={() => handleApplyPreset('month')}
+                >
+                  Month to Date
+                </button>
+                <button
+                  type="button"
+                  className={`fd-preset-pill ${datePreset === 'semester' ? 'active' : ''}`}
+                  onClick={() => handleApplyPreset('semester')}
+                >
+                  Full Semester
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Sub-Filter 3: Subject Selection for Subject-Wise */}
+          {reportType === 'subject' && (
+            <div className="fd-config-item">
+              <label className="fd-config-lbl">Target Course:</label>
+              <select
+                className="fd-config-select"
+                value={selectedSubjectCode}
+                onChange={e => setSelectedSubjectCode(e.target.value)}
+              >
+                <option value="CS101">CS101 - Data Structures</option>
+                <option value="CS205">CS205 - Operating Systems</option>
+                <option value="CS312">CS312 - Database Systems</option>
+              </select>
+            </div>
+          )}
+
+          {/* General Course Filter (Daily / Date-range) */}
+          {(reportType === 'daily' || reportType === 'daterange') && (
+            <div className="fd-config-item">
+              <label className="fd-config-lbl">Course Filter:</label>
+              <select
+                className="fd-config-select"
+                value={selectedCourse}
+                onChange={e => setSelectedCourse(e.target.value)}
+              >
+                <option value="all">All Scheduled Courses</option>
+                <option value="CS101">CS101 - Data Structures</option>
+                <option value="CS205">CS205 - Operating Systems</option>
+                <option value="CS312">CS312 - Database Systems</option>
+              </select>
+            </div>
+          )}
+
+          {/* Section Filter */}
+          <div className="fd-config-item">
+            <label className="fd-config-lbl">Section:</label>
+            <select
+              className="fd-config-select"
+              value={selectedSection}
+              onChange={e => setSelectedSection(e.target.value)}
+            >
+              <option value="all">All Sections (A &amp; B)</option>
+              <option value="Section A">Section A</option>
+              <option value="Section B">Section B</option>
+            </select>
+          </div>
+
+          {/* Attendance Standing Filter */}
+          <div className="fd-config-item">
+            <label className="fd-config-lbl">Attendance Tier:</label>
+            <select
+              className="fd-config-select"
+              value={selectedTier}
+              onChange={e => setSelectedTier(e.target.value)}
+            >
+              <option value="all">All Attendance Tiers</option>
+              <option value="safe">Eligible / Regular (≥ 75%)</option>
+              <option value="shortage">Shortage Defaulters (&lt; 75%)</option>
+              <option value="critical">Critical Detention Tier (&lt; 65%)</option>
+            </select>
+          </div>
+
+          {/* Student Search for Student-Wise report */}
+          {reportType === 'student' && (
+            <div className="fd-config-item search">
+              <label className="fd-config-lbl">Search Student:</label>
+              <div className="fd-report-search-wrap">
+                <SearchIcon size={14} color="var(--fd-text-secondary)" />
+                <input
+                  type="text"
+                  className="fd-report-search-input"
+                  placeholder="Search name, register no (21CS042)..."
+                  value={studentSearch}
+                  onChange={e => setStudentSearch(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Summary KPI Strip ─────────────────────────────────── */}
+      <div className="fd-reports-kpi-strip fd-no-print">
+        {reportType === 'daily' && (
+          <>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Sessions on {selectedDate}</span>
+              <span className="fd-rkpi-val">{dailySessions.length}</span>
+              <span className="fd-rkpi-sub">Total Lectures Held</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Present Scans</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-success)' }}>
+                {dailyRecords.filter(r => r.status === 'present').length}
+              </span>
+              <span className="fd-rkpi-sub">Biometric &amp; QR Verified</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Late &amp; Absences</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-error)' }}>
+                {dailyRecords.filter(r => r.status === 'late' || r.status === 'absent').length}
+              </span>
+              <span className="fd-rkpi-sub">Attendance Deficits</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Daily Attendance Rate</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-navy)' }}>
+                {dailyRecords.length > 0
+                  ? `${Math.round((dailyRecords.filter(r => r.status === 'present').length / dailyRecords.length) * 100)}%`
+                  : '—'}
+              </span>
+              <span className="fd-rkpi-sub">Average Daily Performance</span>
+            </div>
+          </>
+        )}
+
+        {reportType === 'subject' && (
+          <>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Course Code</span>
+              <span className="fd-rkpi-val font-mono">{activeSubjectData.code}</span>
+              <span className="fd-rkpi-sub">{activeSubjectData.name}</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Lectures Conducted</span>
+              <span className="fd-rkpi-val">{activeSubjectData.totalSessions}</span>
+              <span className="fd-rkpi-sub">Semester Target: 24</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Course Average</span>
+              <span className="fd-rkpi-val" style={{ color: getStudentPctColor(activeSubjectData.avgAttendance) }}>
+                {activeSubjectData.avgAttendance}%
+              </span>
+              <span className="fd-rkpi-sub">Institutional Target: 75%</span>
+            </div>
+            <div className="fd-rkpi-card warning">
+              <span className="fd-rkpi-label">Defaulters (&lt; 75%)</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-error)' }}>
+                {activeSubjectData.defaultersCount}
+              </span>
+              <span className="fd-rkpi-sub">At Risk of Detention</span>
+            </div>
+          </>
+        )}
+
+        {reportType === 'student' && (
+          <>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Total Cohort</span>
+              <span className="fd-rkpi-val">{studentsList.length}</span>
+              <span className="fd-rkpi-sub">B.Tech CSE Semester 6</span>
+            </div>
+            <div className="fd-rkpi-card safe">
+              <span className="fd-rkpi-label">Good Standing (≥ 75%)</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-success)' }}>
+                {studentsList.filter(s => s.attendancePercentage >= 75).length}
+              </span>
+              <span className="fd-rkpi-sub">Fully Qualified for Exams</span>
+            </div>
+            <div className="fd-rkpi-card warning">
+              <span className="fd-rkpi-label">Shortage Defaulters</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-error)' }}>
+                {studentsList.filter(s => s.attendancePercentage < 75).length}
+              </span>
+              <span className="fd-rkpi-sub">Requires Condonation</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Average Cohort Rate</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-navy)' }}>
+                85.4%
+              </span>
+              <span className="fd-rkpi-sub">Across All 3 Subjects</span>
+            </div>
+          </>
+        )}
+
+        {reportType === 'daterange' && (
+          <>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Date Window</span>
+              <span className="fd-rkpi-val" style={{ fontSize: '18px' }}>
+                {fromDate} – {toDate}
+              </span>
+              <span className="fd-rkpi-sub">Evaluated Range</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Total Sessions</span>
+              <span className="fd-rkpi-val">{dateRangeSessions.length}</span>
+              <span className="fd-rkpi-sub">Conducted Classes</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Total Scans Recorded</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-success)' }}>
+                {dateRangeSessions.reduce((acc, s) => acc + s.present, 0)}
+              </span>
+              <span className="fd-rkpi-sub">Present Entries</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Aggregate Rate</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-navy)' }}>
+                {dateRangeSessions.length > 0
+                  ? `${Math.round(dateRangeSessions.reduce((acc, s) => acc + s.rate, 0) / dateRangeSessions.length)}%`
+                  : '—'}
+              </span>
+              <span className="fd-rkpi-sub">Cumulative Performance</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── REPORT CONTENT VIEWS ───────────────────────────────── */}
+
+      {/* ── VIEW 1: Daily Attendance Report ─────────────────────── */}
+      {reportType === 'daily' && (
+        <div className="fd-report-view-container fd-no-print">
+          {/* Daily Period Timetable Strip */}
+          <div className="fd-daily-periods-strip">
+            <h3 className="fd-section-heading-sm">Sessions Held on {selectedDate}</h3>
+            {dailySessions.length === 0 ? (
+              <div className="fd-empty-daily-state">No attendance sessions recorded for {selectedDate}.</div>
+            ) : (
+              <div className="fd-daily-cards-grid">
+                {dailySessions.map((s) => (
+                  <div key={s.id} className="fd-daily-period-card">
+                    <div className="fd-dpc-top">
+                      <span className="fd-sub-code-pill">{s.course}</span>
+                      <span className="fd-dpc-room">{s.room}</span>
+                    </div>
+                    <h4 className="fd-dpc-title">{s.courseName}</h4>
+                    <span className="fd-dpc-time">{s.time}</span>
+                    <div className="fd-dpc-rate-row">
+                      <span className="fd-dpc-rate-val">{s.rate}%</span>
+                      <span className="fd-dpc-counts">{s.present}/{s.totalEnrolled} Present</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Daily Student Records Roster */}
+          <div className="fd-report-table-card">
+            <div className="fd-table-header-bar">
+              <h3 className="fd-card-title">Daily Student Attendance Ledger ({dailyRecords.length} Scans)</h3>
+              <span className="fd-table-header-meta">{selectedDate} · All Scheduled Lectures</span>
+            </div>
+
+            <div className="fd-report-table-wrap">
+              <table className="fd-report-data-table">
+                <thead>
+                  <tr>
+                    <th>Register No.</th>
+                    <th>Student Name</th>
+                    <th>Course</th>
+                    <th>Period Time</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Biometric Verification</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyRecords.map((r, idx) => (
+                    <tr key={idx} className={r.status !== 'present' ? 'fd-row-warn' : ''}>
+                      <td className="font-mono font-bold">{r.reg}</td>
+                      <td>
+                        <div className="fd-student-cell-compact">
+                          <span className="fd-st-name">{r.name}</span>
+                          <span className="fd-st-email">{r.email}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="fd-sub-code-pill">{r.course}</span>
+                      </td>
+                      <td>{r.sessionTime}</td>
+                      <td>
+                        <span className="fd-badge-method">{r.method}</span>
+                      </td>
+                      <td>
+                        <span className={`fd-status-pill-v2 status-${r.status}`}>
+                          {r.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="fd-verif-cell">
+                          <ShieldCheckIcon size={13} color="var(--fd-success)" />
+                          <span>{r.verif}</span>
+                        </div>
+                      </td>
+                      <td className="fd-text-muted">{r.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── VIEW 2: Subject-Wise Report ─────────────────────────── */}
+      {reportType === 'subject' && (
+        <div className="fd-report-view-container fd-no-print">
+          {/* Subject Switcher Cards */}
+          <div className="fd-subject-cards-row">
+            {SUBJECT_REPORTS_DATA.map((sub) => {
+              const isSelected = sub.code === selectedSubjectCode;
+              return (
+                <div
+                  key={sub.code}
+                  className={`fd-subj-overview-card ${isSelected ? 'active' : ''}`}
+                  onClick={() => setSelectedSubjectCode(sub.code)}
+                >
+                  <div className="fd-soc-header">
+                    <span className="fd-soc-code">{sub.code}</span>
+                    <span className={`fd-soc-badge ${sub.defaultersCount > 0 ? 'warning' : 'safe'}`}>
+                      {sub.defaultersCount} Defaulters
+                    </span>
+                  </div>
+                  <h3 className="fd-soc-title">{sub.name}</h3>
+                  <div className="fd-soc-stats">
+                    <div>
+                      <span className="fd-soc-num" style={{ color: getStudentPctColor(sub.avgAttendance) }}>
+                        {sub.avgAttendance}%
+                      </span>
+                      <span className="fd-soc-lbl">Avg Attendance</span>
+                    </div>
+                    <div>
+                      <span className="fd-soc-num">{sub.totalSessions}</span>
+                      <span className="fd-soc-lbl">Classes Held</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Detailed Course Roster */}
+          <div className="fd-report-table-card">
+            <div className="fd-table-header-bar">
+              <div>
+                <h3 className="fd-card-title">{activeSubjectData.code} - {activeSubjectData.name} Student Performance</h3>
+                <p className="fd-table-header-meta">Course Faculty: Dr. Sarah Jenkins · Classroom: {activeSubjectData.room}</p>
+              </div>
+              <span className="fd-context-pill">
+                {filteredSubjectStudents.length} Students Listed
+              </span>
+            </div>
+
+            <div className="fd-report-table-wrap">
+              <table className="fd-report-data-table">
+                <thead>
+                  <tr>
+                    <th>Register No.</th>
+                    <th>Student Name</th>
+                    <th>Section</th>
+                    <th>Attended / Total</th>
+                    <th>Attendance Rate</th>
+                    <th>Progress Gauge</th>
+                    <th style={{ textAlign: 'right' }}>Eligibility</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSubjectStudents.map((s, idx) => {
+                    const isLow = s.pct < 75;
+                    const pColor = getStudentPctColor(s.pct);
+                    return (
+                      <tr key={idx} className={isLow ? 'fd-row-warn' : ''}>
+                        <td className="font-mono font-bold">{s.reg}</td>
+                        <td>
+                          <span className="fd-st-name">{s.name}</span>
+                        </td>
+                        <td>
+                          <span className="fd-section-pill">{s.section}</span>
+                        </td>
+                        <td className="font-mono">
+                          <strong>{s.attended}</strong> / {s.total} sessions
+                        </td>
+                        <td>
+                          <span className={`fd-pct-badge ${getStudentPctBadgeClass(s.pct)}`}>
+                            {s.pct}%
+                          </span>
+                        </td>
+                        <td style={{ minWidth: '130px' }}>
+                          <div className="fd-pct-bar-bg">
+                            <div
+                              className="fd-pct-bar-fill"
+                              style={{ width: `${s.pct}%`, background: pColor }}
+                            />
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <span className={`fd-mini-status-pill ${getStudentPctBadgeClass(s.pct)}`}>
+                            {s.pct >= 75 ? 'Qualified' : '⚠️ Shortage Warning'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── VIEW 3: Student-Wise Report ─────────────────────────── */}
+      {reportType === 'student' && (
+        <div className="fd-report-view-container fd-no-print">
+          <div className="fd-report-table-card">
+            <div className="fd-table-header-bar">
+              <div>
+                <h3 className="fd-card-title">Student Cumulative Attendance Ledger</h3>
+                <p className="fd-table-header-meta">Master Semester Attendance Record Across All 3 Assigned Subjects</p>
+              </div>
+              <span className="fd-context-pill">
+                Showing {filteredStudentWise.length} Students
+              </span>
+            </div>
+
+            <div className="fd-report-table-wrap">
+              <table className="fd-report-data-table">
+                <thead>
+                  <tr>
+                    <th>Student Profile</th>
+                    <th>Register No.</th>
+                    <th>Section</th>
+                    <th>CS101</th>
+                    <th>CS205</th>
+                    <th>CS312</th>
+                    <th>Overall %</th>
+                    <th>Attended / Total</th>
+                    <th>Exam Standing</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStudentWise.map((st) => {
+                    const isLow = st.attendancePercentage < 75;
+                    const initials = st.name
+                      .split(' ')
+                      .map(p => p[0])
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase();
+
+                    const cs101 = st.subjectBreakdown?.find(b => b.code === 'CS101')?.pct || 0;
+                    const cs205 = st.subjectBreakdown?.find(b => b.code === 'CS205')?.pct || 0;
+                    const cs312 = st.subjectBreakdown?.find(b => b.code === 'CS312')?.pct || 0;
+
+                    return (
+                      <tr key={st.id} className={isLow ? 'fd-row-warn' : ''}>
+                        <td>
+                          <div className="fd-student-profile-cell">
+                            <div className="fd-student-avatar-thumb">
+                              {st.facePhotoUrl ? (
+                                <img src={st.facePhotoUrl} alt={st.name} className="fd-avatar-img" />
+                              ) : (
+                                <div className="fd-avatar-initials" style={{ background: st.avatarColor || '#162F44' }}>
+                                  {initials}
+                                </div>
+                              )}
+                            </div>
+                            <div className="fd-student-info">
+                              <span
+                                className="fd-student-name-link"
+                                onClick={() => setTranscriptStudent(st)}
+                              >
+                                {st.name}
+                              </span>
+                              <span className="fd-student-email-text">{st.email}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="fd-reg-badge">{st.registerNumber}</span>
+                        </td>
+                        <td>
+                          <span className="fd-section-pill">{st.section}</span>
+                        </td>
+                        <td className="font-mono font-bold" style={{ color: getStudentPctColor(cs101) }}>
+                          {cs101}%
+                        </td>
+                        <td className="font-mono font-bold" style={{ color: getStudentPctColor(cs205) }}>
+                          {cs205}%
+                        </td>
+                        <td className="font-mono font-bold" style={{ color: getStudentPctColor(cs312) }}>
+                          {cs312}%
+                        </td>
+                        <td>
+                          <span className={`fd-pct-badge ${getStudentPctBadgeClass(st.attendancePercentage)}`}>
+                            {st.attendancePercentage}%
+                          </span>
+                        </td>
+                        <td className="font-mono">
+                          <strong>{st.attendedClasses}</strong> / {st.totalClasses}
+                        </td>
+                        <td>
+                          <span className={`fd-student-status-badge ${getStudentPctBadgeClass(st.attendancePercentage)}`}>
+                            {st.status || (isLow ? 'Shortage Alert' : 'Good Standing')}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="fd-action-btn-sm"
+                            onClick={() => setTranscriptStudent(st)}
+                            title="View and print official student attendance transcript"
+                          >
+                            <FileTextIcon size={13} color="var(--fd-navy)" />
+                            <span>Transcript</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── VIEW 4: Date-Range Report ───────────────────────────── */}
+      {reportType === 'daterange' && (
+        <div className="fd-report-view-container fd-no-print">
+          <div className="fd-report-table-card">
+            <div className="fd-table-header-bar">
+              <div>
+                <h3 className="fd-card-title">Range Audit: {fromDate} to {toDate}</h3>
+                <p className="fd-table-header-meta">{dateRangeSessions.length} Academic Sessions Logged in Specified Timeframe</p>
+              </div>
+              <span className="fd-context-pill">
+                {dateRangeSessions.length} Sessions Conducted
+              </span>
+            </div>
+
+            <div className="fd-report-table-wrap">
+              <table className="fd-report-data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Time Slot</th>
+                    <th>Course Code</th>
+                    <th>Course Name</th>
+                    <th>Room</th>
+                    <th>Section</th>
+                    <th>Enrolled</th>
+                    <th>Present</th>
+                    <th>Late</th>
+                    <th>Absent</th>
+                    <th style={{ textAlign: 'right' }}>Attendance Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dateRangeSessions.length === 0 ? (
+                    <tr>
+                      <td colSpan={11} className="fd-text-center fd-empty-cell">
+                        No sessions found between {fromDate} and {toDate}. Try selecting a wider date range.
+                      </td>
+                    </tr>
+                  ) : (
+                    dateRangeSessions.map((s, idx) => (
+                      <tr key={idx}>
+                        <td className="font-mono font-bold">{s.date}</td>
+                        <td>{s.time}</td>
+                        <td>
+                          <span className="fd-sub-code-pill">{s.course}</span>
+                        </td>
+                        <td>{s.courseName}</td>
+                        <td>{s.room}</td>
+                        <td>
+                          <span className="fd-section-pill">{s.section}</span>
+                        </td>
+                        <td className="font-mono">{s.totalEnrolled}</td>
+                        <td className="font-mono font-bold" style={{ color: 'var(--fd-success)' }}>
+                          {s.present}
+                        </td>
+                        <td className="font-mono" style={{ color: '#B5822C' }}>
+                          {s.late}
+                        </td>
+                        <td className="font-mono" style={{ color: 'var(--fd-error)' }}>
+                          {s.absent}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <span className={`fd-pct-badge ${getStudentPctBadgeClass(s.rate)}`}>
+                            {s.rate}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Active Modals ───────────────────────────────────────── */}
+      {transcriptStudent && (
+        <StudentTranscriptModal
+          student={transcriptStudent}
+          onClose={() => setTranscriptStudent(null)}
+          onPrint={() => {
+            window.print();
+            if (onShowToast) onShowToast(`🖨️ Printing official transcript for ${transcriptStudent.name}`);
+          }}
+        />
+      )}
+
+      {previewModalOpen && (
+        <PrintPreviewModal
+          reportMeta={getReportMeta()}
+          reportType={reportType}
+          onClose={() => setPreviewModalOpen(false)}
+          onConfirmPrint={() => {
+            setPreviewModalOpen(false);
+            window.print();
+          }}
+          onExportPDF={() => {
+            setPreviewModalOpen(false);
+            window.print();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  TAB: QR CODE SESSION MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 function TabQR({ onShowToast, liveData, user }) {
@@ -6029,7 +7830,7 @@ export default function FacultyDashboardPage() {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search);
       const t = p.get('tab');
-      if (t && ['dashboard', 'attendance', 'students', 'qr', 'timetable', 'assignments', 'settings'].includes(t)) {
+      if (t && ['dashboard', 'attendance', 'students', 'reports', 'qr', 'timetable', 'assignments', 'settings'].includes(t)) {
         return t;
       }
     }
@@ -6209,6 +8010,15 @@ export default function FacultyDashboardPage() {
 
           {activeTab === 'students' && (
             <TabStudents
+              user={user}
+              onNav={handleNav}
+              onShowToast={showToast}
+              liveData={liveData}
+            />
+          )}
+
+          {activeTab === 'reports' && (
+            <TabReports
               user={user}
               onNav={handleNav}
               onShowToast={showToast}
