@@ -44,6 +44,10 @@ import {
   FileTextIcon,
   DownloadIcon,
   FileSpreadsheetIcon,
+  FlaskConicalIcon,
+  LayersIcon,
+  CalendarDaysIcon,
+  ListCheckIcon,
 } from './FacultyDashboardIcons';
 import './FacultyDashboardPage.css';
 
@@ -7163,140 +7167,1578 @@ function TabQR({ onShowToast, liveData, user }) {
 // ═══════════════════════════════════════════════════════════════
 //  TAB: TIMETABLE
 // ═══════════════════════════════════════════════════════════════
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const SLOTS = ['9:00 AM', '11:00 AM', '2:00 PM', '4:00 PM'];
+// ═══════════════════════════════════════════════════════════════
+//  TIMETABLE & TEACHING PLAN DATASETS
+// ═══════════════════════════════════════════════════════════════
+const TIMETABLE_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const TIMETABLE_TIME_SLOTS = [
+  { id: 'p1', time: '09:00 AM – 10:00 AM', label: 'Period 1' },
+  { id: 'p2', time: '10:15 AM – 11:15 AM', label: 'Period 2' },
+  { id: 'p3', time: '11:30 AM – 12:30 PM', label: 'Period 3' },
+  { id: 'p4', time: '01:30 PM – 02:30 PM', label: 'Period 4' },
+  { id: 'p5', time: '02:45 PM – 03:45 PM', label: 'Period 5' },
+  { id: 'p6', time: '04:00 PM – 05:00 PM', label: 'Period 6' },
+];
 
-function TabTimetable({ onShowToast }) {
-  const STORE_KEY = 'attentify_faculty_timetable';
-  const [entries, setEntries] = useState(() => {
+// Assigned Courses (Lectures & Labs)
+const REFERENCE_ASSIGNED_COURSES = [
+  {
+    code: 'CS101',
+    title: 'Data Structures & Algorithms',
+    type: 'Lecture',
+    credits: 4,
+    weeklyHours: 3,
+    room: 'Lecture Hall 302',
+    semester: 'Semester 6',
+    section: 'Section A',
+    enrolled: 42,
+    plannedClasses: 40,
+    completedClasses: 28,
+    pendingClasses: 12,
+    syllabusPct: 70,
+    labLinked: 'CS101L',
+    description: 'Fundamental data representations, balanced search trees, graph algorithms, and algorithmic complexity analysis.',
+    days: ['Monday (09:00 AM)', 'Tuesday (01:30 PM)', 'Friday (09:00 AM)'],
+  },
+  {
+    code: 'CS101L',
+    title: 'Data Structures Programming Lab',
+    type: 'Laboratory',
+    credits: 1.5,
+    weeklyHours: 3,
+    room: 'Computing Lab 3 (60 Workstations)',
+    semester: 'Semester 6',
+    section: 'Batches A1 & A2',
+    enrolled: 42,
+    plannedClasses: 15,
+    completedClasses: 10,
+    pendingClasses: 5,
+    syllabusPct: 67,
+    labLinked: 'CS101',
+    description: 'Hands-on C++ and Python implementation of linked structures, binary heaps, disjoint-sets, and graph shortest path algorithms.',
+    days: ['Monday (02:00 PM – 04:00 PM)', 'Thursday (11:30 AM – 01:30 PM)'],
+  },
+  {
+    code: 'CS205',
+    title: 'Operating Systems & Architecture',
+    type: 'Lecture',
+    credits: 4,
+    weeklyHours: 4,
+    room: 'Room 12',
+    semester: 'Semester 6',
+    section: 'Section B',
+    enrolled: 38,
+    plannedClasses: 42,
+    completedClasses: 26,
+    pendingClasses: 16,
+    syllabusPct: 62,
+    labLinked: 'CS205L',
+    description: 'Process management, concurrency, semaphores, virtual memory paging, CPU scheduling, and storage file systems.',
+    days: ['Monday (11:30 AM)', 'Wednesday (09:00 AM)', 'Thursday (02:45 PM)', 'Friday (10:15 AM)'],
+  },
+  {
+    code: 'CS205L',
+    title: 'OS Kernel & Systems Programming Lab',
+    type: 'Laboratory',
+    credits: 1.5,
+    weeklyHours: 2,
+    room: 'Systems Lab 2 (Linux Cluster)',
+    semester: 'Semester 6',
+    section: 'Batch B1',
+    enrolled: 38,
+    plannedClasses: 14,
+    completedClasses: 9,
+    pendingClasses: 5,
+    syllabusPct: 64,
+    labLinked: 'CS205',
+    description: 'POSIX system calls, fork-exec multitasking, multithreading with pthreads, and shared memory inter-process communication.',
+    days: ['Tuesday (02:45 PM – 04:45 PM)'],
+  },
+  {
+    code: 'CS312',
+    title: 'Database Management Systems',
+    type: 'Lecture',
+    credits: 3,
+    weeklyHours: 3,
+    room: 'Room 7',
+    semester: 'Semester 6',
+    section: 'Section A',
+    enrolled: 35,
+    plannedClasses: 36,
+    completedClasses: 27,
+    pendingClasses: 9,
+    syllabusPct: 75,
+    labLinked: 'CS312L',
+    description: 'Relational algebra, SQL query optimization, ACID transactions, concurrency control, B+ tree indexing, and NoSQL principles.',
+    days: ['Tuesday (10:15 AM)', 'Wednesday (11:30 AM)', 'Thursday (09:00 AM)'],
+  },
+];
+
+// Weekly Timetable Grid Items
+const REFERENCE_WEEKLY_SCHEDULE = [
+  // Monday
+  { id: 'w-1', day: 'Monday', slotId: 'p1', time: '09:00 AM – 10:00 AM', course: 'CS101', courseName: 'Data Structures', type: 'Lecture', room: 'Room 302', section: 'Section A', enrolled: 42, status: 'completed' },
+  { id: 'w-2', day: 'Monday', slotId: 'p3', time: '11:30 AM – 12:30 PM', course: 'CS205', courseName: 'Operating Systems', type: 'Lecture', room: 'Room 12', section: 'Section B', enrolled: 38, status: 'completed' },
+  { id: 'w-3', day: 'Monday', slotId: 'p4', time: '01:30 PM – 03:30 PM', course: 'CS101L', courseName: 'Data Structures Lab', type: 'Laboratory', room: 'Computing Lab 3', section: 'Batch A1', enrolled: 21, status: 'upcoming', spanSlots: 2 },
+
+  // Tuesday
+  { id: 'w-4', day: 'Tuesday', slotId: 'p2', time: '10:15 AM – 11:15 AM', course: 'CS312', courseName: 'Database Systems', type: 'Lecture', room: 'Room 7', section: 'Section A', enrolled: 35, status: 'upcoming' },
+  { id: 'w-5', day: 'Tuesday', slotId: 'p4', time: '01:30 PM – 02:30 PM', course: 'CS101', courseName: 'Data Structures', type: 'Lecture', room: 'Room 302', section: 'Section A', enrolled: 42, status: 'upcoming' },
+  { id: 'w-6', day: 'Tuesday', slotId: 'p5', time: '02:45 PM – 04:45 PM', course: 'CS205L', courseName: 'OS Kernel Lab', type: 'Laboratory', room: 'Systems Lab 2', section: 'Batch B1', enrolled: 19, status: 'upcoming', spanSlots: 2 },
+
+  // Wednesday
+  { id: 'w-7', day: 'Wednesday', slotId: 'p1', time: '09:00 AM – 10:00 AM', course: 'CS205', courseName: 'Operating Systems', type: 'Lecture', room: 'Room 12', section: 'Section B', enrolled: 38, status: 'upcoming' },
+  { id: 'w-8', day: 'Wednesday', slotId: 'p3', time: '11:30 AM – 12:30 PM', course: 'CS312', courseName: 'Database Systems', type: 'Lecture', room: 'Room 7', section: 'Section A', enrolled: 35, status: 'upcoming' },
+  { id: 'w-9', day: 'Wednesday', slotId: 'p5', time: '02:45 PM – 03:45 PM', course: 'CS101', courseName: 'DS Tutorial & Doubts', type: 'Tutorial', room: 'Room 302', section: 'Section A', enrolled: 42, status: 'upcoming' },
+
+  // Thursday
+  { id: 'w-10', day: 'Thursday', slotId: 'p1', time: '09:00 AM – 10:00 AM', course: 'CS312', courseName: 'Database Systems', type: 'Lecture', room: 'Room 7', section: 'Section A', enrolled: 35, status: 'upcoming' },
+  { id: 'w-11', day: 'Thursday', slotId: 'p3', time: '11:30 AM – 01:30 PM', course: 'CS101L', courseName: 'Data Structures Lab', type: 'Laboratory', room: 'Computing Lab 3', section: 'Batch A2', enrolled: 21, status: 'upcoming', spanSlots: 2 },
+  { id: 'w-12', day: 'Thursday', slotId: 'p5', time: '02:45 PM – 03:45 PM', course: 'CS205', courseName: 'Operating Systems', type: 'Lecture', room: 'Room 12', section: 'Section B', enrolled: 38, status: 'upcoming' },
+
+  // Friday
+  { id: 'w-13', day: 'Friday', slotId: 'p1', time: '09:00 AM – 10:00 AM', course: 'CS101', courseName: 'Data Structures', type: 'Lecture', room: 'Room 302', section: 'Section A', enrolled: 42, status: 'upcoming' },
+  { id: 'w-14', day: 'Friday', slotId: 'p2', time: '10:15 AM – 11:15 AM', course: 'CS205', courseName: 'Operating Systems', type: 'Lecture', room: 'Room 12', section: 'Section B', enrolled: 38, status: 'upcoming' },
+  { id: 'w-15', day: 'Friday', slotId: 'p4', time: '01:30 PM – 03:30 PM', course: 'CS312L', courseName: 'DBMS SQL & Indexing Lab', type: 'Laboratory', room: 'Database Lab 1', section: 'Batch A1', enrolled: 18, status: 'upcoming', spanSlots: 2 },
+
+  // Saturday
+  { id: 'w-16', day: 'Saturday', slotId: 'p2', time: '10:15 AM – 12:15 PM', course: 'ACAD-SEM', courseName: 'Student Project Mentorship', type: 'Tutorial', room: 'Seminar Hall B', section: 'B.Tech 3rd Yr', enrolled: 25, status: 'upcoming', spanSlots: 2 },
+];
+
+// Teaching Plan Syllabus Data
+const REFERENCE_TEACHING_PLAN = {
+  CS101: {
+    courseCode: 'CS101',
+    courseName: 'Data Structures & Algorithms',
+    totalPlannedHours: 40,
+    deliveredHours: 28,
+    completionPct: 70,
+    units: [
+      {
+        unitNumber: 1,
+        title: 'Linear Structures, Stacks & Queues',
+        plannedHours: 8,
+        deliveredHours: 8,
+        status: 'completed',
+        topics: [
+          { id: '1.1', title: 'Asymptotic Complexity & Big-O Notation', planned: 2, delivered: 2, status: 'completed', date: '04 Aug 2026', method: 'Chalk & Board', textbook: 'CLRS Ch. 3' },
+          { id: '1.2', title: 'Dynamic Arrays & Memory Layout', planned: 2, delivered: 2, status: 'completed', date: '08 Aug 2026', method: 'Lecture + Code', textbook: 'Sedgewick Ch. 1' },
+          { id: '1.3', title: 'Singly, Doubly & Circular Linked Lists', planned: 2, delivered: 2, status: 'completed', date: '12 Aug 2026', method: 'Chalk & Board', textbook: 'CLRS Ch. 10' },
+          { id: '1.4', title: 'Stack & Queue Applications (Infix/Postfix)', planned: 2, delivered: 2, status: 'completed', date: '18 Aug 2026', method: 'Problem Solving', textbook: 'CLRS Ch. 10' },
+        ],
+      },
+      {
+        unitNumber: 2,
+        title: 'Trees & Balanced Search Trees',
+        plannedHours: 10,
+        deliveredHours: 10,
+        status: 'completed',
+        topics: [
+          { id: '2.1', title: 'Binary Trees & Recursive Tree Traversals', planned: 2, delivered: 2, status: 'completed', date: '25 Aug 2026', method: 'Lecture', textbook: 'CLRS Ch. 12' },
+          { id: '2.2', title: 'Binary Search Trees (BST) Insertion & Deletion', planned: 2, delivered: 2, status: 'completed', date: '02 Sep 2026', method: 'Lecture + Demo', textbook: 'CLRS Ch. 12' },
+          { id: '2.3', title: 'AVL Trees & Self-Balancing Rotations', planned: 3, delivered: 3, status: 'completed', date: '09 Sep 2026', method: 'Chalk & Board', textbook: 'Sedgewick Ch. 3' },
+          { id: '2.4', title: 'Red-Black Trees & Multi-Way B-Trees', planned: 3, delivered: 3, status: 'completed', date: '16 Sep 2026', method: 'Lecture', textbook: 'CLRS Ch. 13, 18' },
+        ],
+      },
+      {
+        unitNumber: 3,
+        title: 'Priority Queues, Heaps & Disjoint Sets',
+        plannedHours: 8,
+        deliveredHours: 6,
+        status: 'in-progress',
+        topics: [
+          { id: '3.1', title: 'Binary Heaps & Max-Heapify Operations', planned: 2, delivered: 2, status: 'completed', date: '28 Sep 2026', method: 'Chalk & Board', textbook: 'CLRS Ch. 6' },
+          { id: '3.2', title: 'Heapsort & Priority Queue API Design', planned: 2, delivered: 2, status: 'completed', date: '06 Oct 2026', method: 'Lecture + Demo', textbook: 'CLRS Ch. 6' },
+          { id: '3.3', title: 'Disjoint-Set Union (Union-Find with Rank & Path Compression)', planned: 2, delivered: 2, status: 'completed', date: '14 Oct 2026', method: 'Lecture', textbook: 'CLRS Ch. 21' },
+          { id: '3.4', title: 'Fibonacci Heaps & Amortized Complexity Analysis', planned: 2, delivered: 0, status: 'in-progress', date: '28 Oct 2026', method: 'Lecture + Proofs', textbook: 'CLRS Ch. 19' },
+        ],
+      },
+      {
+        unitNumber: 4,
+        title: 'Graph Algorithms & Shortest Paths',
+        plannedHours: 8,
+        deliveredHours: 4,
+        status: 'in-progress',
+        topics: [
+          { id: '4.1', title: 'Graph Representations (Adjacency Matrix vs List)', planned: 2, delivered: 2, status: 'completed', date: '21 Oct 2026', method: 'Chalk & Board', textbook: 'CLRS Ch. 22' },
+          { id: '4.2', title: 'Breadth-First Search (BFS) & Depth-First Search (DFS)', planned: 2, delivered: 2, status: 'completed', date: '26 Oct 2026', method: 'Lecture + Lab Demo', textbook: 'CLRS Ch. 22' },
+          { id: '4.3', title: 'Dijkstra Single-Source Shortest Path Algorithm', planned: 2, delivered: 0, status: 'pending', date: '02 Nov 2026', method: 'Lecture + Tracing', textbook: 'CLRS Ch. 24' },
+          { id: '4.4', title: 'Minimum Spanning Trees (Kruskal & Prim)', planned: 2, delivered: 0, status: 'pending', date: '09 Nov 2026', method: 'Lecture', textbook: 'CLRS Ch. 23' },
+        ],
+      },
+      {
+        unitNumber: 5,
+        title: 'Hash Tables & Algorithmic Paradigms',
+        plannedHours: 6,
+        deliveredHours: 0,
+        status: 'pending',
+        topics: [
+          { id: '5.1', title: 'Direct Addressing & Hash Function Design', planned: 2, delivered: 0, status: 'pending', date: '16 Nov 2026', method: 'Lecture', textbook: 'CLRS Ch. 11' },
+          { id: '5.2', title: 'Collision Resolution (Chaining vs Open Addressing)', planned: 2, delivered: 0, status: 'pending', date: '20 Nov 2026', method: 'Problem Solving', textbook: 'CLRS Ch. 11' },
+          { id: '5.3', title: 'Dynamic Programming vs Greedy Strategies', planned: 2, delivered: 0, status: 'pending', date: '25 Nov 2026', method: 'Lecture + Review', textbook: 'CLRS Ch. 15, 16' },
+        ],
+      },
+    ],
+  },
+  CS205: {
+    courseCode: 'CS205',
+    courseName: 'Operating Systems & Architecture',
+    totalPlannedHours: 42,
+    deliveredHours: 26,
+    completionPct: 62,
+    units: [
+      {
+        unitNumber: 1,
+        title: 'Operating System Overview & Process Management',
+        plannedHours: 8,
+        deliveredHours: 8,
+        status: 'completed',
+        topics: [
+          { id: '1.1', title: 'OS Structures, Kernel Architectures & Dual-Mode Execution', planned: 2, delivered: 2, status: 'completed', date: '05 Aug 2026', method: 'Lecture', textbook: 'Silberschatz Ch. 1, 2' },
+          { id: '1.2', title: 'Process Concepts, Process Control Blocks (PCB) & Context Switching', planned: 2, delivered: 2, status: 'completed', date: '10 Aug 2026', method: 'Chalk & Board', textbook: 'Silberschatz Ch. 3' },
+          { id: '1.3', title: 'Inter-Process Communication (IPC): Pipes, FIFOs & Sockets', planned: 2, delivered: 2, status: 'completed', date: '15 Aug 2026', method: 'Lab Demo', textbook: 'Silberschatz Ch. 3' },
+          { id: '1.4', title: 'Threads, Multithreading Models & POSIX Pthreads', planned: 2, delivered: 2, status: 'completed', date: '20 Aug 2026', method: 'Lecture + Code', textbook: 'Silberschatz Ch. 4' },
+        ],
+      },
+      {
+        unitNumber: 2,
+        title: 'CPU Scheduling & Process Synchronization',
+        plannedHours: 10,
+        deliveredHours: 10,
+        status: 'completed',
+        topics: [
+          { id: '2.1', title: 'Scheduling Criteria: FCFS, SJF, Priority & Round Robin', planned: 3, delivered: 3, status: 'completed', date: '27 Aug 2026', method: 'Problem Solving', textbook: 'Silberschatz Ch. 5' },
+          { id: '2.2', title: 'Critical Section Problem & Peterson Solution', planned: 2, delivered: 2, status: 'completed', date: '04 Sep 2026', method: 'Chalk & Board', textbook: 'Silberschatz Ch. 6' },
+          { id: '2.3', title: 'Hardware Synchronization, Mutex Locks & Semaphores', planned: 3, delivered: 3, status: 'completed', date: '11 Sep 2026', method: 'Lecture + Demo', textbook: 'Silberschatz Ch. 6' },
+          { id: '2.4', title: 'Classic Synchronization: Producer-Consumer & Dining Philosophers', planned: 2, delivered: 2, status: 'completed', date: '18 Sep 2026', method: 'Lab Implementation', textbook: 'Silberschatz Ch. 7' },
+        ],
+      },
+      {
+        unitNumber: 3,
+        title: 'Deadlocks & Prevention Mechanisms',
+        plannedHours: 8,
+        deliveredHours: 8,
+        status: 'completed',
+        topics: [
+          { id: '3.1', title: 'Deadlock Characterization & Resource Allocation Graphs', planned: 2, delivered: 2, status: 'completed', date: '29 Sep 2026', method: 'Chalk & Board', textbook: 'Silberschatz Ch. 8' },
+          { id: '3.2', title: 'Deadlock Prevention & Avoidance (Banker Algorithm)', planned: 3, delivered: 3, status: 'completed', date: '07 Oct 2026', method: 'Problem Solving', textbook: 'Silberschatz Ch. 8' },
+          { id: '3.3', title: 'Deadlock Detection & Recovery Strategies', planned: 3, delivered: 3, status: 'completed', date: '15 Oct 2026', method: 'Lecture', textbook: 'Silberschatz Ch. 8' },
+        ],
+      },
+      {
+        unitNumber: 4,
+        title: 'Main Memory Management & Virtual Memory',
+        plannedHours: 10,
+        deliveredHours: 0,
+        status: 'in-progress',
+        topics: [
+          { id: '4.1', title: 'Address Binding, Logical vs Physical Addresses & Swapping', planned: 2, delivered: 0, status: 'in-progress', date: '29 Oct 2026', method: 'Chalk & Board', textbook: 'Silberschatz Ch. 9' },
+          { id: '4.2', title: 'Contiguous Memory Allocation & Segmentation', planned: 2, delivered: 0, status: 'pending', date: '05 Nov 2026', method: 'Lecture', textbook: 'Silberschatz Ch. 9' },
+          { id: '4.3', title: 'Paging Architecture, Page Tables & TLB Translation', planned: 3, delivered: 0, status: 'pending', date: '12 Nov 2026', method: 'Lecture + Tracing', textbook: 'Silberschatz Ch. 9' },
+          { id: '4.4', title: 'Virtual Memory, Demand Paging & Page Replacement (FIFO, LRU)', planned: 3, delivered: 0, status: 'pending', date: '19 Nov 2026', method: 'Problem Solving', textbook: 'Silberschatz Ch. 10' },
+        ],
+      },
+      {
+        unitNumber: 5,
+        title: 'File Systems & Storage Architecture',
+        plannedHours: 6,
+        deliveredHours: 0,
+        status: 'pending',
+        topics: [
+          { id: '5.1', title: 'File System Interface, Directory Structures & Access Methods', planned: 2, delivered: 0, status: 'pending', date: '23 Nov 2026', method: 'Lecture', textbook: 'Silberschatz Ch. 13' },
+          { id: '5.2', title: 'File System Implementation & Free Space Allocation', planned: 2, delivered: 0, status: 'pending', date: '26 Nov 2026', method: 'Lecture', textbook: 'Silberschatz Ch. 14' },
+          { id: '5.3', title: 'Disk Scheduling Algorithms (SCAN, C-SCAN, LOOK)', planned: 2, delivered: 0, status: 'pending', date: '28 Nov 2026', method: 'Problem Solving', textbook: 'Silberschatz Ch. 11' },
+        ],
+      },
+    ],
+  },
+  CS312: {
+    courseCode: 'CS312',
+    courseName: 'Database Management Systems',
+    totalPlannedHours: 36,
+    deliveredHours: 27,
+    completionPct: 75,
+    units: [
+      {
+        unitNumber: 1,
+        title: 'Database Architecture & ER Modeling',
+        plannedHours: 6,
+        deliveredHours: 6,
+        status: 'completed',
+        topics: [
+          { id: '1.1', title: 'Database System Concepts & Three-Schema Architecture', planned: 2, delivered: 2, status: 'completed', date: '06 Aug 2026', method: 'Lecture', textbook: 'Elmasri Ch. 1, 2' },
+          { id: '1.2', title: 'Entity-Relationship (ER) & Enhanced ER (EER) Modeling', planned: 2, delivered: 2, status: 'completed', date: '13 Aug 2026', method: 'Diagram Workshop', textbook: 'Elmasri Ch. 3' },
+          { id: '1.3', title: 'Relational Model Constraints & ER-to-Relational Mapping', planned: 2, delivered: 2, status: 'completed', date: '20 Aug 2026', method: 'Problem Solving', textbook: 'Elmasri Ch. 9' },
+        ],
+      },
+      {
+        unitNumber: 2,
+        title: 'Relational Algebra & Advanced SQL',
+        plannedHours: 8,
+        deliveredHours: 8,
+        status: 'completed',
+        topics: [
+          { id: '2.1', title: 'Relational Algebra: Select, Project, Join, Set Operations', planned: 2, delivered: 2, status: 'completed', date: '27 Aug 2026', method: 'Chalk & Board', textbook: 'Elmasri Ch. 8' },
+          { id: '2.2', title: 'Complex SQL Queries: Aggregations, GROUP BY, HAVING', planned: 2, delivered: 2, status: 'completed', date: '03 Sep 2026', method: 'Lab Demo', textbook: 'Elmasri Ch. 6' },
+          { id: '2.3', title: 'Subqueries, Correlated Subqueries & Window Functions', planned: 2, delivered: 2, status: 'completed', date: '10 Sep 2026', method: 'Lecture + Lab', textbook: 'Elmasri Ch. 7' },
+          { id: '2.4', title: 'Views, Stored Procedures, Functions & Triggers', planned: 2, delivered: 2, status: 'completed', date: '17 Sep 2026', method: 'Code Walkthrough', textbook: 'Elmasri Ch. 7' },
+        ],
+      },
+      {
+        unitNumber: 3,
+        title: 'Database Normalization & Functional Dependencies',
+        plannedHours: 8,
+        deliveredHours: 8,
+        status: 'completed',
+        topics: [
+          { id: '3.1', title: 'Functional Dependencies & Inference Rules (Armstrong Axioms)', planned: 2, delivered: 2, status: 'completed', date: '24 Sep 2026', method: 'Chalk & Board', textbook: 'Elmasri Ch. 14' },
+          { id: '3.2', title: 'Normal Forms: 1NF, 2NF, 3NF & Boyce-Codd Normal Form (BCNF)', planned: 3, delivered: 3, status: 'completed', date: '01 Oct 2026', method: 'Problem Solving', textbook: 'Elmasri Ch. 14' },
+          { id: '3.3', title: 'Lossless-Join Decomposition & Dependency Preservation', planned: 3, delivered: 3, status: 'completed', date: '08 Oct 2026', method: 'Proofs & Practice', textbook: 'Elmasri Ch. 15' },
+        ],
+      },
+      {
+        unitNumber: 4,
+        title: 'Transaction Management & Concurrency Control',
+        plannedHours: 8,
+        deliveredHours: 5,
+        status: 'in-progress',
+        topics: [
+          { id: '4.1', title: 'ACID Properties & Transaction State Diagram', planned: 2, delivered: 2, status: 'completed', date: '15 Oct 2026', method: 'Lecture', textbook: 'Elmasri Ch. 20' },
+          { id: '4.2', title: 'Schedules: Serializability, Conflict vs View Serializability', planned: 3, delivered: 3, status: 'completed', date: '22 Oct 2026', method: 'Problem Solving', textbook: 'Elmasri Ch. 20' },
+          { id: '4.3', title: 'Two-Phase Locking (2PL), Strict 2PL & Timestamp Ordering', planned: 3, delivered: 0, status: 'in-progress', date: '30 Oct 2026', method: 'Lecture + Proofs', textbook: 'Elmasri Ch. 21' },
+        ],
+      },
+      {
+        unitNumber: 5,
+        title: 'Indexing, B+ Trees & NoSQL Concepts',
+        plannedHours: 6,
+        deliveredHours: 0,
+        status: 'pending',
+        topics: [
+          { id: '5.1', title: 'Indexing Techniques: Primary, Clustering & Secondary Indexes', planned: 2, delivered: 0, status: 'pending', date: '06 Nov 2026', method: 'Lecture', textbook: 'Elmasri Ch. 17' },
+          { id: '5.2', title: 'B-Tree & B+ Tree Index Structures (Search, Insert, Delete)', planned: 2, delivered: 0, status: 'pending', date: '13 Nov 2026', method: 'Tracing Workshop', textbook: 'Elmasri Ch. 17' },
+          { id: '5.3', title: 'Introduction to MongoDB, Document Stores & CAP Theorem', planned: 2, delivered: 0, status: 'pending', date: '20 Nov 2026', method: 'Lecture + Demo', textbook: 'Elmasri Ch. 24' },
+        ],
+      },
+    ],
+  },
+};
+
+// Academic Calendar Events (Autumn Semester 2026)
+const REFERENCE_ACADEMIC_CALENDAR = [
+  { id: 'cal-1', date: '01 Aug 2026', title: 'Semester Commencement & Course Registration', type: 'academic', status: 'past', desc: 'Commencement of instruction for Autumn Semester 2026' },
+  { id: 'cal-2', date: '15 Aug 2026', title: 'Independence Day', type: 'holiday', status: 'past', desc: 'National Holiday · Institutional Holiday' },
+  { id: 'cal-3', date: '15 Sep – 20 Sep 2026', title: 'Continuous Assessment Test 1 (CAT-1)', type: 'exam', status: 'past', desc: 'Written internal assessment for Units 1 & 2' },
+  { id: 'cal-4', date: '02 Oct 2026', title: 'Gandhi Jayanti', type: 'holiday', status: 'past', desc: 'National Holiday · No Classes' },
+  { id: 'cal-5', date: '19 Oct – 24 Oct 2026', title: 'Mid-Term Examinations', type: 'exam', status: 'past', desc: 'Centralized mid-term examinations for all engineering cohorts' },
+  { id: 'cal-6', date: '26 Oct 2026', title: 'Resumption of Regular Classes & Laboratory', type: 'academic', status: 'today', desc: 'Teaching resumed post-midterm break · Biometric attendance active' },
+  { id: 'cal-7', date: '10 Nov – 14 Nov 2026', title: 'Continuous Assessment Test 2 (CAT-2)', type: 'exam', status: 'upcoming', daysUntil: 15, desc: 'Internal assessment covering Units 3 & 4' },
+  { id: 'cal-8', date: '28 Nov 2026', title: 'Last Instructional Day for Theory Classes', type: 'deadline', status: 'upcoming', daysUntil: 33, desc: 'Final date to submit attendance records and condonation petitions' },
+  { id: 'cal-9', date: '01 Dec – 05 Dec 2026', title: 'End-Semester Practical Laboratory Examinations & External Viva', type: 'exam', status: 'upcoming', daysUntil: 36, desc: 'Practical lab exam for CS101L, CS205L, CS312L' },
+  { id: 'cal-10', date: '08 Dec – 22 Dec 2026', title: 'University Theory Board Examinations', type: 'exam', status: 'upcoming', daysUntil: 43, desc: 'Controller of Examinations written end-semester assessments' },
+  { id: 'cal-11', date: '23 Dec 2026', title: 'Winter Vacation Commences', type: 'holiday', status: 'upcoming', daysUntil: 58, desc: 'Semester recess for faculty and students' },
+];
+
+// Historical & Planned Classes Tracker Log
+const REFERENCE_COMPLETED_CLASSES = [
+  { id: 'c-28', lectureNo: 28, course: 'CS101', date: '26 Oct 2026', time: '09:00 AM', room: 'Room 302', type: 'Lecture', topic: 'Breadth-First Search (BFS) & Depth-First Search (DFS)', attended: 39, enrolled: 42, rate: 92.8, method: 'Face Recognition AI' },
+  { id: 'c-27', lectureNo: 27, course: 'CS101', date: '21 Oct 2026', time: '09:00 AM', room: 'Room 302', type: 'Lecture', topic: 'Graph Representations (Adjacency Matrix vs List)', attended: 40, enrolled: 42, rate: 95.2, method: 'Face + QR Token' },
+  { id: 'c-26', lectureNo: 26, course: 'CS205', date: '23 Oct 2026', time: '11:30 AM', room: 'Room 12', type: 'Lecture', topic: 'Deadlock Detection & Recovery Strategies', attended: 35, enrolled: 38, rate: 92.1, method: 'QR Code' },
+  { id: 'c-25', lectureNo: 25, course: 'CS312', date: '22 Oct 2026', time: '11:30 AM', room: 'Room 7', type: 'Lecture', topic: 'Schedules: Serializability & Conflict Serializability', attended: 32, enrolled: 35, rate: 91.4, method: 'Face Recognition AI' },
+  { id: 'c-24', lectureNo: 24, course: 'CS101L', date: '19 Oct 2026', time: '02:00 PM', room: 'Computing Lab 3', type: 'Laboratory', topic: 'Lab 8: Implementation of Max-Heap & Priority Queue in C++', attended: 20, enrolled: 21, rate: 95.2, method: 'Biometric Face Scan' },
+  { id: 'c-23', lectureNo: 23, course: 'CS205L', date: '20 Oct 2026', time: '02:45 PM', room: 'Systems Lab 2', type: 'Laboratory', topic: 'Lab 7: Semaphore Producer-Consumer IPC with Pthreads', attended: 18, enrolled: 19, rate: 94.7, method: 'Biometric Face Scan' },
+  { id: 'c-22', lectureNo: 22, course: 'CS101', date: '14 Oct 2026', time: '09:00 AM', room: 'Room 302', type: 'Lecture', topic: 'Disjoint-Set Union (Union-Find with Path Compression)', attended: 38, enrolled: 42, rate: 90.5, method: 'Face Recognition AI' },
+  { id: 'c-21', lectureNo: 21, course: 'CS205', date: '15 Oct 2026', time: '10:15 AM', room: 'Room 12', type: 'Lecture', topic: 'Deadlock Avoidance & Bankers Algorithm Verification', attended: 36, enrolled: 38, rate: 94.7, method: 'Face + QR Token' },
+  { id: 'c-20', lectureNo: 20, course: 'CS312', date: '15 Oct 2026', time: '09:00 AM', room: 'Room 7', type: 'Lecture', topic: 'Transaction ACID Properties & State Transitions', attended: 33, enrolled: 35, rate: 94.3, method: 'QR Code' },
+  { id: 'c-19', lectureNo: 19, course: 'CS101', date: '06 Oct 2026', time: '09:00 AM', room: 'Room 302', type: 'Lecture', topic: 'Heapsort & Priority Queue API Design', attended: 41, enrolled: 42, rate: 97.6, method: 'Face Recognition AI' },
+];
+
+const REFERENCE_PENDING_CLASSES = [
+  { id: 'p-1', lectureNo: 29, course: 'CS101L', date: 'Today, 26 Oct 2026', time: '02:00 PM – 04:00 PM', room: 'Computing Lab 3', type: 'Laboratory', topic: 'Lab 9: Graph Traversal BFS/DFS & Maze Pathfinding', section: 'Batch A1', enrolled: 21, status: 'Upcoming Today' },
+  { id: 'p-2', lectureNo: 28, course: 'CS312', date: 'Tomorrow, 27 Oct 2026', time: '10:15 AM – 11:15 AM', room: 'Room 7', type: 'Lecture', topic: 'Two-Phase Locking (2PL) Protocol & Strict 2PL', section: 'Section A', enrolled: 35, status: 'Scheduled' },
+  { id: 'p-3', lectureNo: 29, course: 'CS101', date: 'Tomorrow, 27 Oct 2026', time: '01:30 PM – 02:30 PM', room: 'Room 302', type: 'Lecture', topic: 'Fibonacci Heaps & Amortized Complexity Analysis', section: 'Section A', enrolled: 42, status: 'Scheduled' },
+  { id: 'p-4', lectureNo: 10, course: 'CS205L', date: 'Tomorrow, 27 Oct 2026', time: '02:45 PM – 04:45 PM', room: 'Systems Lab 2', type: 'Laboratory', topic: 'Lab 8: POSIX Shared Memory and Message Queues in Linux', section: 'Batch B1', enrolled: 19, status: 'Scheduled' },
+  { id: 'p-5', lectureNo: 27, course: 'CS205', date: 'Wednesday, 28 Oct 2026', time: '09:00 AM – 10:00 AM', room: 'Room 12', type: 'Lecture', topic: 'Address Binding, Logical vs Physical Addresses & Swapping', section: 'Section B', enrolled: 38, status: 'Scheduled' },
+  { id: 'p-6', lectureNo: 29, course: 'CS312', date: 'Wednesday, 28 Oct 2026', time: '11:30 AM – 12:30 PM', room: 'Room 7', type: 'Lecture', topic: 'Timestamp Ordering Protocol & Multi-Version Concurrency', section: 'Section A', enrolled: 35, status: 'Scheduled' },
+  { id: 'p-7', lectureNo: 30, course: 'CS101', date: 'Wednesday, 28 Oct 2026', time: '02:45 PM – 03:45 PM', room: 'Room 302', type: 'Tutorial', topic: 'Problem Solving: Graph Shortest Path Proofs', section: 'Section A', enrolled: 42, status: 'Scheduled' },
+  { id: 'p-8', lectureNo: 30, course: 'CS312', date: 'Thursday, 29 Oct 2026', time: '09:00 AM – 10:00 AM', room: 'Room 7', type: 'Lecture', topic: 'Indexing Techniques: Primary vs Secondary B+ Trees', section: 'Section A', enrolled: 35, status: 'Scheduled' },
+  { id: 'p-9', lectureNo: 11, course: 'CS101L', date: 'Thursday, 29 Oct 2026', time: '11:30 AM – 01:30 PM', room: 'Computing Lab 3', type: 'Laboratory', topic: 'Lab 9 (Batch A2): Graph Traversal BFS/DFS Practice', section: 'Batch A2', enrolled: 21, status: 'Scheduled' },
+  { id: 'p-10', lectureNo: 28, course: 'CS205', date: 'Thursday, 29 Oct 2026', time: '02:45 PM – 03:45 PM', room: 'Room 12', type: 'Lecture', topic: 'Contiguous Memory Allocation & Segmentation Hardware', section: 'Section B', enrolled: 38, status: 'Scheduled' },
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  MAIN COMPONENT: TAB TIMETABLE & TEACHING PLAN
+// ═══════════════════════════════════════════════════════════════
+function TabTimetable({ onShowToast, onNav, user, liveData }) {
+  // Sub-tabs: 'timetable' | 'assigned' | 'teachingPlan' | 'calendar' | 'tracker'
+  const [subTab, setSubTab] = useState('timetable');
+
+  // Timetable view modes: 'daily' | 'weekly'
+  const [timetableMode, setTimetableMode] = useState('daily');
+  const [selectedDay, setSelectedDay] = useState('Monday');
+
+  // Filter criteria for Weekly Timetable
+  const [filterType, setFilterType] = useState('all'); // 'all' | 'lecture' | 'lab'
+  const [filterCourse, setFilterCourse] = useState('all');
+
+  // Teaching Plan active subject
+  const [activePlanCourse, setActivePlanCourse] = useState('CS101');
+  const [teachingPlans, setTeachingPlans] = useState(REFERENCE_TEACHING_PLAN);
+
+  // Tracker filter: 'all' | 'completed' | 'pending'
+  const [trackerMode, setTrackerMode] = useState('all');
+  const [trackerCourse, setTrackerCourse] = useState('all');
+
+  // Calendar filter: 'all' | 'exam' | 'holiday' | 'academic' | 'deadline'
+  const [calendarFilter, setCalendarFilter] = useState('all');
+
+  // Add Slot Modal state
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [slotForm, setSlotForm] = useState({
+    day: 'Monday',
+    slotId: 'p1',
+    course: 'CS101',
+    type: 'Lecture',
+    room: 'Room 302',
+    section: 'Section A',
+  });
+
+  // Local storage timetable entries
+  const STORE_KEY = 'attentify_faculty_timetable_v2';
+  const [weeklySchedule, setWeeklySchedule] = useState(() => {
     try {
       const stored = localStorage.getItem(STORE_KEY);
       if (stored) return JSON.parse(stored);
     } catch (e) {}
-    return [
-      { id: 1, day: 'Monday', slot: '9:00 AM', course: 'CS101', room: 'Lab 3' },
-      { id: 2, day: 'Tuesday', slot: '11:00 AM', course: 'CS205', room: 'Room 12' },
-      { id: 3, day: 'Wednesday', slot: '2:00 PM', course: 'CS312', room: 'Room 7' },
-      { id: 4, day: 'Friday', slot: '9:00 AM', course: 'CS101', room: 'Lab 3' },
-    ];
+    return REFERENCE_WEEKLY_SCHEDULE;
   });
 
-  const [form, setForm] = useState({ day: 'Monday', slot: '9:00 AM', course: '', room: '' });
+  // Next Upcoming Class calculation
+  const nextClass = useMemo(() => {
+    return {
+      course: 'CS101L',
+      courseName: 'Data Structures Programming Lab',
+      type: 'Laboratory',
+      time: '02:00 PM – 04:00 PM',
+      room: 'Computing Lab 3',
+      section: 'Batch A1',
+      enrolled: 21,
+      countdownMinutes: 20,
+    };
+  }, []);
 
-  const handleAdd = (e) => {
+  // Filtered Daily Sessions
+  const dailySessions = useMemo(() => {
+    return weeklySchedule.filter(item => item.day === selectedDay);
+  }, [weeklySchedule, selectedDay]);
+
+  // Handle Add Slot
+  const handleAddSlot = (e) => {
     e.preventDefault();
-    if (!form.course.trim()) return;
-    const newEntry = { ...form, id: Date.now() };
-    const updated = [...entries, newEntry];
-    setEntries(updated);
-    localStorage.setItem(STORE_KEY, JSON.stringify(updated));
-    setForm({ day: 'Monday', slot: '9:00 AM', course: '', room: '' });
-    onShowToast('✅ Class schedule entry added');
+    const timeMatch = TIMETABLE_TIME_SLOTS.find(s => s.id === slotForm.slotId);
+    const newEntry = {
+      id: `custom-${Date.now()}`,
+      day: slotForm.day,
+      slotId: slotForm.slotId,
+      time: timeMatch ? timeMatch.time : '09:00 AM – 10:00 AM',
+      course: slotForm.course,
+      courseName: slotForm.course === 'CS101' ? 'Data Structures' : slotForm.course === 'CS205' ? 'Operating Systems' : 'Database Systems',
+      type: slotForm.type,
+      room: slotForm.room || 'Room 302',
+      section: slotForm.section || 'Section A',
+      enrolled: 40,
+      status: 'upcoming',
+    };
+    const updated = [...weeklySchedule, newEntry];
+    setWeeklySchedule(updated);
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(updated));
+    } catch (err) {}
+    setAddModalOpen(false);
+    if (onShowToast) onShowToast(`✅ Timetable slot added for ${slotForm.day} (${slotForm.course})`);
   };
 
-  const handleDelete = (id) => {
-    const updated = entries.filter(e => e.id !== id);
-    setEntries(updated);
-    localStorage.setItem(STORE_KEY, JSON.stringify(updated));
-    onShowToast('Entry removed');
+  // Toggle Teaching Plan Topic status
+  const handleToggleTopicStatus = (courseCode, unitIdx, topicId) => {
+    setTeachingPlans(prev => {
+      const plan = { ...prev[courseCode] };
+      const units = [...plan.units];
+      const targetUnit = { ...units[unitIdx] };
+      const topics = targetUnit.topics.map(t => {
+        if (t.id === topicId) {
+          const nextStatus = t.status === 'completed' ? 'in-progress' : t.status === 'in-progress' ? 'pending' : 'completed';
+          return {
+            ...t,
+            status: nextStatus,
+            delivered: nextStatus === 'completed' ? t.planned : nextStatus === 'in-progress' ? Math.floor(t.planned / 2) : 0,
+          };
+        }
+        return t;
+      });
+
+      targetUnit.topics = topics;
+      targetUnit.deliveredHours = topics.reduce((acc, cur) => acc + (cur.delivered || 0), 0);
+      targetUnit.status = targetUnit.deliveredHours >= targetUnit.plannedHours ? 'completed' : targetUnit.deliveredHours > 0 ? 'in-progress' : 'pending';
+      units[unitIdx] = targetUnit;
+      plan.units = units;
+
+      const totalDelivered = units.reduce((acc, u) => acc + u.deliveredHours, 0);
+      plan.deliveredHours = totalDelivered;
+      plan.completionPct = Math.round((totalDelivered / plan.totalPlannedHours) * 100);
+
+      return { ...prev, [courseCode]: plan };
+    });
+
+    if (onShowToast) onShowToast('📌 Teaching plan progress updated');
   };
+
+  // Filtered Calendar Events
+  const filteredEvents = useMemo(() => {
+    if (calendarFilter === 'all') return REFERENCE_ACADEMIC_CALENDAR;
+    return REFERENCE_ACADEMIC_CALENDAR.filter(e => e.type === calendarFilter);
+  }, [calendarFilter]);
+
+  // Overall Semester Progress Stats
+  const semesterTrackerStats = useMemo(() => {
+    const totalPlanned = 120;
+    const completed = 81;
+    const pending = 39;
+    const pct = Math.round((completed / totalPlanned) * 100);
+    return { totalPlanned, completed, pending, pct };
+  }, []);
 
   return (
-    <div className="fd-tab-content">
-      <div className="fd-section-header">
-        <div>
-          <h2 className="fd-section-title">Weekly Schedule</h2>
-          <p className="fd-section-sub">Configure and view your regular lecture and laboratory slots</p>
+    <div className="fd-tab-content fd-timetable-module-wrap">
+      {/* ── 1. Top Upcoming Class Alert Banner ─────────────────── */}
+      <div className="fd-upcoming-class-banner">
+        <div className="fd-ucb-left">
+          <div className="fd-ucb-live-badge">
+            <span className="fd-ucb-dot pulse" />
+            <span>NEXT UPCOMING SESSION</span>
+          </div>
+          <div className="fd-ucb-info">
+            <h3 className="fd-ucb-title">
+              <span className="fd-ucb-code">{nextClass.course}</span> · {nextClass.courseName}
+            </h3>
+            <div className="fd-ucb-meta">
+              <span><ClockIcon size={13} /> {nextClass.time} (Today)</span>
+              <span className="fd-meta-divider-dot">·</span>
+              <span><FlaskConicalIcon size={13} /> {nextClass.room}</span>
+              <span className="fd-meta-divider-dot">·</span>
+              <span>{nextClass.section} ({nextClass.enrolled} Students)</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="fd-ucb-actions">
+          <div className="fd-countdown-tag">
+            <span className="fd-cd-label">Starts in</span>
+            <span className="fd-cd-val">{nextClass.countdownMinutes} mins</span>
+          </div>
+          <button
+            type="button"
+            className="fd-btn-primary fd-ucb-launch-btn"
+            onClick={() => {
+              if (onNav) onNav('qr');
+              if (onShowToast) onShowToast(`🚀 Initializing QR & Face Scan session for ${nextClass.course}`);
+            }}
+          >
+            <PlayIcon size={14} color="#FFF" />
+            <span>Start Attendance Session</span>
+          </button>
         </div>
       </div>
 
-      <div className="fd-card" style={{ marginBottom: '24px' }}>
-        <h3 className="fd-card-title" style={{ fontSize: '20px' }}>Add Lecture Slot</h3>
-        <hr className="fd-card-divider" />
-        <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-          <div>
-            <label className="fd-form-label">Day</label>
-            <select className="fd-select" value={form.day} onChange={e => setForm({ ...form, day: e.target.value })}>
-              {DAYS.map(d => <option key={d}>{d}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="fd-form-label">Time Slot</label>
-            <select className="fd-select" value={form.slot} onChange={e => setForm({ ...form, slot: e.target.value })}>
-              {SLOTS.map(s => <option key={s}>{s}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="fd-form-label">Course Code</label>
-            <input
-              type="text"
-              className="fd-input"
-              placeholder="e.g. CS101"
-              value={form.course}
-              onChange={e => setForm({ ...form, course: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label className="fd-form-label">Room / Hall</label>
-            <input
-              type="text"
-              className="fd-input"
-              placeholder="e.g. Lab 3"
-              value={form.room}
-              onChange={e => setForm({ ...form, room: e.target.value })}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button type="submit" className="fd-btn-primary" style={{ width: '100%', height: '38px' }}>
-              <PlusIcon size={14} color="#FFF" />
-              <span>Add to Schedule</span>
-            </button>
-          </div>
-        </form>
+      {/* ── 2. Header & Module Switcher Tabs ───────────────────── */}
+      <div className="fd-page-header-bar fd-no-print">
+        <div className="fd-header-left">
+          <span className="fd-context-pill">ACADEMIC WORKSPACE · SEMESTER 6</span>
+          <h1 className="fd-heading-serif">Timetable &amp; Teaching Plan</h1>
+          <p className="fd-sub-serif">
+            Manage your daily lecture timetable, hands-on lab sessions, syllabus teaching plan, and academic calendar.
+          </p>
+        </div>
+
+        <div className="fd-header-actions-right">
+          <button
+            type="button"
+            className="fd-btn-secondary"
+            onClick={() => setAddModalOpen(true)}
+          >
+            <PlusIcon size={14} color="var(--fd-navy)" />
+            <span>Add / Reschedule Slot</span>
+          </button>
+          <button
+            type="button"
+            className="fd-btn-secondary"
+            onClick={() => {
+              window.print();
+              if (onShowToast) onShowToast('🖨️ Printing official faculty timetable');
+            }}
+          >
+            <PrinterIcon size={14} color="var(--fd-navy)" />
+            <span>Print Timetable</span>
+          </button>
+        </div>
       </div>
 
-      <div className="fd-table-card">
-        <table className="fd-table">
-          <thead>
-            <tr>
-              <th>Day</th>
-              <th>Time</th>
-              <th>Course</th>
-              <th>Room</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.length === 0 ? (
-              <tr>
-                <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--fd-text-secondary)' }}>
-                  No scheduled classes yet.
-                </td>
-              </tr>
-            ) : (
-              entries.map(e => (
-                <tr key={e.id}>
-                  <td><strong>{e.day}</strong></td>
-                  <td>{e.slot}</td>
-                  <td><span className="fd-qr-badge">{e.course}</span></td>
-                  <td>{e.room || '—'}</td>
-                  <td style={{ textAlign: 'right' }}>
+      {/* ── 3. Sub-Navigation Tabs ─────────────────────────────── */}
+      <div className="fd-subnav-pills-card fd-no-print">
+        <div className="fd-subnav-pills-row">
+          <button
+            type="button"
+            className={`fd-subnav-pill ${subTab === 'timetable' ? 'active' : ''}`}
+            onClick={() => setSubTab('timetable')}
+          >
+            <CalendarIcon size={14} color={subTab === 'timetable' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Weekly &amp; Daily Timetable</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-subnav-pill ${subTab === 'assigned' ? 'active' : ''}`}
+            onClick={() => setSubTab('assigned')}
+          >
+            <FlaskConicalIcon size={14} color={subTab === 'assigned' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Assigned Lectures &amp; Labs</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-subnav-pill ${subTab === 'teachingPlan' ? 'active' : ''}`}
+            onClick={() => setSubTab('teachingPlan')}
+          >
+            <LayersIcon size={14} color={subTab === 'teachingPlan' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Teaching Plan</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-subnav-pill ${subTab === 'calendar' ? 'active' : ''}`}
+            onClick={() => setSubTab('calendar')}
+          >
+            <CalendarDaysIcon size={14} color={subTab === 'calendar' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Academic Calendar</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-subnav-pill ${subTab === 'tracker' ? 'active' : ''}`}
+            onClick={() => setSubTab('tracker')}
+          >
+            <ListCheckIcon size={14} color={subTab === 'tracker' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Completed &amp; Pending Classes</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 1: TIMETABLE (DAILY & WEEKLY)
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'timetable' && (
+        <div className="fd-tt-tab-container">
+          {/* Mode Switcher Strip */}
+          <div className="fd-tt-control-bar fd-no-print">
+            <div className="fd-tt-view-toggle">
+              <button
+                type="button"
+                className={`fd-toggle-btn ${timetableMode === 'daily' ? 'active' : ''}`}
+                onClick={() => setTimetableMode('daily')}
+              >
+                <span>Daily Schedule</span>
+              </button>
+              <button
+                type="button"
+                className={`fd-toggle-btn ${timetableMode === 'weekly' ? 'active' : ''}`}
+                onClick={() => setTimetableMode('weekly')}
+              >
+                <span>Weekly Institutional Matrix</span>
+              </button>
+            </div>
+
+            {/* Daily Day Pills */}
+            {timetableMode === 'daily' && (
+              <div className="fd-days-pill-row">
+                {TIMETABLE_DAYS.map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    className={`fd-day-select-pill ${selectedDay === day ? 'active' : ''}`}
+                    onClick={() => setSelectedDay(day)}
+                  >
+                    <span>{day}</span>
+                    {day === 'Monday' && <span className="fd-today-badge">Today</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Weekly Filters */}
+            {timetableMode === 'weekly' && (
+              <div className="fd-tt-filters-group">
+                <select
+                  className="fd-config-select"
+                  value={filterType}
+                  onChange={e => setFilterType(e.target.value)}
+                >
+                  <option value="all">All Session Types</option>
+                  <option value="Lecture">Theory Lectures Only</option>
+                  <option value="Laboratory">Laboratory Sessions Only</option>
+                </select>
+
+                <select
+                  className="fd-config-select"
+                  value={filterCourse}
+                  onChange={e => setFilterCourse(e.target.value)}
+                >
+                  <option value="all">All Assigned Courses</option>
+                  <option value="CS101">CS101 - Data Structures</option>
+                  <option value="CS205">CS205 - Operating Systems</option>
+                  <option value="CS312">CS312 - Database Systems</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* ── Mode 1: Daily Timeline View ── */}
+          {timetableMode === 'daily' && (
+            <div className="fd-daily-timetable-view">
+              <div className="fd-daily-header-card">
+                <div>
+                  <h3 className="fd-card-title">{selectedDay} Teaching Schedule</h3>
+                  <p className="fd-sub-serif">
+                    {dailySessions.length} Scheduled classes on {selectedDay} · Faculty of Engineering
+                  </p>
+                </div>
+                <span className="fd-context-pill">
+                  {selectedDay === 'Monday' ? 'Today · 26 Oct 2026' : 'Regular Timetable'}
+                </span>
+              </div>
+
+              {dailySessions.length === 0 ? (
+                <div className="fd-empty-daily-state">
+                  No classes scheduled for {selectedDay}. Faculty office hours &amp; student mentorship slot.
+                </div>
+              ) : (
+                <div className="fd-daily-timeline-list">
+                  {dailySessions.map((session, idx) => {
+                    const isLab = session.type === 'Laboratory';
+                    return (
+                      <div key={session.id || idx} className={`fd-daily-session-card ${isLab ? 'is-lab' : ''}`}>
+                        <div className="fd-dsc-time-col">
+                          <span className="fd-dsc-time">{session.time}</span>
+                          <span className="fd-dsc-slot-lbl">Period Slot</span>
+                          <span className={`fd-session-status-badge ${session.status}`}>
+                            {session.status.toUpperCase()}
+                          </span>
+                        </div>
+
+                        <div className="fd-dsc-details-col">
+                          <div className="fd-dsc-top-row">
+                            <span className="fd-sub-code-pill font-mono">{session.course}</span>
+                            <span className={`fd-session-type-pill ${isLab ? 'lab' : 'lecture'}`}>
+                              {session.type}
+                            </span>
+                            <span className="fd-dsc-room">{session.room}</span>
+                          </div>
+
+                          <h4 className="fd-dsc-title">{session.courseName}</h4>
+
+                          <div className="fd-dsc-meta-row">
+                            <span><strong>Cohort:</strong> {session.section}</span>
+                            <span className="fd-meta-divider-dot">·</span>
+                            <span><strong>Headcount:</strong> {session.enrolled} Students Enrolled</span>
+                            <span className="fd-meta-divider-dot">·</span>
+                            <span>Biometric Face &amp; QR Terminal Verified</span>
+                          </div>
+                        </div>
+
+                        <div className="fd-dsc-action-col">
+                          <button
+                            type="button"
+                            className="fd-btn-primary"
+                            onClick={() => {
+                              if (onNav) onNav('qr');
+                              if (onShowToast) onShowToast(`🚀 Launching attendance session for ${session.course}`);
+                            }}
+                          >
+                            <PlayIcon size={13} color="#FFF" />
+                            <span>Take Attendance</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="fd-btn-secondary"
+                            onClick={() => {
+                              setSubTab('teachingPlan');
+                              setActivePlanCourse(session.course.replace('L', ''));
+                            }}
+                          >
+                            <LayersIcon size={13} color="var(--fd-navy)" />
+                            <span>Lesson Plan</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Mode 2: Weekly Matrix View ── */}
+          {timetableMode === 'weekly' && (
+            <div className="fd-weekly-matrix-card">
+              <div className="fd-matrix-table-wrap">
+                <table className="fd-weekly-matrix-table">
+                  <thead>
+                    <tr>
+                      <th className="fd-matrix-th-time">Period / Time</th>
+                      {TIMETABLE_DAYS.map(day => (
+                        <th key={day} className={day === 'Monday' ? 'fd-matrix-th-today' : ''}>
+                          {day}
+                          {day === 'Monday' && <span className="fd-today-indicator">TODAY</span>}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {TIMETABLE_TIME_SLOTS.map((slot) => (
+                      <tr key={slot.id}>
+                        <td className="fd-matrix-cell-time">
+                          <span className="fd-slot-label">{slot.label}</span>
+                          <span className="fd-slot-time-text">{slot.time}</span>
+                        </td>
+                        {TIMETABLE_DAYS.map((day) => {
+                          const matches = weeklySchedule.filter(item => {
+                            if (item.day !== day) return false;
+                            if (item.slotId !== slot.id) return false;
+                            if (filterType !== 'all' && item.type !== filterType) return false;
+                            if (filterCourse !== 'all' && item.course !== filterCourse) return false;
+                            return true;
+                          });
+
+                          return (
+                            <td key={day} className="fd-matrix-cell-day">
+                              {matches.map((item) => {
+                                const isLab = item.type === 'Laboratory';
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className={`fd-matrix-block ${isLab ? 'is-lab' : 'is-lecture'}`}
+                                    onClick={() => {
+                                      if (onNav) onNav('qr');
+                                      if (onShowToast) onShowToast(`Launch attendance for ${item.course}`);
+                                    }}
+                                  >
+                                    <div className="fd-mb-header">
+                                      <span className="fd-mb-code">{item.course}</span>
+                                      <span className="fd-mb-type">{isLab ? 'LAB' : 'LEC'}</span>
+                                    </div>
+                                    <span className="fd-mb-title">{item.courseName}</span>
+                                    <span className="fd-mb-room">{item.room}</span>
+                                    <span className="fd-mb-sec">{item.section}</span>
+                                  </div>
+                                );
+                              })}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 2: ASSIGNED LECTURE & LABORATORY SESSIONS
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'assigned' && (
+        <div className="fd-assigned-sessions-container">
+          <div className="fd-assigned-kpi-strip">
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Assigned Subjects</span>
+              <span className="fd-rkpi-val">{REFERENCE_ASSIGNED_COURSES.length}</span>
+              <span className="fd-rkpi-sub">3 Lectures · 2 Labs</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Weekly Contact Hours</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-navy)' }}>
+                {REFERENCE_ASSIGNED_COURSES.reduce((acc, c) => acc + c.weeklyHours, 0)} hrs/wk
+              </span>
+              <span className="fd-rkpi-sub">Institutional Target: 15 hrs</span>
+            </div>
+            <div className="fd-rkpi-card safe">
+              <span className="fd-rkpi-label">Total Cohort Strength</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-success)' }}>
+                {REFERENCE_ASSIGNED_COURSES.reduce((acc, c) => acc + c.enrolled, 0)}
+              </span>
+              <span className="fd-rkpi-sub">Registered Students</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Overall Syllabus Pace</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-navy)' }}>
+                {Math.round(REFERENCE_ASSIGNED_COURSES.reduce((acc, c) => acc + c.syllabusPct, 0) / REFERENCE_ASSIGNED_COURSES.length)}%
+              </span>
+              <span className="fd-rkpi-sub">On Track for Dec Exams</span>
+            </div>
+          </div>
+
+          <div className="fd-assigned-cards-grid">
+            {REFERENCE_ASSIGNED_COURSES.map((course) => {
+              const isLab = course.type === 'Laboratory';
+              return (
+                <div key={course.code} className={`fd-assigned-course-card ${isLab ? 'is-lab' : ''}`}>
+                  <div className="fd-acc-top">
+                    <span className="fd-sub-code-pill font-mono">{course.code}</span>
+                    <span className={`fd-session-type-pill ${isLab ? 'lab' : 'lecture'}`}>
+                      {course.type}
+                    </span>
+                    <span className="fd-acc-credits">{course.credits} Credits · {course.weeklyHours} hrs/wk</span>
+                  </div>
+
+                  <h3 className="fd-acc-title">{course.title}</h3>
+                  <p className="fd-acc-desc">{course.description}</p>
+
+                  <div className="fd-acc-specs-grid">
+                    <div className="fd-acc-spec-item">
+                      <span className="fd-spec-label">Assigned Venue:</span>
+                      <span className="fd-spec-val">{course.room}</span>
+                    </div>
+                    <div className="fd-acc-spec-item">
+                      <span className="fd-spec-label">Class &amp; Section:</span>
+                      <span className="fd-spec-val">{course.semester} · {course.section}</span>
+                    </div>
+                    <div className="fd-acc-spec-item">
+                      <span className="fd-spec-label">Class Headcount:</span>
+                      <span className="fd-spec-val font-mono">{course.enrolled} Students</span>
+                    </div>
+                    <div className="fd-acc-spec-item">
+                      <span className="fd-spec-label">Exam Eligibility:</span>
+                      <span className="fd-spec-val font-bold">{course.type === 'Laboratory' ? '80% Mandatory' : '75% Required'}</span>
+                    </div>
+                  </div>
+
+                  <div className="fd-acc-progress-section">
+                    <div className="fd-acc-prog-labels">
+                      <span>Syllabus Completion</span>
+                      <span className="font-bold">{course.completedClasses} / {course.plannedClasses} Sessions ({course.syllabusPct}%)</span>
+                    </div>
+                    <div className="fd-pct-bar-bg">
+                      <div
+                        className="fd-pct-bar-fill"
+                        style={{
+                          width: `${course.syllabusPct}%`,
+                          backgroundColor: isLab ? 'var(--fd-success)' : 'var(--fd-navy)',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="fd-acc-days-list">
+                    <span className="fd-acc-days-title">Scheduled Weekly Slots:</span>
+                    <div className="fd-acc-days-tags">
+                      {course.days.map((d, i) => (
+                        <span key={i} className="fd-slot-pill">{d}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="fd-acc-footer">
                     <button
                       type="button"
-                      className="fd-btn-outline"
-                      style={{ height: '30px', padding: '0 8px', color: 'var(--fd-error)' }}
-                      onClick={() => handleDelete(e.id)}
+                      className="fd-btn-secondary"
+                      onClick={() => {
+                        setSubTab('teachingPlan');
+                        setActivePlanCourse(course.code.replace('L', ''));
+                      }}
                     >
-                      <TrashIcon size={13} />
+                      <LayersIcon size={13} color="var(--fd-navy)" />
+                      <span>View Teaching Plan</span>
                     </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+
+                    <button
+                      type="button"
+                      className="fd-btn-primary"
+                      onClick={() => {
+                        if (onNav) onNav('qr');
+                        if (onShowToast) onShowToast(`Launch attendance session for ${course.code}`);
+                      }}
+                    >
+                      <PlayIcon size={13} color="#FFF" />
+                      <span>Launch Session</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 3: TEACHING PLAN (SYLLABUS & TOPICS)
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'teachingPlan' && (
+        <div className="fd-teaching-plan-container">
+          {/* Course Switcher Strip */}
+          <div className="fd-tp-switcher-card fd-no-print">
+            <div className="fd-tp-courses-row">
+              {['CS101', 'CS205', 'CS312'].map((cCode) => {
+                const plan = teachingPlans[cCode];
+                const isSelected = activePlanCourse === cCode;
+                return (
+                  <button
+                    key={cCode}
+                    type="button"
+                    className={`fd-tp-course-btn ${isSelected ? 'active' : ''}`}
+                    onClick={() => setActivePlanCourse(cCode)}
+                  >
+                    <div className="fd-tpc-btn-top">
+                      <span className="fd-tpc-code">{cCode}</span>
+                      <span className="fd-tpc-pct">{plan.completionPct}% Completed</span>
+                    </div>
+                    <span className="fd-tpc-name">{plan.courseName}</span>
+                    <div className="fd-pct-bar-bg" style={{ height: '4px', marginTop: '6px' }}>
+                      <div className="fd-pct-bar-fill" style={{ width: `${plan.completionPct}%`, backgroundColor: 'var(--fd-navy)' }} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active Course Overview Strip */}
+          {(() => {
+            const currentPlan = teachingPlans[activePlanCourse];
+            return (
+              <div className="fd-tp-content-wrap">
+                <div className="fd-tp-overview-card">
+                  <div>
+                    <h3 className="fd-card-title">{currentPlan.courseCode}: {currentPlan.courseName} Teaching Plan</h3>
+                    <p className="fd-sub-serif">
+                      Academic Syllabus &amp; Lecture Delivery Schedule · Units 1 to 5
+                    </p>
+                  </div>
+
+                  <div className="fd-tp-stats-badge-group">
+                    <div className="fd-tp-metric-pill">
+                      <span className="fd-tp-lbl">Planned Hours:</span>
+                      <span className="fd-tp-val">{currentPlan.totalPlannedHours} hrs</span>
+                    </div>
+                    <div className="fd-tp-metric-pill">
+                      <span className="fd-tp-lbl">Delivered:</span>
+                      <span className="fd-tp-val font-bold" style={{ color: 'var(--fd-success)' }}>
+                        {currentPlan.deliveredHours} hrs
+                      </span>
+                    </div>
+                    <div className="fd-tp-metric-pill">
+                      <span className="fd-tp-lbl">Remaining:</span>
+                      <span className="fd-tp-val font-bold" style={{ color: 'var(--fd-error)' }}>
+                        {currentPlan.totalPlannedHours - currentPlan.deliveredHours} hrs
+                      </span>
+                    </div>
+                    <div className="fd-tp-metric-pill">
+                      <span className="fd-tp-lbl">Completion:</span>
+                      <span className="fd-tp-val font-bold">{currentPlan.completionPct}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Units List */}
+                <div className="fd-tp-units-list">
+                  {currentPlan.units.map((unit, unitIdx) => (
+                    <div key={unit.unitNumber} className={`fd-tp-unit-card status-${unit.status}`}>
+                      <div className="fd-unit-header-bar">
+                        <div className="fd-uh-left">
+                          <span className="fd-unit-num-badge">UNIT {unit.unitNumber}</span>
+                          <h4 className="fd-unit-title">{unit.title}</h4>
+                        </div>
+                        <div className="fd-uh-right">
+                          <span className="fd-unit-hours-stat">
+                            {unit.deliveredHours} / {unit.plannedHours} Hours Completed
+                          </span>
+                          <span className={`fd-unit-status-pill ${unit.status}`}>
+                            {unit.status.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Topics Table */}
+                      <div className="fd-unit-topics-table-wrap">
+                        <table className="fd-unit-topics-table">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '8%' }}>ID</th>
+                              <th style={{ width: '38%' }}>Topic Name / Module</th>
+                              <th style={{ width: '12%' }}>Hours</th>
+                              <th style={{ width: '16%' }}>Pedagogy</th>
+                              <th style={{ width: '14%' }}>Textbook Ref</th>
+                              <th style={{ width: '12%', textAlign: 'right' }}>Status / Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {unit.topics.map((t) => (
+                              <tr key={t.id} className={t.status === 'completed' ? 'fd-row-completed' : ''}>
+                                <td className="font-mono font-bold">{t.id}</td>
+                                <td>
+                                  <span className="fd-topic-title-text">{t.title}</span>
+                                  {t.date && (
+                                    <span className="fd-topic-date-text">
+                                      {t.status === 'completed' ? `Delivered on ${t.date}` : `Target: ${t.date}`}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="font-mono">
+                                  <strong>{t.delivered}</strong> / {t.planned} hrs
+                                </td>
+                                <td>
+                                  <span className="fd-pedagogy-badge">{t.method}</span>
+                                </td>
+                                <td className="fd-text-muted">{t.textbook}</td>
+                                <td style={{ textAlign: 'right' }}>
+                                  <button
+                                    type="button"
+                                    className={`fd-status-toggle-btn ${t.status}`}
+                                    onClick={() => handleToggleTopicStatus(activePlanCourse, unitIdx, t.id)}
+                                    title="Click to toggle status (Completed / In Progress / Pending)"
+                                  >
+                                    {t.status === 'completed' && <CheckCircleIcon size={12} />}
+                                    <span>{t.status === 'completed' ? 'Delivered' : t.status === 'in-progress' ? 'In Progress' : 'Pending'}</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 4: ACADEMIC CALENDAR
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'calendar' && (
+        <div className="fd-academic-calendar-container">
+          <div className="fd-cal-header-bar fd-no-print">
+            <div>
+              <h3 className="fd-card-title">Autumn Semester 2026 Academic Calendar</h3>
+              <p className="fd-sub-serif">Official university key dates, examinations, holidays, and deadlines</p>
+            </div>
+
+            <div className="fd-cal-filters-row">
+              <button
+                type="button"
+                className={`fd-preset-pill ${calendarFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setCalendarFilter('all')}
+              >
+                All Events
+              </button>
+              <button
+                type="button"
+                className={`fd-preset-pill ${calendarFilter === 'exam' ? 'active' : ''}`}
+                onClick={() => setCalendarFilter('exam')}
+              >
+                Exams &amp; Tests
+              </button>
+              <button
+                type="button"
+                className={`fd-preset-pill ${calendarFilter === 'holiday' ? 'active' : ''}`}
+                onClick={() => setCalendarFilter('holiday')}
+              >
+                Holidays
+              </button>
+              <button
+                type="button"
+                className={`fd-preset-pill ${calendarFilter === 'deadline' ? 'active' : ''}`}
+                onClick={() => setCalendarFilter('deadline')}
+              >
+                Academic Deadlines
+              </button>
+            </div>
+          </div>
+
+          <div className="fd-calendar-timeline-cards">
+            {filteredEvents.map((evt) => (
+              <div key={evt.id} className={`fd-cal-event-card type-${evt.type} status-${evt.status}`}>
+                <div className="fd-cec-date-col">
+                  <span className="fd-cec-date-text">{evt.date}</span>
+                  <span className={`fd-cec-type-tag ${evt.type}`}>
+                    {evt.type.toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="fd-cec-details-col">
+                  <h4 className="fd-cec-title">{evt.title}</h4>
+                  <p className="fd-cec-desc">{evt.desc}</p>
+                </div>
+
+                <div className="fd-cec-status-col">
+                  {evt.status === 'today' ? (
+                    <span className="fd-today-pill">
+                      <span className="fd-today-pulse-dot" /> ACTIVE TODAY
+                    </span>
+                  ) : evt.status === 'past' ? (
+                    <span className="fd-past-pill">✓ COMPLETED</span>
+                  ) : (
+                    <span className="fd-upcoming-pill">
+                      IN {evt.daysUntil} DAYS
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 5: COMPLETED & PENDING CLASSES TRACKER
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'tracker' && (
+        <div className="fd-classes-tracker-container">
+          {/* High-level Progress KPI Cards */}
+          <div className="fd-tracker-kpi-strip">
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Semester Classes Planned</span>
+              <span className="fd-rkpi-val">{semesterTrackerStats.totalPlanned}</span>
+              <span className="fd-rkpi-sub">Across All 3 Subjects</span>
+            </div>
+            <div className="fd-rkpi-card safe">
+              <span className="fd-rkpi-label">Completed Classes</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-success)' }}>
+                {semesterTrackerStats.completed}
+              </span>
+              <span className="fd-rkpi-sub">{semesterTrackerStats.pct}% Syllabus Delivered</span>
+            </div>
+            <div className="fd-rkpi-card warning">
+              <span className="fd-rkpi-label">Pending Classes</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-error)' }}>
+                {semesterTrackerStats.pending}
+              </span>
+              <span className="fd-rkpi-sub">Remaining Before Dec Exams</span>
+            </div>
+            <div className="fd-rkpi-card">
+              <span className="fd-rkpi-label">Curriculum Schedule Health</span>
+              <span className="fd-rkpi-val" style={{ color: 'var(--fd-navy)' }}>
+                +2 Ahead
+              </span>
+              <span className="fd-rkpi-sub">2 Buffer Sessions in Hand</span>
+            </div>
+          </div>
+
+          {/* Subject-Wise Progress Summary */}
+          <div className="fd-tracker-subj-cards-row">
+            {REFERENCE_ASSIGNED_COURSES.map((c) => (
+              <div key={c.code} className="fd-tracker-subj-card">
+                <div className="fd-tsc-header">
+                  <span className="fd-sub-code-pill font-mono">{c.code}</span>
+                  <span className="fd-tsc-pct font-bold">{c.syllabusPct}%</span>
+                </div>
+                <h4 className="fd-tsc-title">{c.title}</h4>
+                <div className="fd-tsc-ratio-row">
+                  <span><strong>{c.completedClasses}</strong> Delivered</span>
+                  <span><strong>{c.pendingClasses}</strong> Remaining</span>
+                </div>
+                <div className="fd-pct-bar-bg" style={{ height: '5px' }}>
+                  <div className="fd-pct-bar-fill" style={{ width: `${c.syllabusPct}%`, backgroundColor: 'var(--fd-navy)' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Controls Bar */}
+          <div className="fd-reports-config-card fd-no-print">
+            <div className="fd-config-row">
+              <div className="fd-config-item">
+                <label className="fd-config-lbl">Status View:</label>
+                <select
+                  className="fd-config-select"
+                  value={trackerMode}
+                  onChange={e => setTrackerMode(e.target.value)}
+                >
+                  <option value="all">All Evaluated Classes (Completed &amp; Pending)</option>
+                  <option value="completed">Completed Classes Log Only</option>
+                  <option value="pending">Upcoming &amp; Pending Classes Only</option>
+                </select>
+              </div>
+
+              <div className="fd-config-item">
+                <label className="fd-config-lbl">Course Filter:</label>
+                <select
+                  className="fd-config-select"
+                  value={trackerCourse}
+                  onChange={e => setTrackerCourse(e.target.value)}
+                >
+                  <option value="all">All Assigned Courses</option>
+                  <option value="CS101">CS101 / CS101L - Data Structures</option>
+                  <option value="CS205">CS205 / CS205L - Operating Systems</option>
+                  <option value="CS312">CS312 - Database Systems</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* 1. Pending Classes Schedule Table */}
+          {(trackerMode === 'all' || trackerMode === 'pending') && (
+            <div className="fd-report-table-card" style={{ marginBottom: '24px' }}>
+              <div className="fd-table-header-bar">
+                <div>
+                  <h3 className="fd-card-title">Pending &amp; Upcoming Lecture Schedule</h3>
+                  <p className="fd-table-header-meta">Scheduled future teaching sessions to complete semester requirements</p>
+                </div>
+                <span className="fd-context-pill">
+                  {REFERENCE_PENDING_CLASSES.length} Classes Pending
+                </span>
+              </div>
+
+              <div className="fd-report-table-wrap">
+                <table className="fd-report-data-table">
+                  <thead>
+                    <tr>
+                      <th>Lecture #</th>
+                      <th>Scheduled Date &amp; Time</th>
+                      <th>Course</th>
+                      <th>Room</th>
+                      <th>Type</th>
+                      <th>Planned Syllabus Module / Topic</th>
+                      <th>Section</th>
+                      <th style={{ textAlign: 'right' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {REFERENCE_PENDING_CLASSES
+                      .filter(c => trackerCourse === 'all' || c.course.startsWith(trackerCourse))
+                      .map((cls) => (
+                        <tr key={cls.id}>
+                          <td className="font-mono font-bold">L-{cls.lectureNo}</td>
+                          <td>
+                            <div className="fd-student-cell-compact">
+                              <span className="fd-st-name">{cls.date}</span>
+                              <span className="fd-st-email">{cls.time}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="fd-sub-code-pill font-mono">{cls.course}</span>
+                          </td>
+                          <td>{cls.room}</td>
+                          <td>
+                            <span className={`fd-session-type-pill ${cls.type === 'Laboratory' ? 'lab' : 'lecture'}`}>
+                              {cls.type}
+                            </span>
+                          </td>
+                          <td className="font-bold">{cls.topic}</td>
+                          <td>{cls.section}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <span className="fd-mini-status-pill safe">
+                              {cls.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 2. Completed Classes Historical Ledger */}
+          {(trackerMode === 'all' || trackerMode === 'completed') && (
+            <div className="fd-report-table-card">
+              <div className="fd-table-header-bar">
+                <div>
+                  <h3 className="fd-card-title">Completed Lectures &amp; Labs Audit Log</h3>
+                  <p className="fd-table-header-meta">Historical attendance and topic delivery verification</p>
+                </div>
+                <span className="fd-context-pill">
+                  {REFERENCE_COMPLETED_CLASSES.length} Delivered Sessions Shown
+                </span>
+              </div>
+
+              <div className="fd-report-table-wrap">
+                <table className="fd-report-data-table">
+                  <thead>
+                    <tr>
+                      <th>Lecture #</th>
+                      <th>Conducted Date</th>
+                      <th>Course</th>
+                      <th>Room</th>
+                      <th>Type</th>
+                      <th>Topic Covered</th>
+                      <th>Turnout</th>
+                      <th>Attendance Rate</th>
+                      <th style={{ textAlign: 'right' }}>Verification</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {REFERENCE_COMPLETED_CLASSES
+                      .filter(c => trackerCourse === 'all' || c.course.startsWith(trackerCourse))
+                      .map((cls) => (
+                        <tr key={cls.id}>
+                          <td className="font-mono font-bold">L-{cls.lectureNo}</td>
+                          <td>
+                            <span className="fd-st-name">{cls.date}</span>
+                          </td>
+                          <td>
+                            <span className="fd-sub-code-pill font-mono">{cls.course}</span>
+                          </td>
+                          <td>{cls.room}</td>
+                          <td>
+                            <span className={`fd-session-type-pill ${cls.type === 'Laboratory' ? 'lab' : 'lecture'}`}>
+                              {cls.type}
+                            </span>
+                          </td>
+                          <td className="font-bold">{cls.topic}</td>
+                          <td className="font-mono">
+                            {cls.attended} / {cls.enrolled}
+                          </td>
+                          <td>
+                            <span className="fd-pct-badge safe">{cls.rate}%</span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div className="fd-verif-cell" style={{ justifyContent: 'flex-end' }}>
+                              <ShieldCheckIcon size={13} color="var(--fd-success)" />
+                              <span>{cls.method}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Add / Reschedule Slot Modal ────────────────────────── */}
+      {addModalOpen && (
+        <div className="fd-modal-overlay" onClick={() => setAddModalOpen(false)} role="dialog" aria-modal="true">
+          <div className="fd-modal-container fd-add-slot-modal" onClick={e => e.stopPropagation()}>
+            <div className="fd-modal-header-bar">
+              <div>
+                <h2 className="fd-modal-title">Add / Reschedule Timetable Slot</h2>
+                <p className="fd-modal-sub">Add a regular lecture, lab, or tutorial period to your schedule</p>
+              </div>
+              <button
+                type="button"
+                className="fd-modal-close-btn"
+                onClick={() => setAddModalOpen(false)}
+                aria-label="Close modal"
+              >
+                <XIcon size={18} color="var(--fd-text-secondary)" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSlot} className="fd-add-slot-form">
+              <div className="fd-form-grid-2col">
+                <div className="fd-field">
+                  <label className="fd-label">Day of Week:</label>
+                  <select
+                    className="fd-config-select"
+                    value={slotForm.day}
+                    onChange={e => setSlotForm({ ...slotForm, day: e.target.value })}
+                  >
+                    {TIMETABLE_DAYS.map(d => <option key={d}>{d}</option>)}
+                  </select>
+                </div>
+
+                <div className="fd-field">
+                  <label className="fd-label">Time Slot / Period:</label>
+                  <select
+                    className="fd-config-select"
+                    value={slotForm.slotId}
+                    onChange={e => setSlotForm({ ...slotForm, slotId: e.target.value })}
+                  >
+                    {TIMETABLE_TIME_SLOTS.map(s => (
+                      <option key={s.id} value={s.id}>{s.label} ({s.time})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="fd-field">
+                  <label className="fd-label">Course Code:</label>
+                  <select
+                    className="fd-config-select"
+                    value={slotForm.course}
+                    onChange={e => setSlotForm({ ...slotForm, course: e.target.value })}
+                  >
+                    <option value="CS101">CS101 - Data Structures</option>
+                    <option value="CS101L">CS101L - Data Structures Lab</option>
+                    <option value="CS205">CS205 - Operating Systems</option>
+                    <option value="CS205L">CS205L - OS Kernel Lab</option>
+                    <option value="CS312">CS312 - Database Systems</option>
+                  </select>
+                </div>
+
+                <div className="fd-field">
+                  <label className="fd-label">Session Type:</label>
+                  <select
+                    className="fd-config-select"
+                    value={slotForm.type}
+                    onChange={e => setSlotForm({ ...slotForm, type: e.target.value })}
+                  >
+                    <option value="Lecture">Theory Lecture</option>
+                    <option value="Laboratory">Laboratory Session</option>
+                    <option value="Tutorial">Tutorial / Mentorship</option>
+                  </select>
+                </div>
+
+                <div className="fd-field">
+                  <label className="fd-label">Room / Laboratory Venue:</label>
+                  <input
+                    type="text"
+                    className="fd-config-date-input"
+                    value={slotForm.room}
+                    onChange={e => setSlotForm({ ...slotForm, room: e.target.value })}
+                    placeholder="e.g. Room 302, Computing Lab 3"
+                    required
+                  />
+                </div>
+
+                <div className="fd-field">
+                  <label className="fd-label">Class &amp; Section / Batch:</label>
+                  <input
+                    type="text"
+                    className="fd-config-date-input"
+                    value={slotForm.section}
+                    onChange={e => setSlotForm({ ...slotForm, section: e.target.value })}
+                    placeholder="e.g. Section A, Batch B1"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="fd-modal-footer">
+                <button
+                  type="button"
+                  className="fd-btn-secondary"
+                  onClick={() => setAddModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="fd-btn-primary"
+                >
+                  <PlusIcon size={14} color="#FFF" />
+                  <span>Save to Schedule</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -8031,7 +9473,7 @@ export default function FacultyDashboardPage() {
           )}
 
           {activeTab === 'timetable' && (
-            <TabTimetable onShowToast={showToast} />
+            <TabTimetable onShowToast={showToast} onNav={navigate} user={user} liveData={liveData} />
           )}
 
           {activeTab === 'assignments' && (

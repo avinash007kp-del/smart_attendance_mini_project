@@ -6976,3 +6976,1323 @@
     gap: 20px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   TIMETABLE & TEACHING PLAN WORKSPACE SYSTEM
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Module Wrapper */
+.fd-timetable-module-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── 1. Top Upcoming Class Alert Banner ─────────────────────── */
+.fd-upcoming-class-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-left: 4px solid var(--fd-navy);
+  border-radius: 4px;
+  padding: 18px 24px;
+  box-shadow: 0 2px 10px rgba(22, 47, 68, 0.05);
+  flex-wrap: wrap;
+}
+
+.fd-ucb-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.fd-ucb-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--fd-success);
+}
+
+.fd-ucb-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--fd-success);
+}
+
+.fd-ucb-dot.pulse {
+  animation: fdPulseGreen 1.6s infinite;
+}
+
+@keyframes fdPulseGreen {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(85, 126, 109, 0.7); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(85, 126, 109, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(85, 126, 109, 0); }
+}
+
+.fd-ucb-title {
+  font-family: var(--fd-font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.fd-ucb-code {
+  font-family: monospace;
+  font-weight: 700;
+  padding: 2px 8px;
+  background-color: #EAEFEA;
+  color: var(--fd-navy);
+  border-radius: 3px;
+  font-size: 15px;
+}
+
+.fd-ucb-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--fd-text-secondary);
+  flex-wrap: wrap;
+}
+
+.fd-ucb-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fd-meta-divider-dot {
+  color: #B0B7B3;
+  font-weight: bold;
+}
+
+.fd-ucb-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fd-countdown-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.fd-cd-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fd-text-secondary);
+}
+
+.fd-cd-val {
+  font-family: var(--fd-font-serif);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--fd-navy);
+}
+
+.fd-ucb-launch-btn {
+  height: 42px;
+  padding: 0 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* ── 2. Sub-Navigation Pills Card ───────────────────────────── */
+.fd-subnav-pills-card {
+  background-color: var(--fd-card-bg, #FCFBF9);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  padding: 6px;
+}
+
+.fd-subnav-pills-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.fd-subnav-pill {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.fd-subnav-pill:hover {
+  color: var(--fd-navy);
+  background-color: rgba(22, 47, 68, 0.04);
+}
+
+.fd-subnav-pill.active {
+  background-color: #FFFFFF;
+  color: var(--fd-navy);
+  border-color: var(--fd-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+}
+
+/* ── 3. Timetable Controls & Day Selector ───────────────────── */
+.fd-tt-tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fd-tt-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background-color: var(--fd-card-bg);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  padding: 12px 18px;
+}
+
+.fd-tt-view-toggle {
+  display: inline-flex;
+  background-color: #ECEEEA;
+  border-radius: 4px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.fd-toggle-btn {
+  height: 32px;
+  padding: 0 14px;
+  background-color: transparent;
+  border: none;
+  border-radius: 3px;
+  font-family: var(--fd-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fd-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fd-toggle-btn.active {
+  background-color: #FFFFFF;
+  color: var(--fd-navy);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.fd-days-pill-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fd-day-select-pill {
+  height: 32px;
+  padding: 0 12px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 3px;
+  font-family: var(--fd-font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--fd-navy);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.fd-day-select-pill:hover {
+  background-color: var(--fd-nav-active);
+}
+
+.fd-day-select-pill.active {
+  background-color: var(--fd-navy);
+  border-color: var(--fd-navy);
+  color: #FFFFFF;
+}
+
+.fd-day-select-pill.active .fd-today-badge {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+.fd-today-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background-color: #E8EEEA;
+  color: var(--fd-success);
+  text-transform: uppercase;
+}
+
+.fd-tt-filters-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── 4. Daily Schedule Timeline ────────────────────────────── */
+.fd-daily-timetable-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fd-daily-header-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: var(--fd-card-bg);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+}
+
+.fd-daily-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fd-daily-session-card {
+  display: grid;
+  grid-template-columns: 190px 1fr 200px;
+  gap: 20px;
+  align-items: center;
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  padding: 18px 22px;
+  transition: all 0.15s ease;
+}
+
+.fd-daily-session-card:hover {
+  border-color: var(--fd-navy);
+  box-shadow: 0 4px 14px rgba(22, 47, 68, 0.05);
+}
+
+.fd-daily-session-card.is-lab {
+  border-left: 4px solid var(--fd-success);
+}
+
+.fd-dsc-time-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fd-dsc-time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fd-navy);
+}
+
+.fd-dsc-slot-lbl {
+  font-size: 11px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-session-status-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  margin-top: 4px;
+}
+
+.fd-session-status-badge.completed {
+  background-color: #E8EEEA;
+  color: var(--fd-success);
+}
+
+.fd-session-status-badge.upcoming {
+  background-color: #F8F9F7;
+  color: var(--fd-navy);
+  border: 1px solid var(--fd-border);
+}
+
+.fd-session-status-badge.ongoing {
+  background-color: #FDF4F2;
+  color: var(--fd-error);
+}
+
+.fd-dsc-details-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fd-dsc-top-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fd-session-type-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.fd-session-type-pill.lecture {
+  background-color: #ECEEEA;
+  color: var(--fd-navy);
+}
+
+.fd-session-type-pill.lab {
+  background-color: #E8EEEA;
+  color: var(--fd-success);
+}
+
+.fd-dsc-room {
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+  font-weight: 500;
+}
+
+.fd-dsc-title {
+  font-family: var(--fd-font-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+}
+
+.fd-dsc-meta-row {
+  font-size: 12px;
+  color: var(--fd-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fd-dsc-action-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+/* ── 5. Weekly Matrix View ─────────────────────────────────── */
+.fd-weekly-matrix-card {
+  background-color: var(--fd-card-bg);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.fd-matrix-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fd-weekly-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--fd-font-sans);
+  min-width: 900px;
+}
+
+.fd-weekly-matrix-table th {
+  padding: 12px 14px;
+  background-color: #FAF9F6;
+  border: 1px solid var(--fd-border);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fd-navy);
+  text-align: center;
+}
+
+.fd-matrix-th-time {
+  width: 150px;
+  text-align: left !important;
+}
+
+.fd-matrix-th-today {
+  background-color: #F0F4F1 !important;
+  color: var(--fd-success) !important;
+}
+
+.fd-today-indicator {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--fd-success);
+  margin-top: 2px;
+}
+
+.fd-weekly-matrix-table td {
+  border: 1px solid var(--fd-border);
+  vertical-align: top;
+  padding: 8px;
+  height: 80px;
+}
+
+.fd-matrix-cell-time {
+  background-color: #FCFBF9;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-slot-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fd-navy);
+}
+
+.fd-slot-time-text {
+  font-size: 10.5px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-matrix-cell-day {
+  background-color: #FFFFFF;
+  position: relative;
+}
+
+.fd-matrix-block {
+  background-color: #FAF9F6;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 4px;
+}
+
+.fd-matrix-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+}
+
+.fd-matrix-block.is-lecture {
+  border-left: 3px solid var(--fd-navy);
+}
+
+.fd-matrix-block.is-lab {
+  border-left: 3px solid var(--fd-success);
+  background-color: #F6FAF7;
+}
+
+.fd-mb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fd-mb-code {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fd-navy);
+}
+
+.fd-mb-type {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background-color: #ECEEEA;
+  color: var(--fd-text-secondary);
+}
+
+.fd-mb-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fd-text-primary);
+  line-height: 1.25;
+}
+
+.fd-mb-room {
+  font-size: 10px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-mb-sec {
+  font-size: 9.5px;
+  color: var(--fd-text-secondary);
+  font-style: italic;
+}
+
+/* ── 6. Assigned Sessions Catalog ──────────────────────────── */
+.fd-assigned-sessions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fd-assigned-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.fd-assigned-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 18px;
+}
+
+.fd-assigned-course-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.fd-assigned-course-card:hover {
+  border-color: var(--fd-navy);
+  box-shadow: 0 4px 14px rgba(22, 47, 68, 0.06);
+}
+
+.fd-assigned-course-card.is-lab {
+  border-left: 4px solid var(--fd-success);
+}
+
+.fd-acc-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fd-acc-credits {
+  font-size: 11px;
+  color: var(--fd-text-secondary);
+  margin-left: auto;
+}
+
+.fd-acc-title {
+  font-family: var(--fd-font-serif);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.fd-acc-desc {
+  font-size: 12px;
+  color: var(--fd-text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.fd-acc-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+  padding: 12px;
+  background-color: #FAF9F6;
+  border-radius: 4px;
+  border: 1px solid #ECEEEA;
+}
+
+.fd-acc-spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-spec-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--fd-text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.fd-spec-val {
+  font-size: 12px;
+  color: var(--fd-navy);
+}
+
+.fd-acc-progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fd-acc-prog-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--fd-navy);
+}
+
+.fd-acc-days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fd-acc-days-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fd-text-secondary);
+}
+
+.fd-acc-days-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fd-slot-pill {
+  font-size: 11px;
+  padding: 2.5px 7px;
+  background-color: #ECEEEA;
+  color: var(--fd-navy);
+  border-radius: 3px;
+}
+
+.fd-acc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ECEEEA;
+  margin-top: auto;
+}
+
+/* ── 7. Teaching Plan ──────────────────────────────────────── */
+.fd-teaching-plan-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fd-tp-switcher-card {
+  background-color: var(--fd-card-bg);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.fd-tp-courses-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.fd-tp-course-btn {
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fd-tp-course-btn:hover {
+  border-color: var(--fd-navy);
+}
+
+.fd-tp-course-btn.active {
+  border-color: var(--fd-navy);
+  border-left: 4px solid var(--fd-navy);
+  box-shadow: 0 4px 12px rgba(22, 47, 68, 0.08);
+}
+
+.fd-tpc-btn-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fd-tpc-code {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fd-navy);
+}
+
+.fd-tpc-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fd-success);
+}
+
+.fd-tpc-name {
+  font-family: var(--fd-font-serif);
+  font-size: 15px;
+  color: var(--fd-navy);
+  line-height: 1.2;
+}
+
+.fd-tp-content-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fd-tp-overview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.fd-tp-stats-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.fd-tp-metric-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 6px 12px;
+  background-color: #FAF9F6;
+  border: 1px solid #ECEEEA;
+  border-radius: 3px;
+}
+
+.fd-tp-lbl {
+  color: var(--fd-text-secondary);
+}
+
+.fd-tp-val {
+  color: var(--fd-navy);
+}
+
+.fd-tp-units-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fd-tp-unit-card {
+  background-color: var(--fd-card-bg);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.fd-tp-unit-card.status-completed {
+  border-left: 4px solid var(--fd-success);
+}
+
+.fd-tp-unit-card.status-in-progress {
+  border-left: 4px solid var(--fd-navy);
+}
+
+.fd-tp-unit-card.status-pending {
+  border-left: 4px solid #C4C9C5;
+}
+
+.fd-unit-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background-color: #FAF9F6;
+  border-bottom: 1px solid var(--fd-border);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fd-uh-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fd-unit-num-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background-color: var(--fd-navy);
+  color: #FFFFFF;
+}
+
+.fd-unit-title {
+  font-family: var(--fd-font-serif);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+}
+
+.fd-uh-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fd-unit-hours-stat {
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+}
+
+.fd-unit-status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.fd-unit-status-pill.completed {
+  background-color: #E8EEEA;
+  color: var(--fd-success);
+}
+
+.fd-unit-status-pill.in-progress {
+  background-color: #ECEEEA;
+  color: var(--fd-navy);
+}
+
+.fd-unit-status-pill.pending {
+  background-color: #ECEEEA;
+  color: var(--fd-text-secondary);
+}
+
+.fd-unit-topics-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fd-unit-topics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.fd-unit-topics-table th {
+  padding: 10px 18px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--fd-text-secondary);
+  background-color: #FFFFFF;
+  border-bottom: 1px solid var(--fd-border);
+  text-align: left;
+}
+
+.fd-unit-topics-table td {
+  padding: 11px 18px;
+  border-bottom: 1px solid #ECEEEA;
+  vertical-align: middle;
+}
+
+.fd-unit-topics-table tr:last-child td {
+  border-bottom: none;
+}
+
+.fd-unit-topics-table tr.fd-row-completed {
+  background-color: rgba(85, 126, 109, 0.02);
+}
+
+.fd-topic-title-text {
+  font-weight: 600;
+  color: var(--fd-navy);
+  display: block;
+}
+
+.fd-topic-date-text {
+  font-size: 10.5px;
+  color: var(--fd-text-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
+.fd-pedagogy-badge {
+  font-size: 10.5px;
+  padding: 2px 6px;
+  background-color: #FAF9F6;
+  border: 1px solid #E2E4DE;
+  border-radius: 3px;
+  color: var(--fd-navy);
+}
+
+.fd-status-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.fd-status-toggle-btn.completed {
+  background-color: #E8EEEA;
+  color: var(--fd-success);
+  border-color: #D3DDD6;
+}
+
+.fd-status-toggle-btn.in-progress {
+  background-color: #ECEEEA;
+  color: var(--fd-navy);
+  border-color: var(--fd-border);
+}
+
+.fd-status-toggle-btn.pending {
+  background-color: #FAF9F6;
+  color: var(--fd-text-secondary);
+  border-color: var(--fd-border);
+}
+
+/* ── 8. Academic Calendar ──────────────────────────────────── */
+.fd-academic-calendar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fd-cal-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: var(--fd-card-bg);
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.fd-cal-filters-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fd-calendar-timeline-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fd-cal-event-card {
+  display: grid;
+  grid-template-columns: 210px 1fr 150px;
+  gap: 20px;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.fd-cal-event-card:hover {
+  border-color: var(--fd-navy);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.fd-cal-event-card.status-today {
+  border-left: 4px solid var(--fd-navy);
+  background-color: #FAF9F6;
+}
+
+.fd-cal-event-card.type-exam {
+  border-left: 4px solid var(--fd-error);
+}
+
+.fd-cal-event-card.type-holiday {
+  border-left: 4px solid var(--fd-amber);
+}
+
+.fd-cal-event-card.type-academic {
+  border-left: 4px solid var(--fd-navy);
+}
+
+.fd-cal-event-card.type-deadline {
+  border-left: 4px solid var(--fd-navy);
+}
+
+.fd-cec-date-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fd-cec-date-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fd-navy);
+}
+
+.fd-cec-type-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.fd-cec-type-tag.exam {
+  background-color: #F8EEEB;
+  color: var(--fd-error);
+}
+
+.fd-cec-type-tag.holiday {
+  background-color: #FDF8EE;
+  color: #B5822C;
+}
+
+.fd-cec-type-tag.academic,
+.fd-cec-type-tag.deadline {
+  background-color: #ECEEEA;
+  color: var(--fd-navy);
+}
+
+.fd-cec-details-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fd-cec-title {
+  font-family: var(--fd-font-serif);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+}
+
+.fd-cec-desc {
+  font-size: 12px;
+  color: var(--fd-text-secondary);
+  margin: 0;
+}
+
+.fd-cec-status-col {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fd-today-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fd-navy);
+  background-color: #ECEEEA;
+  padding: 4px 10px;
+  border-radius: 3px;
+}
+
+.fd-today-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--fd-success);
+}
+
+.fd-past-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fd-text-secondary);
+}
+
+.fd-upcoming-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  background-color: #FAF9F6;
+  border: 1px solid var(--fd-border);
+  border-radius: 3px;
+  color: var(--fd-navy);
+}
+
+/* ── 9. Classes Tracker (Completed vs Pending) ─────────────── */
+.fd-classes-tracker-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fd-tracker-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.fd-tracker-subj-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.fd-tracker-subj-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--fd-border);
+  border-radius: 4px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fd-tsc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fd-tsc-pct {
+  font-size: 13px;
+  color: var(--fd-navy);
+}
+
+.fd-tsc-title {
+  font-family: var(--fd-font-serif);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--fd-navy);
+  margin: 0;
+}
+
+.fd-tsc-ratio-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--fd-text-secondary);
+  margin-top: 4px;
+}
+
+/* ── 10. Add Slot Modal ────────────────────────────────────── */
+.fd-add-slot-modal {
+  max-width: 580px;
+  width: 90%;
+}
+
+.fd-add-slot-form {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fd-form-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* Responsive Rules for Timetable & Teaching Plan */
+@media (max-width: 1024px) {
+  .fd-subnav-pills-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .fd-assigned-kpi-strip,
+  .fd-tracker-kpi-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .fd-tp-courses-row,
+  .fd-tracker-subj-cards-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .fd-subnav-pills-row {
+    grid-template-columns: 1fr;
+  }
+  .fd-upcoming-class-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .fd-ucb-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .fd-daily-session-card {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .fd-cal-event-card {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .fd-cec-status-col {
+    justify-content: flex-start;
+  }
+  .fd-assigned-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .fd-assigned-kpi-strip,
+  .fd-tracker-kpi-strip {
+    grid-template-columns: 1fr;
+  }
+  .fd-form-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}

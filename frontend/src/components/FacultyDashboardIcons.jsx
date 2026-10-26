@@ -449,3 +449,59 @@ export function FileSpreadsheetIcon({ size = 16, color = 'currentColor' }) {
     </svg>
   );
 }
+
+// 40. Flask / Lab Icon (Assigned Laboratory Sessions)
+export function FlaskConicalIcon({ size = 16, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={iconStyle}>
+      <path d="M10 2v7.31L4.69 18.2A2 2 0 0 0 6.4 21h11.2a2 2 0 0 0 1.71-2.8L14 9.31V2" />
+      <path d="M8.5 2h7" />
+      <path d="M14 9.3a6.5 6.5 0 0 1-4 0" />
+      <path d="M5.52 16h12.96" />
+    </svg>
+  );
+}
+
+// 41. Layers Icon (Teaching Plan & Units)
+export function LayersIcon({ size = 16, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={iconStyle}>
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </svg>
+  );
+}
+
+// 42. Calendar Days Icon (Academic Calendar)
+export function CalendarDaysIcon({ size = 16, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={iconStyle}>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <path d="M8 14h.01" />
+      <path d="M12 14h.01" />
+      <path d="M16 14h.01" />
+      <path d="M8 18h.01" />
+      <path d="M12 18h.01" />
+      <path d="M16 18h.01" />
+    </svg>
+  );
+}
+
+// 43. List Check Icon (Completed & Pending Classes Tracker)
+export function ListCheckIcon({ size = 16, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={iconStyle}>
+      <path d="M11 6h9" />
+      <path d="M11 12h9" />
+      <path d="M11 18h9" />
+      <polyline points="3 5 5 7 8 4" />
+      <polyline points="3 11 5 13 8 10" />
+      <polyline points="3 17 5 19 8 16" />
+    </svg>
+  );
+}
+
