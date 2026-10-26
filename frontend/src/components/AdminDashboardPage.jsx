@@ -20,7 +20,14 @@ import {
   LockIcon,
   ClipboardListIcon,
   BrandEllipse,
-  CameraIcon
+  CameraIcon,
+  EditIcon,
+  TrashIcon,
+  KeyIcon,
+  RefreshCwIcon,
+  CheckIcon,
+  BookOpenIcon,
+  UserCheckIcon,
 } from './AdminDashboardIcons';
 import './AdminDashboardPage.css';
 
@@ -52,10 +59,11 @@ const SYSTEM_HEALTH = [
 ];
 
 const NAV_ITEMS = [
-  { id: 'overview',    label: 'Overview',        icon: GridIcon     },
-  { id: 'departments', label: 'Departments',     icon: BuildingIcon },
-  { id: 'users',       label: 'User Management', icon: UsersIcon    },
-  { id: 'settings',    label: 'Settings',        icon: SettingsIcon },
+  { id: 'overview',    label: 'Overview',           icon: GridIcon     },
+  { id: 'departments', label: 'Departments',        icon: BuildingIcon },
+  { id: 'faculty',     label: 'Faculty Management', icon: IdCardIcon   },
+  { id: 'users',       label: 'User Management',    icon: UsersIcon    },
+  { id: 'settings',    label: 'Settings',           icon: SettingsIcon },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -90,6 +98,15 @@ function TabOverview({ user, users, onNav, onQuickAction }) {
           <button
             type="button"
             className="ad-btn-outline"
+            onClick={() => onNav('faculty')}
+            title="Manage Faculty Accounts, Allocations & Security"
+          >
+            <IdCardIcon size={16} />
+            <span>Faculty Hub</span>
+          </button>
+          <button
+            type="button"
+            className="ad-btn-outline"
             onClick={() => onNav('users')}
           >
             <UsersIcon size={16} />
@@ -121,8 +138,16 @@ function TabOverview({ user, users, onNav, onQuickAction }) {
           </div>
         </div>
 
-        {/* Metric 2 — Faculty Members */}
-        <div className="ad-stat-col">
+        {/* Metric 2 — Faculty Members (Clickable to Faculty Management) */}
+        <div 
+          className="ad-stat-col" 
+          onClick={() => onNav('faculty')}
+          style={{ cursor: 'pointer' }}
+          title="Click to view Faculty Management"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onNav('faculty'); }}
+        >
           <div className="ad-stat-header">
             <IdCardIcon size={17} />
             <span>Faculty Members</span>
@@ -130,7 +155,7 @@ function TabOverview({ user, users, onNav, onQuickAction }) {
           <div className="ad-stat-value">{totalFaculty}</div>
           <div className="ad-stat-footer">
             <span className="ad-stat-sub">Active instructors</span>
-            <span className="ad-stat-trend">+2 this month</span>
+            <span className="ad-stat-trend" style={{ color: '#557E6D', fontWeight: 600 }}>Manage &rarr;</span>
           </div>
         </div>
 
@@ -616,6 +641,1285 @@ function FaceRegistrationModal({ student, onClose, onSuccess, onShowToast }) {
             disabled={!photoBlob || loading}
           >
             {loading ? 'Analyzing with DeepFace…' : 'Save & Register Face Profile'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FACULTY MANAGEMENT DATASETS & CATALOG
+// ═══════════════════════════════════════════════════════════════
+const COURSE_CATALOG = [
+  { code: 'CS101',  title: 'Data Structures & Algorithms',       dept: 'CS', type: 'Theory' },
+  { code: 'CS101L', title: 'Data Structures Laboratory',         dept: 'CS', type: 'Lab'    },
+  { code: 'CS205',  title: 'Operating Systems & Architecture',   dept: 'CS', type: 'Theory' },
+  { code: 'CS312',  title: 'Database Management Systems',        dept: 'CS', type: 'Theory' },
+  { code: 'CS312L', title: 'DBMS Practical Laboratory',          dept: 'CS', type: 'Lab'    },
+  { code: 'CS401',  title: 'Artificial Intelligence & ML',       dept: 'CS', type: 'Theory' },
+  { code: 'EC201',  title: 'Digital Signal Processing',          dept: 'EC', type: 'Theory' },
+  { code: 'EC201L', title: 'Signals & Hardware Lab',             dept: 'EC', type: 'Lab'    },
+  { code: 'ME102',  title: 'Thermodynamics & Fluid Mechanics',   dept: 'ME', type: 'Theory' },
+  { code: 'ME102L', title: 'Mechanical Workshop & CAD',          dept: 'ME', type: 'Lab'    },
+  { code: 'CV204',  title: 'Structural Analysis & Design',       dept: 'CV', type: 'Theory' },
+  { code: 'BT301',  title: 'Molecular Biology & Genetics',       dept: 'BT', type: 'Theory' },
+  { code: 'BT301L', title: 'Biotech Microbiology Lab',           dept: 'BT', type: 'Lab'    },
+  { code: 'MBA101', title: 'Organizational Behavior & Strategy', dept: 'MBA', type: 'Theory' },
+];
+
+const SECTIONS_CATALOG = [
+  'Section A',
+  'Section B',
+  'Section C',
+  'Batch A1',
+  'Batch A2',
+  'Batch B1',
+  'Batch B2',
+];
+
+const DESIGNATIONS_CATALOG = [
+  'Professor & HOD',
+  'Professor',
+  'Associate Professor',
+  'Assistant Professor',
+  'Senior Lecturer',
+  'Visiting Faculty',
+];
+
+const INITIAL_FACULTY = [
+  {
+    id: 'FAC001',
+    name: 'Dr. Rajan Kumar',
+    email: 'rajan.kumar@attentify.ac.in',
+    dept: 'CS',
+    designation: 'Professor & HOD',
+    qualification: 'Ph.D. in AI (IIT Madras)',
+    experience: '16 Years',
+    phone: '+91 94451 22301',
+    status: 'active',
+    assignedCourses: ['CS312', 'CS401'],
+    assignedLabs: ['CS312L'],
+    assignedSections: ['Section A'],
+    joinedDate: '15 July 2014',
+  },
+  {
+    id: 'FAC002',
+    name: 'Prof. Meera Iyer',
+    email: 'meera.iyer@attentify.ac.in',
+    dept: 'EC',
+    designation: 'Associate Professor',
+    qualification: 'M.Tech (IISc Bangalore)',
+    experience: '11 Years',
+    phone: '+91 98402 33412',
+    status: 'active',
+    assignedCourses: ['EC201'],
+    assignedLabs: ['EC201L'],
+    assignedSections: ['Section A', 'Section B'],
+    joinedDate: '01 August 2017',
+  },
+  {
+    id: 'FAC003',
+    name: 'Avinash K P',
+    email: 'avinash@attentify.ac.in',
+    dept: 'CS',
+    designation: 'Associate Professor',
+    qualification: 'Ph.D. (NITK Surathkal)',
+    experience: '7 Years',
+    phone: '+91 98765 43210',
+    status: 'active',
+    assignedCourses: ['CS101', 'CS205'],
+    assignedLabs: ['CS101L'],
+    assignedSections: ['Section A', 'Section B', 'Batch A1'],
+    joinedDate: '12 August 2021',
+  },
+  {
+    id: 'FAC004',
+    name: 'Dr. Anand V',
+    email: 'anand.v@attentify.ac.in',
+    dept: 'ME',
+    designation: 'Professor & HOD',
+    qualification: 'Ph.D. in Robotics (BITS Pilani)',
+    experience: '14 Years',
+    phone: '+91 97103 44521',
+    status: 'active',
+    assignedCourses: ['ME102'],
+    assignedLabs: ['ME102L'],
+    assignedSections: ['Section A'],
+    joinedDate: '10 January 2016',
+  },
+  {
+    id: 'FAC005',
+    name: 'Prof. Suresh R',
+    email: 'suresh.r@attentify.ac.in',
+    dept: 'CV',
+    designation: 'Assistant Professor',
+    qualification: 'M.Tech in Structural Eng (VTU)',
+    experience: '5 Years',
+    phone: '+91 99801 55632',
+    status: 'inactive',
+    assignedCourses: ['CV204'],
+    assignedLabs: [],
+    assignedSections: ['Section B'],
+    joinedDate: '22 February 2022',
+  },
+  {
+    id: 'FAC006',
+    name: 'Dr. Priya Nair',
+    email: 'priya.nair@attentify.ac.in',
+    dept: 'BT',
+    designation: 'Associate Professor & HOD',
+    qualification: 'Ph.D. in Bioinformatics (JNU)',
+    experience: '10 Years',
+    phone: '+91 98112 66743',
+    status: 'active',
+    assignedCourses: ['BT301'],
+    assignedLabs: ['BT301L'],
+    assignedSections: ['Section A'],
+    joinedDate: '04 September 2019',
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  TAB: FACULTY MANAGEMENT
+//  - Add or remove faculty accounts
+//  - Edit official faculty information
+//  - Assign departments, subjects and classes
+//  - Activate or deactivate accounts
+//  - Reset faculty passwords
+// ═══════════════════════════════════════════════════════════════
+function TabFacultyManagement({ facultyList, setFacultyList, users, setUsers, onShowToast }) {
+  const [search, setSearch] = useState('');
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Modal States
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingFaculty, setEditingFaculty] = useState(null);
+  const [assigningFaculty, setAssigningFaculty] = useState(null);
+  const [resettingFaculty, setResettingFaculty] = useState(null);
+  const [removingFaculty, setRemovingFaculty] = useState(null);
+
+  // Filtered List
+  const filteredFaculty = useMemo(() => {
+    return facultyList.filter(f => {
+      const q = search.toLowerCase();
+      const matchSearch =
+        f.name.toLowerCase().includes(q) ||
+        f.email.toLowerCase().includes(q) ||
+        f.id.toLowerCase().includes(q) ||
+        f.assignedCourses.some(c => c.toLowerCase().includes(q));
+      const matchDept = deptFilter === 'all' || f.dept === deptFilter;
+      const matchStatus = statusFilter === 'all' || f.status === statusFilter;
+      return matchSearch && matchDept && matchStatus;
+    });
+  }, [facultyList, search, deptFilter, statusFilter]);
+
+  // Statistics Summary
+  const stats = useMemo(() => {
+    const total = facultyList.length;
+    const active = facultyList.filter(f => f.status === 'active').length;
+    const inactive = total - active;
+    const totalAllocations = facultyList.reduce((acc, f) => acc + f.assignedCourses.length + f.assignedLabs.length, 0);
+    const deptsCount = new Set(facultyList.map(f => f.dept)).size;
+    return { total, active, inactive, totalAllocations, deptsCount };
+  }, [facultyList]);
+
+  // Quick One-Click Toggle Status (Activate / Deactivate)
+  const handleToggleStatus = (faculty) => {
+    const newStatus = faculty.status === 'active' ? 'inactive' : 'active';
+    const updated = facultyList.map(f => f.id === faculty.id ? { ...f, status: newStatus } : f);
+    setFacultyList(updated);
+
+    // Sync with users list
+    if (setUsers && users) {
+      setUsers(users.map(u => u.email === faculty.email ? { ...u, status: newStatus } : u));
+    }
+
+    onShowToast(`🔄 Account ${newStatus === 'active' ? 'activated' : 'deactivated'} for ${faculty.name}`);
+  };
+
+  // Add Faculty Handler
+  const handleAddFaculty = (newFacultyData) => {
+    setFacultyList([newFacultyData, ...facultyList]);
+
+    // Also sync to general users table
+    if (setUsers && users) {
+      const newUserRecord = {
+        id: newFacultyData.id,
+        name: newFacultyData.name,
+        email: newFacultyData.email,
+        role: 'teacher',
+        dept: newFacultyData.dept,
+        status: newFacultyData.status,
+      };
+      setUsers([newUserRecord, ...users]);
+    }
+
+    setShowAddModal(false);
+    onShowToast(`✅ Faculty account created successfully for ${newFacultyData.name}`);
+  };
+
+  // Edit Faculty Handler
+  const handleUpdateFaculty = (updatedData) => {
+    setFacultyList(facultyList.map(f => f.id === updatedData.id ? updatedData : f));
+
+    // Sync to users table
+    if (setUsers && users) {
+      setUsers(users.map(u => (u.id === updatedData.id || u.email === updatedData.email) ? {
+        ...u,
+        name: updatedData.name,
+        email: updatedData.email,
+        dept: updatedData.dept,
+        status: updatedData.status,
+      } : u));
+    }
+
+    setEditingFaculty(null);
+    onShowToast(`✅ Official information updated for ${updatedData.name}`);
+  };
+
+  // Assign Subjects & Classes Handler
+  const handleSaveAssignments = (facultyId, { dept, assignedCourses, assignedLabs, assignedSections }) => {
+    setFacultyList(facultyList.map(f => {
+      if (f.id === facultyId) {
+        return {
+          ...f,
+          dept,
+          assignedCourses,
+          assignedLabs,
+          assignedSections,
+        };
+      }
+      return f;
+    }));
+    setAssigningFaculty(null);
+    onShowToast(`📚 Teaching assignments updated successfully`);
+  };
+
+  // Reset Password Handler
+  const handleConfirmResetPassword = (facultyId, newPassword, requireNextChange) => {
+    const target = facultyList.find(f => f.id === facultyId);
+    setResettingFaculty(null);
+    onShowToast(`🔑 Password reset for ${target?.name || 'Faculty'}. New temporary password: ${newPassword}`);
+  };
+
+  // Remove Faculty Handler
+  const handleConfirmRemove = (facultyId) => {
+    const target = facultyList.find(f => f.id === facultyId);
+    setFacultyList(facultyList.filter(f => f.id !== facultyId));
+
+    // Remove from users list as well
+    if (setUsers && users && target) {
+      setUsers(users.filter(u => u.email !== target.email && u.id !== target.id));
+    }
+
+    setRemovingFaculty(null);
+    onShowToast(`🗑️ Faculty account removed for ${target?.name || 'Faculty'}`);
+  };
+
+  return (
+    <div className="ad-tab-content">
+      {/* ── Page Header ────────────────────────────────────────── */}
+      <div className="ad-section-header">
+        <div>
+          <h2 className="ad-section-title">Faculty Management</h2>
+          <p className="ad-section-sub">
+            Administer institutional faculty accounts, credentials, subject &amp; class allocations, and security credentials
+          </p>
+        </div>
+        <button
+          type="button"
+          className="ad-btn-primary"
+          onClick={() => setShowAddModal(true)}
+        >
+          <UserPlusIcon size={16} />
+          <span>Add Faculty Account</span>
+        </button>
+      </div>
+
+      {/* ── 4 KPI Summary Cards ────────────────────────────────── */}
+      <div className="ad-faculty-kpi-strip">
+        <div className="ad-fk-card">
+          <div className="ad-fk-top">
+            <span className="ad-fk-lbl">Total Faculty</span>
+            <IdCardIcon size={16} color="var(--ad-navy)" />
+          </div>
+          <div className="ad-fk-val">{stats.total}</div>
+          <span className="ad-fk-sub">Academic instructors</span>
+        </div>
+
+        <div className="ad-fk-card">
+          <div className="ad-fk-top">
+            <span className="ad-fk-lbl">Active Status</span>
+            <CheckIcon size={16} color="var(--ad-success)" />
+          </div>
+          <div className="ad-fk-val font-bold" style={{ color: 'var(--ad-success)' }}>
+            {stats.active} <span style={{ fontSize: '14px', color: 'var(--ad-text-secondary)', fontWeight: 400 }}>/ {stats.total}</span>
+          </div>
+          <span className="ad-fk-sub">{stats.inactive} Inactive accounts</span>
+        </div>
+
+        <div className="ad-fk-card">
+          <div className="ad-fk-top">
+            <span className="ad-fk-lbl">Teaching Allocations</span>
+            <BookOpenIcon size={16} color="var(--ad-navy)" />
+          </div>
+          <div className="ad-fk-val">{stats.totalAllocations}</div>
+          <span className="ad-fk-sub">Active course &amp; lab sections</span>
+        </div>
+
+        <div className="ad-fk-card">
+          <div className="ad-fk-top">
+            <span className="ad-fk-lbl">Departments</span>
+            <BuildingIcon size={16} color="var(--ad-navy)" />
+          </div>
+          <div className="ad-fk-val">{stats.deptsCount}</div>
+          <span className="ad-fk-sub">Academic disciplines</span>
+        </div>
+      </div>
+
+      {/* ── Search & Filter Toolbar ────────────────────────────── */}
+      <div className="ad-faculty-toolbar">
+        <div className="ad-search-box-wrap">
+          <input
+            type="text"
+            className="ad-input"
+            placeholder="Search faculty by name, employee ID, email, or course…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="ad-toolbar-filters">
+          <div className="ad-filter-select-wrap">
+            <label className="ad-filter-lbl">Department:</label>
+            <select
+              className="ad-select"
+              value={deptFilter}
+              onChange={e => setDeptFilter(e.target.value)}
+            >
+              <option value="all">All Departments</option>
+              {DEPARTMENTS.map(d => (
+                <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="ad-filter-select-wrap">
+            <label className="ad-filter-lbl">Status:</label>
+            <select
+              className="ad-select"
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Faculty Table ──────────────────────────────────────── */}
+      <div className="ad-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto', width: '100%' }}>
+          <table className="ad-table">
+            <thead>
+              <tr>
+                <th>Faculty Member</th>
+                <th>Department &amp; Rank</th>
+                <th>Assigned Subjects &amp; Classes</th>
+                <th>Contact &amp; Joined</th>
+                <th>Account Status</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredFaculty.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: 'var(--ad-text-secondary)' }}>
+                    No faculty members found matching your search criteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredFaculty.map((f) => {
+                  const initials = f.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'FA';
+                  const allAllocations = [...f.assignedCourses, ...f.assignedLabs];
+
+                  return (
+                    <tr key={f.id}>
+                      {/* Column 1: Faculty Member */}
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div className="ad-avatar-circle">{initials}</div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: 'var(--ad-navy)', fontSize: '13.5px' }}>
+                              {f.name}
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--ad-text-secondary)' }}>
+                              <span className="font-mono" style={{ backgroundColor: '#F0EDE6', padding: '1px 5px', borderRadius: '3px', marginRight: '6px' }}>
+                                {f.id}
+                              </span>
+                              <span>{f.email}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Column 2: Department & Designation */}
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span className="ad-dept-pill font-mono">{f.dept}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--ad-navy)', fontSize: '12.5px' }}>
+                              {f.designation}
+                            </span>
+                          </div>
+                          <span style={{ fontSize: '11px', color: 'var(--ad-text-secondary)' }}>
+                            {f.qualification}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Column 3: Assigned Subjects & Classes */}
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div className="ad-courses-pills-row">
+                            {allAllocations.length === 0 ? (
+                              <span style={{ fontSize: '11.5px', color: 'var(--ad-text-secondary)', fontStyle: 'italic' }}>
+                                No courses assigned yet
+                              </span>
+                            ) : (
+                              allAllocations.map((code, idx) => {
+                                const isLab = code.endsWith('L');
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`ad-course-code-badge ${isLab ? 'lab' : 'theory'}`}
+                                    title={isLab ? 'Laboratory Session' : 'Theory Lecture'}
+                                  >
+                                    {code}
+                                  </span>
+                                );
+                              })
+                            )}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {f.assignedSections.length > 0 && (
+                              <span style={{ fontSize: '11px', color: 'var(--ad-text-secondary)' }}>
+                                Sections: {f.assignedSections.join(', ')}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              className="ad-btn-assign-quick"
+                              onClick={() => setAssigningFaculty(f)}
+                              title="Assign or reassign departments, subjects and classes"
+                            >
+                              + Assign Classes
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Column 4: Contact & Joined */}
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '12px' }}>
+                          <span className="font-mono">{f.phone}</span>
+                          <span style={{ color: 'var(--ad-text-secondary)', fontSize: '11px' }}>
+                            Joined {f.joinedDate}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Column 5: Status */}
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span
+                            className={`ad-badge ${f.status === 'active' ? 'active' : 'inactive'}`}
+                            onClick={() => handleToggleStatus(f)}
+                            style={{ cursor: 'pointer' }}
+                            title="Click to toggle status"
+                          >
+                            {f.status === 'active' ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Column 6: Actions */}
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                          {/* 1. Edit Official Info */}
+                          <button
+                            type="button"
+                            className="ad-action-icon-btn"
+                            onClick={() => setEditingFaculty(f)}
+                            title="Edit official faculty information"
+                            aria-label="Edit faculty"
+                          >
+                            <EditIcon size={14} color="var(--ad-navy)" />
+                          </button>
+
+                          {/* 2. Assign Subjects & Classes */}
+                          <button
+                            type="button"
+                            className="ad-action-icon-btn"
+                            onClick={() => setAssigningFaculty(f)}
+                            title="Assign departments, subjects and classes"
+                            aria-label="Assign classes"
+                          >
+                            <BookOpenIcon size={14} color="var(--ad-navy)" />
+                          </button>
+
+                          {/* 3. Activate / Deactivate Toggle */}
+                          <button
+                            type="button"
+                            className="ad-action-icon-btn"
+                            onClick={() => handleToggleStatus(f)}
+                            title={f.status === 'active' ? 'Deactivate account' : 'Activate account'}
+                            aria-label="Toggle status"
+                          >
+                            <RefreshCwIcon size={13} color="var(--ad-navy)" />
+                          </button>
+
+                          {/* 4. Reset Password */}
+                          <button
+                            type="button"
+                            className="ad-action-icon-btn"
+                            onClick={() => setResettingFaculty(f)}
+                            title="Reset faculty password"
+                            aria-label="Reset password"
+                          >
+                            <KeyIcon size={14} color="var(--ad-navy)" />
+                          </button>
+
+                          {/* 5. Remove Account */}
+                          <button
+                            type="button"
+                            className="ad-action-icon-btn danger"
+                            onClick={() => setRemovingFaculty(f)}
+                            title="Remove faculty account"
+                            aria-label="Remove faculty"
+                          >
+                            <TrashIcon size={14} color="var(--ad-error)" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ═════════════════════════════════════════════════════════
+          MODAL 1: ADD FACULTY ACCOUNT
+          ═════════════════════════════════════════════════════════ */}
+      {showAddModal && (
+        <AddFacultyModal
+          onClose={() => setShowAddModal(false)}
+          onAdd={handleAddFaculty}
+          existingCount={facultyList.length}
+        />
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          MODAL 2: EDIT OFFICIAL FACULTY INFORMATION
+          ═════════════════════════════════════════════════════════ */}
+      {editingFaculty && (
+        <EditFacultyModal
+          faculty={editingFaculty}
+          onClose={() => setEditingFaculty(null)}
+          onSave={handleUpdateFaculty}
+        />
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          MODAL 3: ASSIGN DEPARTMENTS, SUBJECTS & CLASSES
+          ═════════════════════════════════════════════════════════ */}
+      {assigningFaculty && (
+        <AssignFacultyModal
+          faculty={assigningFaculty}
+          onClose={() => setAssigningFaculty(null)}
+          onSave={(data) => handleSaveAssignments(assigningFaculty.id, data)}
+        />
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          MODAL 4: RESET FACULTY PASSWORD
+          ═════════════════════════════════════════════════════════ */}
+      {resettingFaculty && (
+        <ResetPasswordModal
+          faculty={resettingFaculty}
+          onClose={() => setResettingFaculty(null)}
+          onConfirm={(pwd, reqNext) => handleConfirmResetPassword(resettingFaculty.id, pwd, reqNext)}
+        />
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          MODAL 5: REMOVE FACULTY ACCOUNT CONFIRMATION
+          ═════════════════════════════════════════════════════════ */}
+      {removingFaculty && (
+        <RemoveFacultyModal
+          faculty={removingFaculty}
+          onClose={() => setRemovingFaculty(null)}
+          onConfirm={() => handleConfirmRemove(removingFaculty.id)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Add Faculty Modal ──────────────────────────────────────────
+function AddFacultyModal({ onClose, onAdd, existingCount }) {
+  const [form, setForm] = useState({
+    id: `FAC${String(existingCount + 1).padStart(3, '0')}`,
+    name: '',
+    email: '',
+    password: 'Attentify#2026',
+    dept: 'CS',
+    designation: 'Assistant Professor',
+    qualification: 'M.Tech / Ph.D.',
+    experience: '3 Years',
+    phone: '+91 ',
+    status: 'active',
+    assignedCourses: ['CS101'],
+    assignedLabs: [],
+    assignedSections: ['Section A'],
+    joinedDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+  });
+
+  const toggleCourse = (code, isLab) => {
+    if (isLab) {
+      setForm(prev => ({
+        ...prev,
+        assignedLabs: prev.assignedLabs.includes(code)
+          ? prev.assignedLabs.filter(c => c !== code)
+          : [...prev.assignedLabs, code]
+      }));
+    } else {
+      setForm(prev => ({
+        ...prev,
+        assignedCourses: prev.assignedCourses.includes(code)
+          ? prev.assignedCourses.filter(c => c !== code)
+          : [...prev.assignedCourses, code]
+      }));
+    }
+  };
+
+  const toggleSection = (sec) => {
+    setForm(prev => ({
+      ...prev,
+      assignedSections: prev.assignedSections.includes(sec)
+        ? prev.assignedSections.filter(s => s !== sec)
+        : [...prev.assignedSections, sec]
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.name || !form.email) return;
+    onAdd(form);
+  };
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card" style={{ maxWidth: '640px' }} onClick={e => e.stopPropagation()}>
+        <h3 className="ad-modal-title">Add New Faculty Account</h3>
+        <p className="ad-modal-desc">
+          Register a new instructor, set academic credentials, and assign initial subjects and classes.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Employee / Faculty ID</label>
+              <input
+                type="text"
+                className="ad-input font-mono"
+                value={form.id}
+                onChange={e => setForm({ ...form, id: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Full Legal Name</label>
+              <input
+                type="text"
+                className="ad-input"
+                placeholder="Dr. / Prof. Full Name"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Official University Email</label>
+              <input
+                type="email"
+                className="ad-input"
+                placeholder="name@attentify.ac.in"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Initial Temporary Password</label>
+              <input
+                type="text"
+                className="ad-input font-mono"
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Primary Department</label>
+              <select
+                className="ad-select"
+                value={form.dept}
+                onChange={e => setForm({ ...form, dept: e.target.value })}
+              >
+                {DEPARTMENTS.map(d => (
+                  <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Designation / Rank</label>
+              <select
+                className="ad-select"
+                value={form.designation}
+                onChange={e => setForm({ ...form, designation: e.target.value })}
+              >
+                {DESIGNATIONS_CATALOG.map((d, i) => (
+                  <option key={i} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Highest Qualification</label>
+              <input
+                type="text"
+                className="ad-input"
+                placeholder="Ph.D. / M.Tech"
+                value={form.qualification}
+                onChange={e => setForm({ ...form, qualification: e.target.value })}
+              />
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Contact Phone</label>
+              <input
+                type="text"
+                className="ad-input font-mono"
+                placeholder="+91 98765 43210"
+                value={form.phone}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Initial Subject Allocations */}
+          <div className="ad-form-group" style={{ marginTop: '6px' }}>
+            <label className="ad-form-label">Initial Subject Allocations ({form.dept} Department)</label>
+            <div className="ad-assign-checklist-box">
+              {COURSE_CATALOG.filter(c => c.dept === form.dept).map(c => {
+                const isLab = c.type === 'Lab';
+                const isSelected = isLab ? form.assignedLabs.includes(c.code) : form.assignedCourses.includes(c.code);
+                return (
+                  <label key={c.code} className="ad-assign-check-label">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleCourse(c.code, isLab)}
+                    />
+                    <span className="font-mono ad-check-code">{c.code}</span>
+                    <span>{c.title}</span>
+                    <span className={`ad-type-badge ${isLab ? 'lab' : 'theory'}`}>{c.type}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Initial Class Section Allocations */}
+          <div className="ad-form-group">
+            <label className="ad-form-label">Assigned Class Sections</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {SECTIONS_CATALOG.map(sec => {
+                const isChecked = form.assignedSections.includes(sec);
+                return (
+                  <label key={sec} className={`ad-section-check-pill ${isChecked ? 'active' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleSection(sec)}
+                      style={{ display: 'none' }}
+                    />
+                    <span>{sec}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="ad-modal-actions">
+            <button type="button" className="ad-btn-outline" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="ad-btn-primary">
+              <UserPlusIcon size={15} />
+              <span>Create Faculty Account</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Edit Faculty Modal ─────────────────────────────────────────
+function EditFacultyModal({ faculty, onClose, onSave }) {
+  const [form, setForm] = useState({ ...faculty });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(form);
+  };
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+        <h3 className="ad-modal-title">Edit Official Faculty Information</h3>
+        <p className="ad-modal-desc">
+          Update administrative faculty records, institutional designation, and departmental placement.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Employee ID</label>
+              <input
+                type="text"
+                className="ad-input font-mono"
+                value={form.id}
+                onChange={e => setForm({ ...form, id: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Full Name</label>
+              <input
+                type="text"
+                className="ad-input"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Official University Email</label>
+              <input
+                type="email"
+                className="ad-input"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Contact Phone</label>
+              <input
+                type="text"
+                className="ad-input font-mono"
+                value={form.phone}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Department</label>
+              <select
+                className="ad-select"
+                value={form.dept}
+                onChange={e => setForm({ ...form, dept: e.target.value })}
+              >
+                {DEPARTMENTS.map(d => (
+                  <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Designation</label>
+              <select
+                className="ad-select"
+                value={form.designation}
+                onChange={e => setForm({ ...form, designation: e.target.value })}
+              >
+                {DESIGNATIONS_CATALOG.map((d, i) => (
+                  <option key={i} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Highest Qualification</label>
+              <input
+                type="text"
+                className="ad-input"
+                value={form.qualification}
+                onChange={e => setForm({ ...form, qualification: e.target.value })}
+              />
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Experience</label>
+              <input
+                type="text"
+                className="ad-input"
+                value={form.experience}
+                onChange={e => setForm({ ...form, experience: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="ad-form-group">
+              <label className="ad-form-label">Joining Date</label>
+              <input
+                type="text"
+                className="ad-input"
+                value={form.joinedDate}
+                onChange={e => setForm({ ...form, joinedDate: e.target.value })}
+              />
+            </div>
+
+            <div className="ad-form-group">
+              <label className="ad-form-label">Account Status</label>
+              <select
+                className="ad-select"
+                value={form.status}
+                onChange={e => setForm({ ...form, status: e.target.value })}
+              >
+                <option value="active">Active (Access Granted)</option>
+                <option value="inactive">Inactive (Access Suspended)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="ad-modal-actions">
+            <button type="button" className="ad-btn-outline" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="ad-btn-primary">
+              <CheckIcon size={15} />
+              <span>Save Official Information</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Assign Departments, Subjects & Classes Modal ───────────────
+function AssignFacultyModal({ faculty, onClose, onSave }) {
+  const [selectedDept, setSelectedDept] = useState(faculty.dept);
+  const [assignedCourses, setAssignedCourses] = useState([...faculty.assignedCourses]);
+  const [assignedLabs, setAssignedLabs] = useState([...faculty.assignedLabs]);
+  const [assignedSections, setAssignedSections] = useState([...faculty.assignedSections]);
+  const [filterDept, setFilterDept] = useState(faculty.dept);
+
+  const toggleCourse = (code, isLab) => {
+    if (isLab) {
+      setAssignedLabs(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]);
+    } else {
+      setAssignedCourses(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]);
+    }
+  };
+
+  const toggleSection = (sec) => {
+    setAssignedSections(prev => prev.includes(sec) ? prev.filter(s => s !== sec) : [...prev, sec]);
+  };
+
+  const handleSave = () => {
+    onSave({
+      dept: selectedDept,
+      assignedCourses,
+      assignedLabs,
+      assignedSections,
+    });
+  };
+
+  const availableCourses = COURSE_CATALOG.filter(c => filterDept === 'all' || c.dept === filterDept);
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card" style={{ maxWidth: '680px' }} onClick={e => e.stopPropagation()}>
+        <h3 className="ad-modal-title">Assign Subjects &amp; Classes</h3>
+        <p className="ad-modal-desc">
+          Allocate teaching modules, theory courses, laboratory sessions, and class cohorts for <strong>{faculty.name}</strong> ({faculty.id}).
+        </p>
+
+        {/* Faculty Summary Header */}
+        <div className="ad-assign-faculty-summary">
+          <div>
+            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--ad-text-secondary)', fontWeight: 600 }}>Instructor</span>
+            <h4 style={{ margin: 0, fontSize: '15px', color: 'var(--ad-navy)' }}>{faculty.name}</h4>
+          </div>
+          <div>
+            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--ad-text-secondary)', fontWeight: 600 }}>Primary Department</span>
+            <select
+              className="ad-select"
+              style={{ height: '34px', fontSize: '12.5px', marginTop: '2px' }}
+              value={selectedDept}
+              onChange={e => {
+                setSelectedDept(e.target.value);
+                setFilterDept(e.target.value);
+              }}
+            >
+              {DEPARTMENTS.map(d => (
+                <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Filter Course Catalog Strip */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '14px 0 8px 0' }}>
+          <span className="ad-form-label" style={{ margin: 0 }}>Select Courses &amp; Practical Laboratories:</span>
+          <select
+            className="ad-select"
+            style={{ height: '30px', width: 'auto', fontSize: '11.5px' }}
+            value={filterDept}
+            onChange={e => setFilterDept(e.target.value)}
+          >
+            <option value="all">View All Catalogs</option>
+            {DEPARTMENTS.map(d => (
+              <option key={d.id} value={d.id}>{d.id} Dept Courses</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Courses Checklist */}
+        <div className="ad-assign-checklist-box" style={{ maxHeight: '200px' }}>
+          {availableCourses.map(c => {
+            const isLab = c.type === 'Lab';
+            const isSelected = isLab ? assignedLabs.includes(c.code) : assignedCourses.includes(c.code);
+            return (
+              <label key={c.code} className="ad-assign-check-label">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleCourse(c.code, isLab)}
+                />
+                <span className="font-mono ad-check-code">{c.code}</span>
+                <span style={{ flex: 1 }}>{c.title}</span>
+                <span className={`ad-type-badge ${isLab ? 'lab' : 'theory'}`}>{c.type}</span>
+                <span className="ad-dept-pill font-mono">{c.dept}</span>
+              </label>
+            );
+          })}
+        </div>
+
+        {/* Class Sections Checklist */}
+        <div style={{ marginTop: '16px' }}>
+          <label className="ad-form-label">Assign Class &amp; Lab Sections:</label>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
+            {SECTIONS_CATALOG.map(sec => {
+              const isChecked = assignedSections.includes(sec);
+              return (
+                <label key={sec} className={`ad-section-check-pill ${isChecked ? 'active' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleSection(sec)}
+                    style={{ display: 'none' }}
+                  />
+                  <span>{sec}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Allocation Summary Strip */}
+        <div className="ad-allocation-summary-strip">
+          <span>Allocated: <strong>{assignedCourses.length}</strong> Theory Courses · <strong>{assignedLabs.length}</strong> Labs · <strong>{assignedSections.length}</strong> Sections</span>
+        </div>
+
+        <div className="ad-modal-actions">
+          <button type="button" className="ad-btn-outline" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="ad-btn-primary" onClick={handleSave}>
+            <CheckIcon size={15} />
+            <span>Confirm Allocations</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Reset Password Modal ───────────────────────────────────────
+function ResetPasswordModal({ faculty, onClose, onConfirm }) {
+  const [newPassword, setNewPassword] = useState('Attentify#2026!k9');
+  const [showPassword, setShowPassword] = useState(true);
+  const [requireNextChange, setRequireNextChange] = useState(true);
+  const [sendEmailNotice, setSendEmailNotice] = useState(true);
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+    let res = 'Attentify#';
+    for (let i = 0; i < 4; i++) {
+      res += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewPassword(res);
+  };
+
+  const handleConfirm = (e) => {
+    e.preventDefault();
+    if (!newPassword.trim()) return;
+    onConfirm(newPassword, requireNextChange);
+  };
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
+        <h3 className="ad-modal-title">Reset Faculty Password</h3>
+        <p className="ad-modal-desc">
+          Generate temporary access credentials for <strong>{faculty.name}</strong> ({faculty.email}).
+        </p>
+
+        <form onSubmit={handleConfirm}>
+          <div className="ad-form-group">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <label className="ad-form-label" style={{ margin: 0 }}>New Temporary Password</label>
+              <button
+                type="button"
+                className="ad-link-btn"
+                onClick={generatePassword}
+              >
+                ⟳ Generate New Random Password
+              </button>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="ad-input font-mono"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--ad-text-secondary)' }}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '14px 0' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', color: 'var(--ad-navy)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={requireNextChange}
+                onChange={e => setRequireNextChange(e.target.checked)}
+              />
+              <span>Require faculty to change password upon next login</span>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', color: 'var(--ad-navy)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={sendEmailNotice}
+                onChange={e => setSendEmailNotice(e.target.checked)}
+              />
+              <span>Send credentials update notification to {faculty.email}</span>
+            </label>
+          </div>
+
+          <div className="ad-modal-actions">
+            <button type="button" className="ad-btn-outline" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="ad-btn-primary">
+              <KeyIcon size={15} />
+              <span>Confirm Password Reset</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Remove Faculty Modal ───────────────────────────────────────
+function RemoveFacultyModal({ faculty, onClose, onConfirm }) {
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card" style={{ maxWidth: '480px' }} onClick={e => e.stopPropagation()}>
+        <div className="ad-danger-icon-circle">
+          <TrashIcon size={24} color="var(--ad-error)" />
+        </div>
+
+        <h3 className="ad-modal-title" style={{ color: 'var(--ad-error)', marginTop: '8px' }}>
+          Remove Faculty Account?
+        </h3>
+
+        <p className="ad-modal-desc">
+          Are you sure you want to permanently delete the faculty record for <strong>{faculty.name}</strong> (Employee ID: <code>{faculty.id}</code>)?
+        </p>
+
+        <div className="ad-danger-notice-box">
+          <p>
+            <strong>Warning:</strong> This action will revoke faculty portal login access and unassign {faculty.assignedCourses.length} lecture courses and {faculty.assignedLabs.length} laboratory sessions.
+          </p>
+        </div>
+
+        <div className="ad-modal-actions" style={{ marginTop: '20px' }}>
+          <button type="button" className="ad-btn-outline" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="ad-btn-primary"
+            style={{ backgroundColor: 'var(--ad-error)' }}
+            onClick={onConfirm}
+          >
+            <TrashIcon size={15} />
+            <span>Confirm Removal</span>
           </button>
         </div>
       </div>
@@ -1152,6 +2456,8 @@ export default function AdminDashboardPage() {
     { id: 'STU003', name: 'Ananya Roy',     email: 'ananya.r@attentify.ac.in',    role: 'student', dept: 'BT', status: 'active' },
   ]);
 
+  const [facultyList, setFacultyList] = useState(INITIAL_FACULTY);
+
   const [toastMessage, setToastMessage] = useState('');
   const [activeModal, setActiveModal] = useState(null); // 'broadcast', 'lock', 'logs', 'addDept', 'addUser'
 
@@ -1335,6 +2641,16 @@ export default function AdminDashboardPage() {
 
           {activeTab === 'departments' && (
             <TabDepartments onShowToast={showToast} />
+          )}
+
+          {activeTab === 'faculty' && (
+            <TabFacultyManagement
+              facultyList={facultyList}
+              setFacultyList={setFacultyList}
+              users={users}
+              setUsers={setUsers}
+              onShowToast={showToast}
+            />
           )}
 
           {activeTab === 'users' && (

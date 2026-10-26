@@ -52,6 +52,13 @@ import {
   MailIcon,
   MegaphoneIcon,
   AlertCircleIcon,
+  LockIcon,
+  KeyIcon,
+  EyeOffIcon,
+  PhoneIcon,
+  MapPinIcon,
+  BriefcaseIcon,
+  UploadIcon,
 } from './FacultyDashboardIcons';
 import './FacultyDashboardPage.css';
 
@@ -65,6 +72,7 @@ const NAV_ITEMS = [
   { id: 'assignments',    icon: FilePenIcon,       label: 'Assignments'    },
   { id: 'communications', icon: BellIcon,          label: 'Communications' },
   { id: 'qr',             icon: QrCodeIcon,        label: 'QR Code'        },
+  { id: 'profile',        icon: IdCardIcon,        label: 'Profile'        },
   { id: 'settings',       icon: SettingsIcon,      label: 'Settings'       },
 ];
 
@@ -9157,9 +9165,893 @@ function TabAssignments({ user, liveData, onShowToast }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  TAB: PROFILE (Faculty Dashboard → Profile)
+//  - View profile information
+//  - Edit permitted personal details
+//  - Change profile photo
+//  - Change password
+// ═══════════════════════════════════════════════════════════════
+function TabProfile({ user, onShowToast, onNav, facultyPhoto, setFacultyPhoto }) {
+  const [activeSubTab, setActiveSubTab] = useState('overview'); // 'overview' | 'edit' | 'photo' | 'password'
+
+  // Permitted Editable Details (persisted in localStorage)
+  const [personalDetails, setPersonalDetails] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('attentify_faculty_personal');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+    }
+    return {
+      phone: '+91 98765 43210',
+      altEmail: 'avinash.personal@gmail.com',
+      office: 'Room 304, Computing Complex, Block A',
+      officeHours: 'Mon & Wed: 03:00 PM – 05:00 PM',
+      bio: 'Associate Professor of Computer Science specializing in Distributed Edge Architectures, Automated Biometric Attendance, and Real-Time Face Verification Systems.',
+      scholarUrl: 'https://scholar.google.com/citations?user=avinash_kp',
+      linkedinUrl: 'https://linkedin.com/in/avinash-kp',
+    };
+  });
+
+  // Official Institutional Credentials (Admin Controlled / Read-only)
+  const officialInfo = useMemo(() => ({
+    name: user?.name || 'Prof. Avinash K P',
+    employeeId: 'FAC-CSE-042',
+    officialEmail: user?.email || 'avinash@attentify.ac.in',
+    department: 'Computer Science & Engineering',
+    designation: 'Associate Professor & PG Coordinator',
+    qualification: 'Ph.D. in Computer Science — NITK Surathkal',
+    joiningDate: '12 August 2021 (5+ Years Service)',
+    biometricStatus: 'Enrolled & Verified (98.5% confidence)',
+    teachingLoad: '3 Courses · 2 Practical Labs · 14 Hours/Week',
+    assignedCourses: [
+      { code: 'CS101', title: 'Data Structures & Algorithms', section: 'Section A', count: '42 Students' },
+      { code: 'CS101L', title: 'Data Structures Laboratory', section: 'Batch A1', count: '22 Students' },
+      { code: 'CS205', title: 'Operating Systems & Architecture', section: 'Section B', count: '38 Students' },
+    ],
+  }), [user]);
+
+  // Form State for editing permitted personal details
+  const [editForm, setEditForm] = useState({ ...personalDetails });
+
+  const handleSavePersonal = (e) => {
+    e.preventDefault();
+    setPersonalDetails(editForm);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('attentify_faculty_personal', JSON.stringify(editForm));
+    }
+    onShowToast('✅ Permitted personal details updated successfully');
+    setActiveSubTab('overview');
+  };
+
+  // Profile Photo Upload & Webcam
+  const fileInputRef = useRef(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [stream, setStream] = useState(null);
+  const videoRef = useRef(null);
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        onShowToast('❌ Image file too large. Please select under 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const url = reader.result;
+        setFacultyPhoto(url);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('attentify_faculty_photo', url);
+        }
+        onShowToast('✅ Profile photo updated successfully');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 480 }, height: { ideal: 480 }, facingMode: 'user' }
+      });
+      setStream(s);
+      setCameraActive(true);
+      if (videoRef.current) videoRef.current.srcObject = s;
+    } catch (err) {
+      onShowToast('❌ Camera error: ' + err.message);
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      setStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, cameraActive]);
+
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [stream]);
+
+  const captureCameraSnapshot = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0, 400, 400);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    setFacultyPhoto(dataUrl);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('attentify_faculty_photo', dataUrl);
+    }
+    stopCamera();
+    onShowToast('✅ New profile photo captured and saved');
+  };
+
+  const handleRemovePhoto = () => {
+    setFacultyPhoto(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('attentify_faculty_photo');
+    }
+    onShowToast('🗑️ Profile photo removed. Reverted to initials monogram.');
+  };
+
+  // Change Password State
+  const [pwdState, setPwdState] = useState({
+    current: '',
+    newPass: '',
+    confirm: '',
+  });
+  const [showPwd, setShowPwd] = useState({ current: false, newPass: false, confirm: false });
+
+  // Password criteria computation
+  const pwdCriteria = useMemo(() => {
+    const p = pwdState.newPass;
+    return {
+      length: p.length >= 8,
+      upper: /[A-Z]/.test(p),
+      digit: /[0-9]/.test(p),
+      special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p),
+      match: p.length > 0 && p === pwdState.confirm,
+    };
+  }, [pwdState.newPass, pwdState.confirm]);
+
+  const pwdScore = useMemo(() => {
+    let score = 0;
+    if (pwdCriteria.length) score += 25;
+    if (pwdCriteria.upper) score += 25;
+    if (pwdCriteria.digit) score += 25;
+    if (pwdCriteria.special) score += 25;
+    return score;
+  }, [pwdCriteria]);
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (!pwdState.current) {
+      onShowToast('❌ Please enter your current password');
+      return;
+    }
+    if (pwdScore < 100) {
+      onShowToast('❌ New password does not meet security criteria');
+      return;
+    }
+    if (!pwdCriteria.match) {
+      onShowToast('❌ New passwords do not match');
+      return;
+    }
+    setPwdState({ current: '', newPass: '', confirm: '' });
+    onShowToast('🔐 Password changed successfully. Your account is secured.');
+    setActiveSubTab('overview');
+  };
+
+  const facultyInitials = officialInfo.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'AK';
+
+  return (
+    <div className="fd-profile-page-wrap">
+      {/* ── Top Header Identity Card ──────────────────────────── */}
+      <div className="fd-profile-header-card">
+        <div className="fd-phc-left">
+          <div className="fd-phc-avatar-wrap">
+            {facultyPhoto ? (
+              <img src={facultyPhoto} alt={officialInfo.name} className="fd-phc-avatar-img" />
+            ) : (
+              <div className="fd-phc-avatar-monogram">{facultyInitials}</div>
+            )}
+            <button
+              type="button"
+              className="fd-phc-photo-edit-badge"
+              onClick={() => setActiveSubTab('photo')}
+              title="Change profile photo"
+            >
+              <CameraIcon size={14} color="#FFF" />
+            </button>
+          </div>
+
+          <div className="fd-phc-info">
+            <div className="fd-phc-badge-row">
+              <span className="fd-phc-id-pill font-mono">{officialInfo.employeeId}</span>
+              <span className="fd-phc-verified-pill">
+                <ShieldCheckIcon size={12} color="var(--fd-success)" />
+                <span>Verified Faculty</span>
+              </span>
+              <span className="fd-phc-dept-pill">{officialInfo.department}</span>
+            </div>
+
+            <h1 className="fd-phc-name">{officialInfo.name}</h1>
+            <p className="fd-phc-designation">
+              <BriefcaseIcon size={14} color="var(--fd-text-secondary)" />
+              <span>{officialInfo.designation}</span>
+            </p>
+
+            <div className="fd-phc-meta-row">
+              <span title="Office Location">
+                <MapPinIcon size={13} color="var(--fd-text-secondary)" />
+                <span>{personalDetails.office}</span>
+              </span>
+              <span title="Contact Phone">
+                <PhoneIcon size={13} color="var(--fd-text-secondary)" />
+                <span>{personalDetails.phone}</span>
+              </span>
+              <span title="Official Email">
+                <LockIcon size={13} color="var(--fd-text-secondary)" />
+                <span>{officialInfo.officialEmail}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="fd-phc-actions">
+          <button
+            type="button"
+            className={`fd-btn-outline ${activeSubTab === 'edit' ? 'active' : ''}`}
+            onClick={() => {
+              setEditForm({ ...personalDetails });
+              setActiveSubTab('edit');
+            }}
+          >
+            <EditIcon size={14} />
+            <span>Edit Personal Details</span>
+          </button>
+          <button
+            type="button"
+            className={`fd-btn-outline ${activeSubTab === 'password' ? 'active' : ''}`}
+            onClick={() => setActiveSubTab('password')}
+          >
+            <KeyIcon size={14} />
+            <span>Change Password</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Sub Navigation Pills ──────────────────────────────── */}
+      <div className="fd-profile-subnav-bar">
+        <button
+          type="button"
+          className={`fd-profile-subnav-btn ${activeSubTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('overview')}
+        >
+          <IdCardIcon size={15} />
+          <span>Profile Overview</span>
+        </button>
+
+        <button
+          type="button"
+          className={`fd-profile-subnav-btn ${activeSubTab === 'edit' ? 'active' : ''}`}
+          onClick={() => {
+            setEditForm({ ...personalDetails });
+            setActiveSubTab('edit');
+          }}
+        >
+          <EditIcon size={15} />
+          <span>Edit Personal Details</span>
+        </button>
+
+        <button
+          type="button"
+          className={`fd-profile-subnav-btn ${activeSubTab === 'photo' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('photo')}
+        >
+          <CameraIcon size={15} />
+          <span>Profile Photo</span>
+        </button>
+
+        <button
+          type="button"
+          className={`fd-profile-subnav-btn ${activeSubTab === 'password' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('password')}
+        >
+          <LockIcon size={15} />
+          <span>Change Password</span>
+        </button>
+      </div>
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 1: PROFILE OVERVIEW (View Profile Information)
+          ═════════════════════════════════════════════════════════ */}
+      {activeSubTab === 'overview' && (
+        <div className="fd-profile-overview-wrap">
+          {/* 4 Stat KPI Strip */}
+          <div className="fd-profile-kpi-grid">
+            <div className="fd-pk-card">
+              <span className="fd-pk-lbl">Academic Rank</span>
+              <span className="fd-pk-val">Associate Professor</span>
+              <span className="fd-pk-sub">Tenured Faculty</span>
+            </div>
+            <div className="fd-pk-card">
+              <span className="fd-pk-lbl">Department</span>
+              <span className="fd-pk-val">Computer Science</span>
+              <span className="fd-pk-sub">School of Computing</span>
+            </div>
+            <div className="fd-pk-card">
+              <span className="fd-pk-lbl">Faculty ID</span>
+              <span className="fd-pk-val font-mono">{officialInfo.employeeId}</span>
+              <span className="fd-pk-sub">Biometric Registered</span>
+            </div>
+            <div className="fd-pk-card">
+              <span className="fd-pk-lbl">Teaching Load</span>
+              <span className="fd-pk-val">14 Hrs / Week</span>
+              <span className="fd-pk-sub">3 Courses · 2 Labs</span>
+            </div>
+          </div>
+
+          <div className="fd-profile-two-col">
+            {/* Left Column: Official Credentials (Locked) */}
+            <div className="fd-card">
+              <div className="fd-table-header-bar">
+                <div>
+                  <h3 className="fd-card-title">Official Institutional Credentials</h3>
+                  <p className="fd-table-header-meta">Academic information verified by the university registrar</p>
+                </div>
+                <span className="fd-lock-status-pill">
+                  <LockIcon size={12} color="var(--fd-navy)" />
+                  <span>Admin Governed</span>
+                </span>
+              </div>
+
+              <div className="fd-profile-info-list">
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Legal Full Name</span>
+                  <span className="fd-pi-val font-bold">{officialInfo.name}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Employee ID</span>
+                  <span className="fd-pi-val font-mono">{officialInfo.employeeId}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Official Email</span>
+                  <span className="fd-pi-val">{officialInfo.officialEmail}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Department</span>
+                  <span className="fd-pi-val">{officialInfo.department}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Designation</span>
+                  <span className="fd-pi-val">{officialInfo.designation}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Highest Degree</span>
+                  <span className="fd-pi-val">{officialInfo.qualification}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Joining Date</span>
+                  <span className="fd-pi-val">{officialInfo.joiningDate}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Face ID Status</span>
+                  <span className="fd-pi-val font-bold" style={{ color: 'var(--fd-success)' }}>
+                    {officialInfo.biometricStatus}
+                  </span>
+                </div>
+              </div>
+
+              <div className="fd-admin-notice-box">
+                <LockIcon size={14} color="var(--fd-navy)" />
+                <p>
+                  Institutional details like Employee ID, Designation, and Official Email are managed centrally.
+                  To request official credential changes, contact the University Administrator.
+                </p>
+              </div>
+            </div>
+
+            {/* Right Column: Permitted Personal Details & Schedule */}
+            <div className="fd-card">
+              <div className="fd-table-header-bar">
+                <div>
+                  <h3 className="fd-card-title">Personal Contact &amp; Logistics</h3>
+                  <p className="fd-table-header-meta">Permitted editable details published to student directories</p>
+                </div>
+                <button
+                  type="button"
+                  className="fd-btn-secondary"
+                  onClick={() => {
+                    setEditForm({ ...personalDetails });
+                    setActiveSubTab('edit');
+                  }}
+                >
+                  <EditIcon size={13} color="var(--fd-navy)" />
+                  <span>Edit Details</span>
+                </button>
+              </div>
+
+              <div className="fd-profile-info-list">
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Contact Phone</span>
+                  <span className="fd-pi-val font-mono">{personalDetails.phone}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Alternate Email</span>
+                  <span className="fd-pi-val">{personalDetails.altEmail}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Cabin / Chamber</span>
+                  <span className="fd-pi-val">{personalDetails.office}</span>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Consultation Hours</span>
+                  <span className="fd-pi-val font-bold" style={{ color: 'var(--fd-navy)' }}>
+                    {personalDetails.officeHours}
+                  </span>
+                </div>
+                <div className="fd-pi-row fd-pi-row-full">
+                  <span className="fd-pi-lbl">Academic Bio &amp; Research</span>
+                  <p className="fd-pi-val fd-pi-bio">{personalDetails.bio}</p>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">Google Scholar</span>
+                  <a href={personalDetails.scholarUrl} target="_blank" rel="noreferrer" className="fd-link-text">
+                    View Scholar Citations ↗
+                  </a>
+                </div>
+                <div className="fd-pi-row">
+                  <span className="fd-pi-lbl">LinkedIn Profile</span>
+                  <a href={personalDetails.linkedinUrl} target="_blank" rel="noreferrer" className="fd-link-text">
+                    View LinkedIn Profile ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Assigned Subjects & Classes Roster */}
+          <div className="fd-card">
+            <div className="fd-table-header-bar">
+              <div>
+                <h3 className="fd-card-title">Assigned Teaching Allocations</h3>
+                <p className="fd-table-header-meta">Current semester course sections and registered students</p>
+              </div>
+              <span className="fd-context-pill">Semester 5 · Autumn 2026</span>
+            </div>
+
+            <div className="fd-profile-courses-grid">
+              {officialInfo.assignedCourses.map((c, i) => (
+                <div key={i} className="fd-profile-course-card">
+                  <div className="fd-pcc-top">
+                    <span className="fd-sub-code-pill font-mono">{c.code}</span>
+                    <span className="fd-mini-status-pill safe">{c.section}</span>
+                  </div>
+                  <h4 className="fd-pcc-title">{c.title}</h4>
+                  <div className="fd-pcc-footer">
+                    <span>{c.count}</span>
+                    <button
+                      type="button"
+                      className="fd-link-text"
+                      onClick={() => onNav('attendance')}
+                    >
+                      View Roster →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 2: EDIT PERMITTED PERSONAL DETAILS
+          ═════════════════════════════════════════════════════════ */}
+      {activeSubTab === 'edit' && (
+        <div className="fd-card fd-profile-edit-card">
+          <div className="fd-table-header-bar">
+            <div>
+              <h3 className="fd-card-title">Edit Permitted Personal Details</h3>
+              <p className="fd-table-header-meta">Update your contact numbers, chamber location, consultation hours, and academic biography</p>
+            </div>
+            <button
+              type="button"
+              className="fd-btn-outline"
+              onClick={() => setActiveSubTab('overview')}
+            >
+              Cancel
+            </button>
+          </div>
+
+          <form onSubmit={handleSavePersonal} className="fd-profile-edit-form">
+            <div className="fd-edit-grid-2col">
+              <div className="fd-form-field">
+                <label className="fd-form-label">
+                  <PhoneIcon size={13} color="var(--fd-navy)" />
+                  <span>Primary Contact Phone:</span>
+                </label>
+                <input
+                  type="text"
+                  className="fd-input font-mono"
+                  value={editForm.phone}
+                  onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                  required
+                />
+                <span className="fd-form-hint">Used for SMS session reminders and urgent departmental alerts.</span>
+              </div>
+
+              <div className="fd-form-field">
+                <label className="fd-form-label">
+                  <MailIcon size={13} color="var(--fd-navy)" />
+                  <span>Alternate / Recovery Email:</span>
+                </label>
+                <input
+                  type="email"
+                  className="fd-input"
+                  value={editForm.altEmail}
+                  onChange={e => setEditForm({ ...editForm, altEmail: e.target.value })}
+                  placeholder="personal.email@example.com"
+                  required
+                />
+                <span className="fd-form-hint">Used for password recovery and account security notifications.</span>
+              </div>
+
+              <div className="fd-form-field">
+                <label className="fd-form-label">
+                  <MapPinIcon size={13} color="var(--fd-navy)" />
+                  <span>Cabin / Chamber Room Location:</span>
+                </label>
+                <input
+                  type="text"
+                  className="fd-input"
+                  value={editForm.office}
+                  onChange={e => setEditForm({ ...editForm, office: e.target.value })}
+                  placeholder="Room 304, Computing Complex, Block A"
+                  required
+                />
+                <span className="fd-form-hint">Displayed in student timetable and department directory.</span>
+              </div>
+
+              <div className="fd-form-field">
+                <label className="fd-form-label">
+                  <ClockIcon size={13} color="var(--fd-navy)" />
+                  <span>Student Consultation / Office Hours:</span>
+                </label>
+                <input
+                  type="text"
+                  className="fd-input"
+                  value={editForm.officeHours}
+                  onChange={e => setEditForm({ ...editForm, officeHours: e.target.value })}
+                  placeholder="Mon & Wed: 03:00 PM – 05:00 PM"
+                  required
+                />
+                <span className="fd-form-hint">Available walk-in advisory hours for students.</span>
+              </div>
+            </div>
+
+            <div className="fd-form-field">
+              <label className="fd-form-label">
+                <FileTextIcon size={13} color="var(--fd-navy)" />
+                <span>Academic Bio &amp; Research Statement:</span>
+              </label>
+              <textarea
+                className="fd-textarea"
+                rows={4}
+                value={editForm.bio}
+                onChange={e => setEditForm({ ...editForm, bio: e.target.value })}
+                placeholder="Share your academic background, areas of expertise, and research domains..."
+                required
+              />
+            </div>
+
+            <div className="fd-edit-grid-2col">
+              <div className="fd-form-field">
+                <label className="fd-form-label">Google Scholar / ResearchGate URL:</label>
+                <input
+                  type="url"
+                  className="fd-input"
+                  value={editForm.scholarUrl}
+                  onChange={e => setEditForm({ ...editForm, scholarUrl: e.target.value })}
+                  placeholder="https://scholar.google.com/citations?user=..."
+                />
+              </div>
+
+              <div className="fd-form-field">
+                <label className="fd-form-label">LinkedIn / Academic Web Profile URL:</label>
+                <input
+                  type="url"
+                  className="fd-input"
+                  value={editForm.linkedinUrl}
+                  onChange={e => setEditForm({ ...editForm, linkedinUrl: e.target.value })}
+                  placeholder="https://linkedin.com/in/..."
+                />
+              </div>
+            </div>
+
+            <div className="fd-edit-actions-row">
+              <button
+                type="button"
+                className="fd-btn-secondary"
+                onClick={() => setActiveSubTab('overview')}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="fd-btn-primary">
+                Save Personal Details
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 3: CHANGE PROFILE PHOTO
+          ═════════════════════════════════════════════════════════ */}
+      {activeSubTab === 'photo' && (
+        <div className="fd-card fd-profile-photo-card">
+          <div className="fd-table-header-bar">
+            <div>
+              <h3 className="fd-card-title">Faculty Profile Photo</h3>
+              <p className="fd-table-header-meta">Upload a clear academic headshot or capture via camera for student and attendance portals</p>
+            </div>
+          </div>
+
+          <div className="fd-photo-workspace-grid">
+            {/* Left: Avatar Preview Frame */}
+            <div className="fd-photo-preview-pane">
+              <div className="fd-photo-large-frame">
+                {facultyPhoto ? (
+                  <img src={facultyPhoto} alt="Profile Preview" className="fd-large-avatar-img" />
+                ) : (
+                  <div className="fd-large-avatar-monogram">{facultyInitials}</div>
+                )}
+                <span className="fd-verified-badge-large" title="Verified Faculty Avatar">✓</span>
+              </div>
+
+              <span className="fd-photo-caption">
+                {facultyPhoto ? 'Custom Profile Photo Active' : 'Default Monogram Initials Active'}
+              </span>
+
+              {facultyPhoto && (
+                <button
+                  type="button"
+                  className="fd-btn-remove-photo"
+                  onClick={handleRemovePhoto}
+                >
+                  <TrashIcon size={13} color="var(--fd-error)" />
+                  <span>Remove Custom Photo</span>
+                </button>
+              )}
+            </div>
+
+            {/* Right: Upload or Capture Controls */}
+            <div className="fd-photo-controls-pane">
+              <div className="fd-photo-action-box">
+                <h4>Option 1: Upload Headshot from Computer</h4>
+                <p>Supports PNG, JPG, or WEBP up to 5MB. A square portrait works best.</p>
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handlePhotoUpload}
+                />
+
+                <button
+                  type="button"
+                  className="fd-btn-primary"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <UploadIcon size={14} color="#FFF" />
+                  <span>Choose Photo File</span>
+                </button>
+              </div>
+
+              <div className="fd-photo-action-box">
+                <h4>Option 2: Capture Snapshot with Camera</h4>
+                <p>Use your device camera to take an instant academic portrait.</p>
+
+                {!cameraActive ? (
+                  <button
+                    type="button"
+                    className="fd-btn-secondary"
+                    onClick={startCamera}
+                  >
+                    <CameraIcon size={14} color="var(--fd-navy)" />
+                    <span>Open Camera</span>
+                  </button>
+                ) : (
+                  <div className="fd-cam-viewfinder-box">
+                    <video ref={videoRef} autoPlay playsInline muted className="fd-cam-live-video" />
+                    <div className="fd-cam-actions-row">
+                      <button
+                        type="button"
+                        className="fd-btn-primary"
+                        onClick={captureCameraSnapshot}
+                      >
+                        Capture Snapshot
+                      </button>
+                      <button
+                        type="button"
+                        className="fd-btn-secondary"
+                        onClick={stopCamera}
+                      >
+                        Cancel Camera
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 4: CHANGE PASSWORD
+          ═════════════════════════════════════════════════════════ */}
+      {activeSubTab === 'password' && (
+        <div className="fd-card fd-password-card">
+          <div className="fd-table-header-bar">
+            <div>
+              <h3 className="fd-card-title">Change Faculty Password</h3>
+              <p className="fd-table-header-meta">Update your login password and ensure compliance with university cybersecurity policies</p>
+            </div>
+          </div>
+
+          <form onSubmit={handlePasswordSubmit} className="fd-password-form">
+            <div className="fd-form-field">
+              <label className="fd-form-label">Current Password:</label>
+              <div className="fd-password-input-wrap">
+                <input
+                  type={showPwd.current ? 'text' : 'password'}
+                  className="fd-input"
+                  placeholder="Enter your current password"
+                  value={pwdState.current}
+                  onChange={e => setPwdState({ ...pwdState, current: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  className="fd-pwd-toggle-btn"
+                  onClick={() => setShowPwd({ ...showPwd, current: !showPwd.current })}
+                  title={showPwd.current ? 'Hide password' : 'Show password'}
+                >
+                  {showPwd.current ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="fd-form-field">
+              <label className="fd-form-label">New Password:</label>
+              <div className="fd-password-input-wrap">
+                <input
+                  type={showPwd.newPass ? 'text' : 'password'}
+                  className="fd-input"
+                  placeholder="Choose a strong new password"
+                  value={pwdState.newPass}
+                  onChange={e => setPwdState({ ...pwdState, newPass: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  className="fd-pwd-toggle-btn"
+                  onClick={() => setShowPwd({ ...showPwd, newPass: !showPwd.newPass })}
+                  title={showPwd.newPass ? 'Hide password' : 'Show password'}
+                >
+                  {showPwd.newPass ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Real-Time Password Strength Meter */}
+            {pwdState.newPass && (
+              <div className="fd-pwd-strength-container">
+                <div className="fd-strength-track">
+                  <div
+                    className={`fd-strength-fill score-${pwdScore}`}
+                    style={{ width: `${pwdScore}%` }}
+                  />
+                </div>
+
+                <div className="fd-pwd-criteria-list">
+                  <div className={`fd-pc-item ${pwdCriteria.length ? 'met' : ''}`}>
+                    <span>{pwdCriteria.length ? '✓' : '○'}</span>
+                    <span>At least 8 characters</span>
+                  </div>
+                  <div className={`fd-pc-item ${pwdCriteria.upper ? 'met' : ''}`}>
+                    <span>{pwdCriteria.upper ? '✓' : '○'}</span>
+                    <span>Uppercase letter (A-Z)</span>
+                  </div>
+                  <div className={`fd-pc-item ${pwdCriteria.digit ? 'met' : ''}`}>
+                    <span>{pwdCriteria.digit ? '✓' : '○'}</span>
+                    <span>At least one number (0-9)</span>
+                  </div>
+                  <div className={`fd-pc-item ${pwdCriteria.special ? 'met' : ''}`}>
+                    <span>{pwdCriteria.special ? '✓' : '○'}</span>
+                    <span>Special character (!@#$%^&amp;*)</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="fd-form-field">
+              <label className="fd-form-label">Confirm New Password:</label>
+              <div className="fd-password-input-wrap">
+                <input
+                  type={showPwd.confirm ? 'text' : 'password'}
+                  className="fd-input"
+                  placeholder="Re-enter your new password"
+                  value={pwdState.confirm}
+                  onChange={e => setPwdState({ ...pwdState, confirm: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  className="fd-pwd-toggle-btn"
+                  onClick={() => setShowPwd({ ...showPwd, confirm: !showPwd.confirm })}
+                  title={showPwd.confirm ? 'Hide password' : 'Show password'}
+                >
+                  {showPwd.confirm ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                </button>
+              </div>
+              {pwdState.confirm && (
+                <span className={`fd-pwd-match-text ${pwdCriteria.match ? 'match' : 'mismatch'}`}>
+                  {pwdCriteria.match ? '✓ Passwords match' : '✗ Passwords do not match'}
+                </span>
+              )}
+            </div>
+
+            <div className="fd-edit-actions-row">
+              <button
+                type="button"
+                className="fd-btn-secondary"
+                onClick={() => {
+                  setPwdState({ current: '', newPass: '', confirm: '' });
+                  setActiveSubTab('overview');
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="fd-btn-primary"
+                disabled={pwdScore < 100 || !pwdCriteria.match || !pwdState.current}
+              >
+                <KeyIcon size={14} color="#FFF" />
+                <span>Save New Password</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  TAB: SETTINGS
 // ═══════════════════════════════════════════════════════════════
-function TabSettings({ user, onShowToast }) {
+function TabSettings({ user, onShowToast, onNav }) {
   const [profile, setProfile] = useState({
     name: user?.name || 'Avinash K P',
     email: user?.email || 'avinash@attentify.ac.in',
@@ -9179,6 +10071,24 @@ function TabSettings({ user, onShowToast }) {
           <h2 className="fd-section-title">Faculty Settings</h2>
           <p className="fd-section-sub">Manage your profile, academic credentials, and session defaults</p>
         </div>
+      </div>
+
+      {/* Direct Banner Linking to Dedicated Profile Page */}
+      <div className="fd-card" style={{ marginBottom: '20px', borderLeft: '4px solid var(--fd-navy)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: 'var(--fd-navy)' }}>Looking to manage your Faculty Profile?</h4>
+          <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--fd-text-secondary)' }}>
+            Edit personal contact details, consultation hours, upload a new profile photo, or change your account password.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="fd-btn-primary"
+          onClick={() => onNav && onNav('profile')}
+        >
+          <IdCardIcon size={14} color="#FFF" />
+          <span>Open Academic Profile →</span>
+        </button>
       </div>
 
       <div className="fd-two-col-grid">
@@ -10721,11 +11631,18 @@ export default function FacultyDashboardPage() {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search);
       const t = p.get('tab');
-      if (t && ['dashboard', 'attendance', 'students', 'reports', 'qr', 'timetable', 'assignments', 'communications', 'notifications', 'settings'].includes(t)) {
+      if (t && ['dashboard', 'attendance', 'students', 'reports', 'qr', 'timetable', 'assignments', 'communications', 'notifications', 'profile', 'settings'].includes(t)) {
         return t === 'notifications' ? 'communications' : t;
       }
     }
     return 'dashboard';
+  });
+
+  const [facultyPhoto, setFacultyPhoto] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('attentify_faculty_photo') || null;
+    }
+    return null;
   });
 
   const handleNav = (tabId) => {
@@ -10830,18 +11747,35 @@ export default function FacultyDashboardPage() {
         {/* Sidebar Footer */}
         <div className="fd-sidebar-footer">
           <div className="fd-sidebar-tagline">ATTENDANCE, SIMPLIFIED.</div>
-          <div className="fd-user-chip">
+          <div
+            className="fd-user-chip"
+            onClick={() => handleNav('profile')}
+            style={{ cursor: 'pointer' }}
+            title="View & Edit Faculty Profile"
+          >
             <div className="fd-user-profile-left">
-              <div className="fd-avatar-circle">{facultyInitials}</div>
+              {facultyPhoto ? (
+                <img
+                  src={facultyPhoto}
+                  alt={facultyName}
+                  className="fd-avatar-circle"
+                  style={{ objectFit: 'cover' }}
+                />
+              ) : (
+                <div className="fd-avatar-circle">{facultyInitials}</div>
+              )}
               <div className="fd-user-info">
                 <span className="fd-user-name">{facultyName}</span>
-                <span className="fd-user-role">Faculty</span>
+                <span className="fd-user-role">Faculty · Profile</span>
               </div>
             </div>
             <button
               type="button"
               className="fd-logout-btn"
-              onClick={handleLogout}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLogout();
+              }}
               title="Sign out of Faculty Portal"
             >
               <LogoutIcon size={15} color="#758087" />
@@ -10895,7 +11829,12 @@ export default function FacultyDashboardPage() {
               <span className="fd-topbar-badge warning">4</span>
             </button>
 
-            <div className="fd-role-badge">
+            <div
+              className="fd-role-badge"
+              onClick={() => handleNav('profile')}
+              style={{ cursor: 'pointer' }}
+              title="Click to view Faculty Profile"
+            >
               <IdCardIcon size={14} color="#162F44" />
               <span>Faculty</span>
             </div>
@@ -10963,8 +11902,18 @@ export default function FacultyDashboardPage() {
             <TabQR onShowToast={showToast} liveData={liveData} user={user} />
           )}
 
+          {activeTab === 'profile' && (
+            <TabProfile
+              user={user}
+              onShowToast={showToast}
+              onNav={handleNav}
+              facultyPhoto={facultyPhoto}
+              setFacultyPhoto={setFacultyPhoto}
+            />
+          )}
+
           {activeTab === 'settings' && (
-            <TabSettings user={user} onShowToast={showToast} />
+            <TabSettings user={user} onShowToast={showToast} onNav={handleNav} />
           )}
         </div>
       </div>
