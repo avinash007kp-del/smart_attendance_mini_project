@@ -48,19 +48,24 @@ import {
   LayersIcon,
   CalendarDaysIcon,
   ListCheckIcon,
+  MessageSquareIcon,
+  MailIcon,
+  MegaphoneIcon,
+  AlertCircleIcon,
 } from './FacultyDashboardIcons';
 import './FacultyDashboardPage.css';
 
 // ─── Navigation Items ──────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: 'dashboard',   icon: GridIcon,          label: 'Dashboard'   },
-  { id: 'attendance',  icon: ClipboardListIcon, label: 'Attendance'  },
-  { id: 'students',    icon: GraduationCapIcon, label: 'Students'    },
-  { id: 'reports',     icon: BarChartIcon,      label: 'Reports'     },
-  { id: 'qr',          icon: QrCodeIcon,        label: 'QR Code'     },
-  { id: 'timetable',   icon: CalendarIcon,      label: 'Timetable'   },
-  { id: 'assignments', icon: FilePenIcon,       label: 'Assignments' },
-  { id: 'settings',    icon: SettingsIcon,      label: 'Settings'   },
+  { id: 'dashboard',      icon: GridIcon,          label: 'Dashboard'      },
+  { id: 'attendance',     icon: ClipboardListIcon, label: 'Attendance'     },
+  { id: 'students',       icon: GraduationCapIcon, label: 'Students'       },
+  { id: 'reports',        icon: BarChartIcon,      label: 'Reports'        },
+  { id: 'timetable',      icon: CalendarIcon,      label: 'Timetable'      },
+  { id: 'assignments',    icon: FilePenIcon,       label: 'Assignments'    },
+  { id: 'communications', icon: BellIcon,          label: 'Communications' },
+  { id: 'qr',             icon: QrCodeIcon,        label: 'QR Code'        },
+  { id: 'settings',       icon: SettingsIcon,      label: 'Settings'       },
 ];
 
 // ─── Reference Fallback Data ───────────────────────────────────
@@ -9263,6 +9268,1450 @@ function TabSettings({ user, onShowToast }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  COMMUNICATIONS & ALERTS DATASETS
+// ═══════════════════════════════════════════════════════════════
+
+// Notifications dataset
+const COMMUNICATIONS_NOTIFICATIONS = [
+  {
+    id: 'notif-1',
+    category: 'Discrepancy Alert',
+    type: 'discrepancy',
+    unread: true,
+    time: '12 mins ago',
+    title: 'Geofence Anomaly Flagged in CS101 Lab',
+    desc: 'Scan attempt by Rahul S (21CS049) was recorded 85m outside authorized Computing Lab 3 perimeter.',
+    actionLabel: 'Review Discrepancy',
+    targetTab: 'discrepancies',
+  },
+  {
+    id: 'notif-2',
+    category: 'Shortage Warning',
+    type: 'lowAttendance',
+    unread: true,
+    time: '35 mins ago',
+    title: 'Karthik R (21CS028) Dropped Below 75% Threshold',
+    desc: 'Missed 2 consecutive lectures in CS101. Current attendance: 71.4%. Shortage penalty flag active.',
+    actionLabel: 'Issue Notice',
+    targetTab: 'lowAttendance',
+  },
+  {
+    id: 'notif-3',
+    category: 'Session Reminder',
+    type: 'reminder',
+    unread: true,
+    time: '50 mins ago',
+    title: 'Upcoming Laboratory Session: CS101L Algorithms Lab',
+    desc: 'Class scheduled at 02:00 PM today in Computing Lab 3. Remember to launch QR Token or Biometric Terminal.',
+    actionLabel: 'Launch Session',
+    targetTab: 'reminders',
+  },
+  {
+    id: 'notif-4',
+    category: 'HOD Circular',
+    type: 'announcement',
+    unread: true,
+    time: '2 hours ago',
+    title: 'Submission of CAT-2 Attendance Shortage Lists',
+    desc: 'Dr. Rajan Kumar (HOD) requested all faculty to finalize and publish attendance condonation lists before 10 Nov.',
+    actionLabel: 'Broadcast Notice',
+    targetTab: 'announcements',
+  },
+  {
+    id: 'notif-5',
+    category: 'System Audit',
+    type: 'system',
+    unread: false,
+    time: 'Yesterday, 04:30 PM',
+    title: 'Biometric Face Enrollment Complete',
+    desc: '42 of 42 students in Section A have successfully registered facial embeddings with 98.4% mean confidence.',
+    actionLabel: null,
+    targetTab: null,
+  },
+  {
+    id: 'notif-6',
+    category: 'Anti-Proxy Filter',
+    type: 'discrepancy',
+    unread: false,
+    time: 'Yesterday, 09:14 AM',
+    title: 'Concurrent Duplicate Scan Blocked',
+    desc: 'Device fingerprint collision detected for 21CS042 in CS101. Re-scan prevented by Attentify anti-proxy filter.',
+    actionLabel: 'Inspect Incident',
+    targetTab: 'discrepancies',
+  },
+];
+
+// Direct message threads dataset
+const REFERENCE_MESSAGES_THREADS = [
+  {
+    id: 'msg-1',
+    recipientName: 'Ajay Kumar T K',
+    reg: '21CS042',
+    role: 'Student (CSE Sec A)',
+    course: 'CS101',
+    attendancePct: 92.8,
+    unread: true,
+    time: '10:42 AM',
+    messages: [
+      { id: 'm-1', sender: 'student', text: 'Good morning Professor, I was unable to attend CS101 lecture on 19 Oct due to a high viral fever.', time: '20 Oct, 09:30 AM' },
+      { id: 'm-2', sender: 'faculty', text: 'Hello Ajay, please obtain a signed medical slip from Dr. Sen at the campus health center and submit it for attendance adjustment.', time: '20 Oct, 11:15 AM' },
+      { id: 'm-3', sender: 'student', text: 'Good morning Professor, I have received the signed clinic certificate and submitted the scanned copy to the department office.', time: 'Today, 10:42 AM' },
+    ],
+  },
+  {
+    id: 'msg-2',
+    recipientName: 'Rahul S',
+    reg: '21CS049',
+    role: 'Student (CSE Sec B)',
+    course: 'CS205',
+    attendancePct: 61.9,
+    unread: true,
+    time: '09:15 AM',
+    messages: [
+      { id: 'm-4', sender: 'student', text: 'Sir, I received the low attendance alert for CS205 (61.9%). Will I be eligible for CAT-2 if I attend all remaining lectures this month?', time: 'Today, 09:15 AM' },
+    ],
+  },
+  {
+    id: 'msg-3',
+    recipientName: 'Dr. Rajan Kumar',
+    reg: 'FAC-HOD',
+    role: 'Head of Department (CSE)',
+    course: 'Faculty Board',
+    attendancePct: null,
+    unread: false,
+    time: 'Yesterday',
+    messages: [
+      { id: 'm-5', sender: 'faculty', text: 'Good evening Dr. Rajan, I have finalized the CS101 and CS205 attendance audit registers up to 26 Oct.', time: 'Yesterday, 04:10 PM' },
+      { id: 'm-6', sender: 'student', text: 'Excellent Avinash. Please ensure students with under 75% attendance receive formal condonation warnings by Wednesday.', time: 'Yesterday, 05:00 PM' },
+    ],
+  },
+  {
+    id: 'msg-4',
+    recipientName: 'Sneha Patel',
+    reg: '21CS054',
+    role: 'Student (CSE Sec A)',
+    course: 'CS312',
+    attendancePct: 85.7,
+    unread: false,
+    time: '24 Oct',
+    messages: [
+      { id: 'm-7', sender: 'student', text: 'Professor, thank you for verifying my laboratory attendance adjustment for the DBMS indexing practical!', time: '24 Oct, 03:20 PM' },
+    ],
+  },
+];
+
+// Session Reminders
+const REFERENCE_SESSION_REMINDERS = [
+  {
+    id: 'rem-1',
+    course: 'CS101L',
+    courseName: 'Data Structures Programming Lab',
+    room: 'Computing Lab 3',
+    time: '02:00 PM – 04:00 PM (Today)',
+    section: 'Batch A1',
+    enrolled: 21,
+    startsInMinutes: 18,
+    isUrgent: true,
+    note: '60 workstations pre-configured. Remember to project dynamic rotating QR token and activate biometric face terminal.',
+  },
+  {
+    id: 'rem-2',
+    course: 'CS312',
+    courseName: 'Database Management Systems',
+    room: 'Lecture Room 7',
+    time: 'Tomorrow, 10:15 AM – 11:15 AM',
+    section: 'Section A',
+    enrolled: 35,
+    startsInMinutes: 1240,
+    isUrgent: false,
+    note: 'Module: Two-Phase Locking (2PL) Protocol. Pre-class reading material uploaded.',
+  },
+  {
+    id: 'rem-3',
+    course: 'CS101',
+    courseName: 'Data Structures & Algorithms',
+    room: 'Room 302',
+    time: 'Tomorrow, 01:30 PM – 02:30 PM',
+    section: 'Section A',
+    enrolled: 42,
+    startsInMinutes: 1440,
+    isUrgent: false,
+    note: 'Theory lecture: Fibonacci Heaps & Amortized complexity analysis.',
+  },
+];
+
+// Low-Attendance Alerts
+const REFERENCE_LOW_ATTENDANCE_ALERTS = [
+  {
+    id: 'la-1',
+    name: 'Rahul S',
+    reg: '21CS049',
+    course: 'CS205',
+    courseTitle: 'Operating Systems',
+    pct: 61.9,
+    attended: 16,
+    total: 26,
+    deficit: 6,
+    tier: 'critical',
+    section: 'Section B',
+    mentor: 'Dr. Sarah Jenkins',
+    email: 'rahul.s@university.edu',
+    reason: 'Consecutive unexcused absences and geofence verification failure.',
+  },
+  {
+    id: 'la-2',
+    name: 'Karthik R',
+    reg: '21CS028',
+    course: 'CS101',
+    courseTitle: 'Data Structures',
+    pct: 71.4,
+    attended: 20,
+    total: 28,
+    deficit: 2,
+    tier: 'warning',
+    section: 'Section A',
+    mentor: 'Dr. Sarah Jenkins',
+    email: 'karthik.r@university.edu',
+    reason: '2 missed lecture periods in week 8.',
+  },
+  {
+    id: 'la-3',
+    name: 'Priya Sharma',
+    reg: '21CS035',
+    course: 'CS312',
+    courseTitle: 'Database Systems',
+    pct: 74.2,
+    attended: 20,
+    total: 27,
+    deficit: 1,
+    tier: 'borderline',
+    section: 'Section A',
+    mentor: 'Dr. Sarah Jenkins',
+    email: 'priya.s@university.edu',
+    reason: 'Borderline eligibility below 75% cutoff threshold.',
+  },
+  {
+    id: 'la-4',
+    name: 'Ananya Roy',
+    reg: '21CS062',
+    course: 'CS101L',
+    courseTitle: 'Data Structures Lab',
+    pct: 73.3,
+    attended: 11,
+    total: 15,
+    deficit: 1,
+    tier: 'warning',
+    section: 'Batch A2',
+    mentor: 'Dr. Sarah Jenkins',
+    email: 'ananya.roy@university.edu',
+    reason: 'Laboratory session absence. 80% mandatory practical benchmark.',
+  },
+];
+
+// Attendance Discrepancies
+const REFERENCE_DISCREPANCIES = [
+  {
+    id: 'disc-1',
+    student: 'Rahul S',
+    reg: '21CS049',
+    course: 'CS101L',
+    date: 'Today, 09:16 AM',
+    type: 'Geofence Perimeter Anomaly',
+    severity: 'high',
+    details: 'Scan GPS coordinates 85 meters outside authorized boundary perimeter of Computing Lab 3.',
+    status: 'Pending Review',
+  },
+  {
+    id: 'disc-2',
+    student: 'Ajay Kumar T K',
+    reg: '21CS042',
+    course: 'CS101',
+    date: '21 Oct, 09:12 AM',
+    type: 'Concurrent Proxy Token Attempt',
+    severity: 'critical',
+    details: 'Secondary scan attempt detected from duplicate IP 192.168.1.142 while primary session was active.',
+    status: 'Blocked by Anti-Proxy Filter',
+  },
+  {
+    id: 'disc-3',
+    student: 'Vikram Menon',
+    reg: '21CS071',
+    course: 'CS205',
+    date: '22 Oct, 11:08 AM',
+    type: 'Low Facial Match Confidence (68%)',
+    severity: 'medium',
+    details: 'Camera capture confidence 68.4% (Threshold: 85%). Facial recognition inconclusive due to backlighting.',
+    status: 'Notice Dispatched',
+  },
+  {
+    id: 'disc-4',
+    student: 'Karthik R',
+    reg: '21CS028',
+    course: 'CS101',
+    date: '24 Oct, 09:00 AM',
+    type: 'Unexcused 3-Day Absence Streak',
+    severity: 'medium',
+    details: 'Student absent for 3 consecutive lectures without medical intimation or prior leave approval.',
+    status: 'Pending Notice',
+  },
+];
+
+// Announcements
+const REFERENCE_ANNOUNCEMENTS = [
+  {
+    id: 'ann-1',
+    title: 'Mandatory 75% Attendance Requirement for CAT-2 Examinations',
+    course: 'All Assigned Courses',
+    priority: 'Urgent Notice',
+    date: 'Today, 08:30 AM',
+    author: 'Avinash K P',
+    readCount: '98 / 115 Students Read',
+    content: 'All students are hereby notified that the Continuous Assessment Test 2 (CAT-2) attendance cutoff will be strictly enforced on 08 November 2026. Students below 75% will require formal departmental condonation.',
+  },
+  {
+    id: 'ann-2',
+    title: 'Compensatory Data Structures Laboratory Session on Wednesday',
+    course: 'CS101L',
+    priority: 'Schedule Change',
+    date: '24 Oct 2026',
+    author: 'Avinash K P',
+    readCount: '41 / 42 Students Read',
+    content: 'A compensatory 2-hour laboratory session for CS101L (Batch A1 & A2) will be conducted this Wednesday from 02:00 PM to 04:00 PM in Computing Lab 3 to cover Graph BFS/DFS traversal implementations.',
+  },
+  {
+    id: 'ann-3',
+    title: 'Final Call: Medical Certificate Submission for Mid-Term Absences',
+    course: 'CS205',
+    priority: 'Deadline',
+    date: '22 Oct 2026',
+    author: 'Avinash K P',
+    readCount: '37 / 38 Students Read',
+    content: 'Students who were absent during the mid-term revision lectures must submit signed medical certificates from the Chief Medical Officer at the Department of CSE by Friday 5:00 PM.',
+  },
+];
+
+// ─── Modal: Notify Student Discrepancy / Shortage Notice ───────
+function DiscrepancyNoticeModal({ targetItem, onClose, onSendNotice }) {
+  const [noticeType, setNoticeType] = useState('discrepancy');
+  const [severity, setSeverity] = useState('high');
+  const [reason, setReason] = useState(
+    targetItem?.reason || targetItem?.details || 'Geofence location discrepancy flagged during attendance scan.'
+  );
+  const [actionAdvice, setActionAdvice] = useState(
+    'Please report to the Faculty Coordinator cabin (Room 304) within 24 hours to verify attendance.'
+  );
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSendNotice({
+      targetItem,
+      noticeType,
+      severity,
+      reason,
+      actionAdvice,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
+  };
+
+  const studentName = targetItem?.name || targetItem?.student || 'Student';
+  const regNo = targetItem?.reg || '21CS---';
+  const courseCode = targetItem?.course || 'CS101';
+
+  return (
+    <div className="fd-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="fd-modal-container fd-notice-modal" onClick={e => e.stopPropagation()}>
+        <div className="fd-modal-header-bar">
+          <div>
+            <h2 className="fd-modal-title">Dispatch Attendance Discrepancy Notice</h2>
+            <p className="fd-modal-sub">Official Academic Notification · Dispatched to Student Portal &amp; Email</p>
+          </div>
+          <button type="button" className="fd-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <XIcon size={18} color="var(--fd-text-secondary)" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="fd-notice-form">
+          <div className="fd-notice-student-summary">
+            <div className="fd-nss-left">
+              <span className="fd-sub-code-pill font-mono">{regNo}</span>
+              <div>
+                <strong className="fd-nss-name">{studentName}</strong>
+                <span className="fd-nss-meta">Course: {courseCode} · B.Tech CSE Semester 6</span>
+              </div>
+            </div>
+            {targetItem?.pct && (
+              <span className="fd-nss-pct font-bold" style={{ color: 'var(--fd-error)' }}>
+                {targetItem.pct}% Current Attendance
+              </span>
+            )}
+          </div>
+
+          <div className="fd-form-field">
+            <label className="fd-form-label">Notice Category:</label>
+            <select
+              className="fd-config-select"
+              value={noticeType}
+              onChange={e => setNoticeType(e.target.value)}
+            >
+              <option value="discrepancy">Attendance Verification Discrepancy</option>
+              <option value="shortage">Low-Attendance &amp; Detention Warning (&lt; 75%)</option>
+              <option value="proxy">Anti-Proxy Collision Notice</option>
+              <option value="biometric">Biometric Facial Re-Enrollment Request</option>
+            </select>
+          </div>
+
+          <div className="fd-form-field">
+            <label className="fd-form-label">Discrepancy Details / Finding:</label>
+            <textarea
+              className="fd-textarea"
+              rows={3}
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="fd-form-field">
+            <label className="fd-form-label">Required Student Action / Deadline:</label>
+            <textarea
+              className="fd-textarea"
+              rows={2}
+              value={actionAdvice}
+              onChange={e => setActionAdvice(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="fd-modal-footer">
+            <button type="button" className="fd-btn-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="fd-btn-primary">
+              <SendIcon size={14} color="#FFF" />
+              <span>Dispatch Official Notice</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MAIN COMPONENT: TAB COMMUNICATIONS & NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+function TabCommunications({ user, onNav, onShowToast, liveData }) {
+  // Sub-tabs: 'notifications' | 'messages' | 'reminders' | 'lowAttendance' | 'discrepancies' | 'announcements'
+  const [subTab, setSubTab] = useState('notifications');
+
+  // Notifications State
+  const [notifications, setNotifications] = useState(COMMUNICATIONS_NOTIFICATIONS);
+  const [notifFilter, setNotifFilter] = useState('all'); // 'all' | 'unread' | 'discrepancy' | 'reminder'
+
+  // Messages State
+  const [threads, setThreads] = useState(REFERENCE_MESSAGES_THREADS);
+  const [activeThreadId, setActiveThreadId] = useState('msg-1');
+  const [replyText, setReplyText] = useState('');
+
+  // Reminders State
+  const [reminders, setReminders] = useState(REFERENCE_SESSION_REMINDERS);
+  const [reminderPrefs, setReminderPrefs] = useState({
+    preLecture: true,
+    preLab: true,
+    postSummary: true,
+    soundAlerts: true,
+  });
+
+  // Low Attendance State
+  const [lowAttendanceList, setLowAttendanceList] = useState(REFERENCE_LOW_ATTENDANCE_ALERTS);
+
+  // Discrepancies State
+  const [discrepancies, setDiscrepancies] = useState(REFERENCE_DISCREPANCIES);
+  const [activeNoticeTarget, setActiveNoticeTarget] = useState(null);
+
+  // Announcements State
+  const [announcements, setAnnouncements] = useState(REFERENCE_ANNOUNCEMENTS);
+  const [annForm, setAnnForm] = useState({
+    course: 'all',
+    section: 'all',
+    priority: 'Urgent Notice',
+    title: '',
+    content: '',
+  });
+
+  // Active message thread
+  const activeThread = useMemo(() => {
+    return threads.find(t => t.id === activeThreadId) || threads[0];
+  }, [threads, activeThreadId]);
+
+  // Mark all notifications as read
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    if (onShowToast) onShowToast('✅ All notifications marked as read');
+  };
+
+  // Toggle single notification read
+  const handleToggleNotifRead = (id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: !n.unread } : n));
+  };
+
+  // Send Direct Message
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!replyText.trim()) return;
+
+    const newMsg = {
+      id: `m-${Date.now()}`,
+      sender: 'faculty',
+      text: replyText.trim(),
+      time: 'Just now',
+    };
+
+    setThreads(prev => prev.map(t => {
+      if (t.id === activeThreadId) {
+        return {
+          ...t,
+          messages: [...t.messages, newMsg],
+          time: 'Just now',
+        };
+      }
+      return t;
+    }));
+
+    setReplyText('');
+    if (onShowToast) onShowToast(`✉️ Message sent to ${activeThread.recipientName}`);
+  };
+
+  // Quick Preset Replies
+  const handleApplyQuickReply = (text) => {
+    setReplyText(text);
+  };
+
+  // Send Discrepancy Notice Handler
+  const handleSendNotice = (noticeData) => {
+    setActiveNoticeTarget(null);
+    setDiscrepancies(prev => prev.map(d => {
+      if (d.id === noticeData.targetItem?.id) {
+        return { ...d, status: 'Notice Dispatched' };
+      }
+      return d;
+    }));
+
+    // Add to notifications
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      category: 'Discrepancy Dispatched',
+      type: 'discrepancy',
+      unread: false,
+      time: 'Just now',
+      title: `Notice Dispatched to ${noticeData.targetItem?.student || noticeData.targetItem?.name}`,
+      desc: `Official notice sent regarding: ${noticeData.reason}`,
+      actionLabel: null,
+      targetTab: null,
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+
+    if (onShowToast) onShowToast(`📢 Discrepancy notice sent to ${noticeData.targetItem?.student || noticeData.targetItem?.name}`);
+  };
+
+  // Post Announcement
+  const handlePostAnnouncement = (e) => {
+    e.preventDefault();
+    if (!annForm.title.trim() || !annForm.content.trim()) {
+      if (onShowToast) onShowToast('Please provide an announcement title and message');
+      return;
+    }
+
+    const newAnn = {
+      id: `ann-${Date.now()}`,
+      title: annForm.title.trim(),
+      course: annForm.course === 'all' ? 'All Assigned Courses' : annForm.course,
+      priority: annForm.priority,
+      date: 'Just now',
+      author: user?.name || 'Avinash K P',
+      readCount: '0 Students Read',
+      content: annForm.content.trim(),
+    };
+
+    setAnnouncements(prev => [newAnn, ...prev]);
+    setAnnForm({
+      course: 'all',
+      section: 'all',
+      priority: 'Urgent Notice',
+      title: '',
+      content: '',
+    });
+
+    if (onShowToast) onShowToast('📢 Attendance announcement broadcasted to student portal!');
+  };
+
+  // Quick Templates for Announcements
+  const handleApplyAnnTemplate = (title, content, priority = 'Urgent Notice') => {
+    setAnnForm(prev => ({ ...prev, title, content, priority }));
+  };
+
+  // Dismiss Reminder
+  const handleDismissReminder = (id) => {
+    setReminders(prev => prev.filter(r => r.id !== id));
+    if (onShowToast) onShowToast('Reminder dismissed');
+  };
+
+  // Snooze Reminder
+  const handleSnoozeReminder = (id) => {
+    if (onShowToast) onShowToast('⏰ Reminder snoozed for 5 minutes');
+  };
+
+  // Unread count
+  const unreadCount = notifications.filter(n => n.unread).length;
+  const unreadMsgCount = threads.filter(t => t.unread).length;
+
+  return (
+    <div className="fd-tab-content fd-communications-wrap">
+      {/* ── Top Header Bar ────────────────────────────────────── */}
+      <div className="fd-page-header-bar fd-no-print">
+        <div className="fd-header-left">
+          <span className="fd-context-pill">COMMUNICATIONS &amp; ATTENDANCE NOTICES</span>
+          <h1 className="fd-heading-serif">Communications &amp; Alerts Hub</h1>
+          <p className="fd-sub-serif">
+            Monitor real-time notifications, direct student communications, session reminders, low-attendance alerts, discrepancies, and course announcements.
+          </p>
+        </div>
+
+        <div className="fd-header-actions-right">
+          <button
+            type="button"
+            className="fd-btn-secondary"
+            onClick={() => setSubTab('announcements')}
+          >
+            <MegaphoneIcon size={14} color="var(--fd-navy)" />
+            <span>Broadcast Announcement</span>
+          </button>
+
+          <button
+            type="button"
+            className="fd-btn-primary"
+            onClick={() => setSubTab('discrepancies')}
+          >
+            <AlertCircleIcon size={14} color="#FFF" />
+            <span>Review Discrepancies</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── KPI Highlight Strip ───────────────────────────────── */}
+      <div className="fd-comm-kpi-strip fd-no-print">
+        <div className="fd-rkpi-card" onClick={() => setSubTab('notifications')} style={{ cursor: 'pointer' }}>
+          <span className="fd-rkpi-label">Unread Notifications</span>
+          <span className="fd-rkpi-val" style={{ color: unreadCount > 0 ? 'var(--fd-navy)' : 'var(--fd-text-secondary)' }}>
+            {unreadCount}
+          </span>
+          <span className="fd-rkpi-sub">{notifications.length} Total Alerts in Feed</span>
+        </div>
+
+        <div className="fd-rkpi-card" onClick={() => setSubTab('messages')} style={{ cursor: 'pointer' }}>
+          <span className="fd-rkpi-label">Direct Message Threads</span>
+          <span className="fd-rkpi-val" style={{ color: unreadMsgCount > 0 ? 'var(--fd-success)' : 'var(--fd-navy)' }}>
+            {unreadMsgCount} Unread
+          </span>
+          <span className="fd-rkpi-sub">{threads.length} Active Student Dialogues</span>
+        </div>
+
+        <div className="fd-rkpi-card warning" onClick={() => setSubTab('lowAttendance')} style={{ cursor: 'pointer' }}>
+          <span className="fd-rkpi-label">Low Attendance Alerts</span>
+          <span className="fd-rkpi-val" style={{ color: 'var(--fd-error)' }}>
+            {lowAttendanceList.length} Students
+          </span>
+          <span className="fd-rkpi-sub">Below 75% Statutory Cutoff</span>
+        </div>
+
+        <div className="fd-rkpi-card" onClick={() => setSubTab('discrepancies')} style={{ cursor: 'pointer' }}>
+          <span className="fd-rkpi-label">Flagged Discrepancies</span>
+          <span className="fd-rkpi-val" style={{ color: '#B5822C' }}>
+            {discrepancies.filter(d => d.status.includes('Pending')).length}
+          </span>
+          <span className="fd-rkpi-sub">Geofence &amp; Proxy Collisions</span>
+        </div>
+      </div>
+
+      {/* ── Sub-Navigation Tabs ───────────────────────────────── */}
+      <div className="fd-comm-subnav-card fd-no-print">
+        <div className="fd-comm-subnav-row">
+          <button
+            type="button"
+            className={`fd-comm-subnav-btn ${subTab === 'notifications' ? 'active' : ''}`}
+            onClick={() => setSubTab('notifications')}
+          >
+            <BellIcon size={14} color={subTab === 'notifications' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Notifications</span>
+            {unreadCount > 0 && <span className="fd-comm-badge-count">{unreadCount}</span>}
+          </button>
+
+          <button
+            type="button"
+            className={`fd-comm-subnav-btn ${subTab === 'messages' ? 'active' : ''}`}
+            onClick={() => setSubTab('messages')}
+          >
+            <MessageSquareIcon size={14} color={subTab === 'messages' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Messages</span>
+            {unreadMsgCount > 0 && <span className="fd-comm-badge-count">{unreadMsgCount}</span>}
+          </button>
+
+          <button
+            type="button"
+            className={`fd-comm-subnav-btn ${subTab === 'reminders' ? 'active' : ''}`}
+            onClick={() => setSubTab('reminders')}
+          >
+            <ClockIcon size={14} color={subTab === 'reminders' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Session Reminders</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-comm-subnav-btn ${subTab === 'lowAttendance' ? 'active' : ''}`}
+            onClick={() => setSubTab('lowAttendance')}
+          >
+            <AlertCircleIcon size={14} color={subTab === 'lowAttendance' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Low-Attendance Alerts</span>
+            <span className="fd-comm-badge-count warning">{lowAttendanceList.length}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-comm-subnav-btn ${subTab === 'discrepancies' ? 'active' : ''}`}
+            onClick={() => setSubTab('discrepancies')}
+          >
+            <ShieldCheckIcon size={14} color={subTab === 'discrepancies' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Discrepancies</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fd-comm-subnav-btn ${subTab === 'announcements' ? 'active' : ''}`}
+            onClick={() => setSubTab('announcements')}
+          >
+            <MegaphoneIcon size={14} color={subTab === 'announcements' ? 'var(--fd-navy)' : 'var(--fd-text-secondary)'} />
+            <span>Announcements</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 1: NOTIFICATIONS FEED
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'notifications' && (
+        <div className="fd-notifications-feed-container">
+          <div className="fd-notif-control-bar fd-no-print">
+            <div className="fd-notif-filters">
+              <button
+                type="button"
+                className={`fd-preset-pill ${notifFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setNotifFilter('all')}
+              >
+                All Notifications ({notifications.length})
+              </button>
+              <button
+                type="button"
+                className={`fd-preset-pill ${notifFilter === 'unread' ? 'active' : ''}`}
+                onClick={() => setNotifFilter('unread')}
+              >
+                Unread Only ({unreadCount})
+              </button>
+              <button
+                type="button"
+                className={`fd-preset-pill ${notifFilter === 'discrepancy' ? 'active' : ''}`}
+                onClick={() => setNotifFilter('discrepancy')}
+              >
+                Discrepancy Flags
+              </button>
+              <button
+                type="button"
+                className={`fd-preset-pill ${notifFilter === 'reminder' ? 'active' : ''}`}
+                onClick={() => setNotifFilter('reminder')}
+              >
+                Session Reminders
+              </button>
+            </div>
+
+            <div className="fd-notif-actions-right">
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  className="fd-text-btn"
+                  onClick={handleMarkAllRead}
+                >
+                  ✓ Mark all as read
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="fd-notif-cards-list">
+            {notifications
+              .filter(n => {
+                if (notifFilter === 'unread') return n.unread;
+                if (notifFilter === 'discrepancy') return n.type === 'discrepancy';
+                if (notifFilter === 'reminder') return n.type === 'reminder';
+                return true;
+              })
+              .map((n) => (
+                <div key={n.id} className={`fd-notif-card ${n.unread ? 'unread' : ''}`}>
+                  <div className="fd-nc-left-indicator">
+                    {n.unread && <span className="fd-notif-unread-dot" />}
+                  </div>
+
+                  <div className="fd-nc-body">
+                    <div className="fd-nc-header">
+                      <span className="fd-notif-category-pill">{n.category}</span>
+                      <span className="fd-notif-time">{n.time}</span>
+                    </div>
+
+                    <h4 className="fd-notif-title">{n.title}</h4>
+                    <p className="fd-notif-desc">{n.desc}</p>
+                  </div>
+
+                  <div className="fd-nc-actions">
+                    {n.actionLabel && (
+                      <button
+                        type="button"
+                        className="fd-btn-secondary"
+                        onClick={() => {
+                          if (n.targetTab) setSubTab(n.targetTab);
+                        }}
+                      >
+                        <span>{n.actionLabel}</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className="fd-icon-btn-ghost"
+                      onClick={() => handleToggleNotifRead(n.id)}
+                      title={n.unread ? 'Mark as read' : 'Mark as unread'}
+                    >
+                      <CheckCircleIcon size={14} color={n.unread ? 'var(--fd-text-secondary)' : 'var(--fd-success)'} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 2: DIRECT MESSAGES
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'messages' && (
+        <div className="fd-messages-workspace-card">
+          <div className="fd-messages-grid">
+            {/* Left Column: Conversations List */}
+            <div className="fd-threads-sidebar">
+              <div className="fd-threads-header">
+                <h3 className="fd-card-title" style={{ fontSize: '18px' }}>Direct Messages</h3>
+                <span className="fd-context-pill">{threads.length} Dialogues</span>
+              </div>
+
+              <div className="fd-threads-list">
+                {threads.map((t) => {
+                  const isSelected = t.id === activeThreadId;
+                  const lastMsg = t.messages[t.messages.length - 1];
+                  return (
+                    <div
+                      key={t.id}
+                      className={`fd-thread-item ${isSelected ? 'active' : ''}`}
+                      onClick={() => {
+                        setActiveThreadId(t.id);
+                        setThreads(prev => prev.map(item => item.id === t.id ? { ...item, unread: false } : item));
+                      }}
+                    >
+                      <div className="fd-ti-avatar">
+                        {t.recipientName.split(' ').map(p => p[0]).slice(0, 2).join('')}
+                      </div>
+
+                      <div className="fd-ti-info">
+                        <div className="fd-ti-top">
+                          <span className="fd-ti-name">{t.recipientName}</span>
+                          <span className="fd-ti-time">{t.time}</span>
+                        </div>
+                        <span className="fd-ti-role">{t.role}</span>
+                        <p className="fd-ti-preview">{lastMsg?.text || ''}</p>
+                      </div>
+
+                      {t.unread && <span className="fd-ti-unread-badge" />}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right Column: Active Conversation Pane */}
+            <div className="fd-chat-pane">
+              <div className="fd-chat-header">
+                <div className="fd-ch-user-info">
+                  <div className="fd-ch-avatar">
+                    {activeThread.recipientName.split(' ').map(p => p[0]).slice(0, 2).join('')}
+                  </div>
+                  <div>
+                    <h4 className="fd-ch-name">{activeThread.recipientName}</h4>
+                    <span className="fd-ch-role">
+                      {activeThread.role} · Reg: {activeThread.reg}
+                      {activeThread.attendancePct && ` · Current Attendance: ${activeThread.attendancePct}%`}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="fd-ch-actions">
+                  <button
+                    type="button"
+                    className="fd-btn-secondary"
+                    onClick={() => {
+                      setActiveNoticeTarget({
+                        student: activeThread.recipientName,
+                        reg: activeThread.reg,
+                        course: activeThread.course,
+                        pct: activeThread.attendancePct,
+                      });
+                    }}
+                  >
+                    <MailIcon size={13} color="var(--fd-navy)" />
+                    <span>Send Formal Notice</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Chat Message History */}
+              <div className="fd-chat-body">
+                {activeThread.messages.map((m) => {
+                  const isFaculty = m.sender === 'faculty';
+                  return (
+                    <div key={m.id} className={`fd-chat-bubble-row ${isFaculty ? 'faculty' : 'student'}`}>
+                      <div className="fd-chat-bubble">
+                        <p className="fd-chat-text">{m.text}</p>
+                        <span className="fd-chat-time">{m.time}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Quick Template Replies */}
+              <div className="fd-quick-replies-strip">
+                <span className="fd-qr-lbl">Quick Reply:</span>
+                <button
+                  type="button"
+                  className="fd-qr-pill"
+                  onClick={() => handleApplyQuickReply('Please submit your signed medical excuse certificate to room 304 by 5:00 PM today.')}
+                >
+                  Medical slip deadline
+                </button>
+                <button
+                  type="button"
+                  className="fd-qr-pill"
+                  onClick={() => handleApplyQuickReply('Your attendance dispute has been reviewed and manually verified for the scheduled session.')}
+                >
+                  Dispute verified
+                </button>
+                <button
+                  type="button"
+                  className="fd-qr-pill"
+                  onClick={() => handleApplyQuickReply('Attendance below 75% requires formal departmental condonation hearing approval.')}
+                >
+                  Condonation warning
+                </button>
+              </div>
+
+              {/* Compose Message Box */}
+              <form onSubmit={handleSendMessage} className="fd-chat-input-row">
+                <input
+                  type="text"
+                  className="fd-chat-text-input"
+                  placeholder={`Reply to ${activeThread.recipientName}...`}
+                  value={replyText}
+                  onChange={e => setReplyText(e.target.value)}
+                />
+                <button type="submit" className="fd-btn-primary fd-chat-send-btn">
+                  <SendIcon size={14} color="#FFF" />
+                  <span>Send</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 3: SESSION REMINDERS
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'reminders' && (
+        <div className="fd-reminders-container">
+          <div className="fd-reminders-grid">
+            {/* Left: Active Reminders Feed */}
+            <div className="fd-reminders-feed">
+              <div className="fd-reminders-header">
+                <div>
+                  <h3 className="fd-card-title">Attendance Session Reminders</h3>
+                  <p className="fd-sub-serif">Real-time alerts triggered prior to scheduled lectures and practical laboratories</p>
+                </div>
+              </div>
+
+              <div className="fd-reminders-cards-list">
+                {reminders.map((r) => (
+                  <div key={r.id} className={`fd-reminder-card ${r.isUrgent ? 'urgent' : ''}`}>
+                    <div className="fd-rc-top">
+                      <div className="fd-rc-badge-row">
+                        <span className="fd-sub-code-pill font-mono">{r.course}</span>
+                        {r.isUrgent ? (
+                          <span className="fd-reminder-urgent-pill">
+                            <span className="fd-rc-pulse" /> STARTING IN {r.startsInMinutes} MINS
+                          </span>
+                        ) : (
+                          <span className="fd-reminder-normal-pill">SCHEDULED</span>
+                        )}
+                      </div>
+                      <span className="fd-rc-time">{r.time}</span>
+                    </div>
+
+                    <h4 className="fd-rc-title">{r.courseName}</h4>
+
+                    <div className="fd-rc-meta-row">
+                      <span><strong>Venue:</strong> {r.room}</span>
+                      <span className="fd-meta-divider-dot">·</span>
+                      <span><strong>Section:</strong> {r.section} ({r.enrolled} Students)</span>
+                    </div>
+
+                    <p className="fd-rc-note">{r.note}</p>
+
+                    <div className="fd-rc-actions">
+                      <button
+                        type="button"
+                        className="fd-btn-primary"
+                        onClick={() => {
+                          if (onNav) onNav('qr');
+                          if (onShowToast) onShowToast(`🚀 Initializing attendance scanner for ${r.course}`);
+                        }}
+                      >
+                        <PlayIcon size={13} color="#FFF" />
+                        <span>Launch Attendance Now</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="fd-btn-secondary"
+                        onClick={() => handleSnoozeReminder(r.id)}
+                      >
+                        <span>Snooze 5 Mins</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="fd-btn-outline"
+                        onClick={() => handleDismissReminder(r.id)}
+                      >
+                        <span>Dismiss</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Reminder Preferences */}
+            <div className="fd-reminder-pref-card">
+              <h3 className="fd-card-title" style={{ fontSize: '18px' }}>Notification Preferences</h3>
+              <p className="fd-sub-serif">Customize when and how Attentify sends pre-session alerts</p>
+
+              <div className="fd-pref-switches-list">
+                <div className="fd-pref-item">
+                  <div>
+                    <strong className="fd-pref-title">Lecture Start Alert (15m Prior)</strong>
+                    <span className="fd-pref-desc">Notify 15 minutes before scheduled classroom lecture</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="fd-checkbox"
+                    checked={reminderPrefs.preLecture}
+                    onChange={e => setReminderPrefs({ ...reminderPrefs, preLecture: e.target.checked })}
+                  />
+                </div>
+
+                <div className="fd-pref-item">
+                  <div>
+                    <strong className="fd-pref-title">Laboratory Prep Alert (30m Prior)</strong>
+                    <span className="fd-pref-desc">Notify 30 minutes before hands-on computer lab session</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="fd-checkbox"
+                    checked={reminderPrefs.preLab}
+                    onChange={e => setReminderPrefs({ ...reminderPrefs, preLab: e.target.checked })}
+                  />
+                </div>
+
+                <div className="fd-pref-item">
+                  <div>
+                    <strong className="fd-pref-title">Post-Session Attendance Recap</strong>
+                    <span className="fd-pref-desc">Generate automatic attendance summary report upon session close</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="fd-checkbox"
+                    checked={reminderPrefs.postSummary}
+                    onChange={e => setReminderPrefs({ ...reminderPrefs, postSummary: e.target.checked })}
+                  />
+                </div>
+
+                <div className="fd-pref-item">
+                  <div>
+                    <strong className="fd-pref-title">In-App Audio Chime &amp; Push</strong>
+                    <span className="fd-pref-desc">Play soft notification chime when new reminder fires</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="fd-checkbox"
+                    checked={reminderPrefs.soundAlerts}
+                    onChange={e => setReminderPrefs({ ...reminderPrefs, soundAlerts: e.target.checked })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: '16px' }}>
+                <button
+                  type="button"
+                  className="fd-btn-outline"
+                  onClick={() => {
+                    if (onShowToast) onShowToast('✅ Notification reminder preferences saved');
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  Save Alert Settings
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 4: LOW-ATTENDANCE ALERTS
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'lowAttendance' && (
+        <div className="fd-low-att-container">
+          <div className="fd-low-att-header fd-no-print">
+            <div>
+              <h3 className="fd-card-title">Defaulters &amp; Low-Attendance Alerts</h3>
+              <p className="fd-sub-serif">
+                Automated system detection for students crossing below statutory attendance benchmarks (&lt; 75%)
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="fd-btn-secondary"
+              onClick={() => {
+                if (onShowToast) onShowToast('📢 Dispatched bulk attendance shortage notices to all 4 defaulters');
+              }}
+            >
+              <MailIcon size={14} color="var(--fd-navy)" />
+              <span>Broadcast Bulk Shortage Warning</span>
+            </button>
+          </div>
+
+          <div className="fd-low-att-grid">
+            {lowAttendanceList.map((st) => (
+              <div key={st.id} className={`fd-low-att-card tier-${st.tier}`}>
+                <div className="fd-lac-top">
+                  <div className="fd-lac-avatar">
+                    {st.name.split(' ').map(p => p[0]).slice(0, 2).join('')}
+                  </div>
+                  <div className="fd-lac-info">
+                    <span className="fd-sub-code-pill font-mono">{st.reg}</span>
+                    <h4 className="fd-lac-name">{st.name}</h4>
+                    <span className="fd-lac-section">{st.section} · {st.course} ({st.courseTitle})</span>
+                  </div>
+
+                  <div className="fd-lac-gauge">
+                    <span className="fd-lac-pct font-bold" style={{ color: 'var(--fd-error)' }}>
+                      {st.pct}%
+                    </span>
+                    <span className="fd-lac-tier-badge">{st.tier.toUpperCase()} TIER</span>
+                  </div>
+                </div>
+
+                <div className="fd-lac-stats-row">
+                  <div>
+                    <span className="fd-lac-lbl">Attended Sessions</span>
+                    <span className="fd-lac-val">{st.attended} / {st.total}</span>
+                  </div>
+                  <div>
+                    <span className="fd-lac-lbl">Classes to 75%</span>
+                    <span className="fd-lac-val font-bold" style={{ color: 'var(--fd-error)' }}>
+                      +{st.deficit} Required
+                    </span>
+                  </div>
+                  <div>
+                    <span className="fd-lac-lbl">Academic Mentor</span>
+                    <span className="fd-lac-val">{st.mentor}</span>
+                  </div>
+                </div>
+
+                <div className="fd-lac-reason-box">
+                  <strong>Trigger Reason:</strong> {st.reason}
+                </div>
+
+                <div className="fd-lac-actions">
+                  <button
+                    type="button"
+                    className="fd-btn-secondary"
+                    onClick={() => setActiveNoticeTarget(st)}
+                  >
+                    <MailIcon size={13} color="var(--fd-navy)" />
+                    <span>Send Discrepancy Notice</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="fd-btn-primary"
+                    onClick={() => {
+                      setSubTab('messages');
+                      const match = threads.find(t => t.reg === st.reg);
+                      if (match) setActiveThreadId(match.id);
+                    }}
+                  >
+                    <MessageSquareIcon size={13} color="#FFF" />
+                    <span>Direct Message</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 5: ATTENDANCE DISCREPANCIES
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'discrepancies' && (
+        <div className="fd-discrepancies-container">
+          <div className="fd-disc-header fd-no-print">
+            <div>
+              <h3 className="fd-card-title">Flagged Attendance Discrepancies</h3>
+              <p className="fd-sub-serif">
+                Review anomalous attendance records, proxy collisions, geofence breaches, and dispatch corrective notices
+              </p>
+            </div>
+          </div>
+
+          <div className="fd-discrepancies-list">
+            {discrepancies.map((d) => (
+              <div key={d.id} className={`fd-disc-card severity-${d.severity}`}>
+                <div className="fd-dc-col-info">
+                  <div className="fd-dc-top-row">
+                    <span className="fd-sub-code-pill font-mono">{d.reg}</span>
+                    <span className="fd-dc-student">{d.student}</span>
+                    <span className="fd-sub-code-pill">{d.course}</span>
+                    <span className={`fd-disc-severity-badge ${d.severity}`}>
+                      {d.severity.toUpperCase()} PRIORITY
+                    </span>
+                  </div>
+
+                  <h4 className="fd-dc-type">{d.type}</h4>
+                  <p className="fd-dc-details">{d.details}</p>
+                  <span className="fd-dc-timestamp">{d.date}</span>
+                </div>
+
+                <div className="fd-dc-col-action">
+                  <span className={`fd-mini-status-pill ${d.status.includes('Dispatched') ? 'safe' : 'warning'}`}>
+                    {d.status}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="fd-btn-primary fd-disc-btn"
+                    onClick={() => setActiveNoticeTarget({ student: d.student, reg: d.reg, course: d.course, details: d.details })}
+                  >
+                    <MailIcon size={13} color="#FFF" />
+                    <span>Notify Student</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════
+          SUB-TAB 6: ANNOUNCEMENTS PUBLISHER
+          ═════════════════════════════════════════════════════════ */}
+      {subTab === 'announcements' && (
+        <div className="fd-announcements-container">
+          {/* Announcement Composer */}
+          <div className="fd-announcement-composer-card">
+            <h3 className="fd-card-title">Broadcast Attendance Announcement</h3>
+            <p className="fd-sub-serif">Publish notifications to student dashboard portals and university email digests</p>
+
+            {/* Quick Templates Strip */}
+            <div className="fd-ann-templates-row">
+              <span className="fd-at-lbl">Quick Presets:</span>
+              <button
+                type="button"
+                className="fd-preset-pill"
+                onClick={() => handleApplyAnnTemplate(
+                  'Upcoming CAT-2 Examination Attendance Cutoff (75% Minimum)',
+                  'All students are advised that the CAT-2 attendance eligibility cutoff will be finalized on 08 November. Please check your standing on the portal.',
+                  'Urgent Notice'
+                )}
+              >
+                CAT-2 Cutoff Notice
+              </button>
+              <button
+                type="button"
+                className="fd-preset-pill"
+                onClick={() => handleApplyAnnTemplate(
+                  'Compensatory Laboratory Practical Session Scheduled',
+                  'A mandatory compensatory 2-hour laboratory practical session is scheduled this Wednesday from 02:00 PM to 04:00 PM in Computing Lab 3.',
+                  'Schedule Change'
+                )}
+              >
+                Compensatory Lab
+              </button>
+              <button
+                type="button"
+                className="fd-preset-pill"
+                onClick={() => handleApplyAnnTemplate(
+                  'Final Deadline for Medical Certificate Submission',
+                  'Students with approved medical leaves must submit physical clinic certificates to Room 304 before 05:00 PM on Friday for attendance condonation.',
+                  'Deadline'
+                )}
+              >
+                Medical Slip Deadline
+              </button>
+            </div>
+
+            <form onSubmit={handlePostAnnouncement} className="fd-ann-form">
+              <div className="fd-ann-grid-row">
+                <div className="fd-form-field">
+                  <label className="fd-form-label">Target Course:</label>
+                  <select
+                    className="fd-config-select"
+                    value={annForm.course}
+                    onChange={e => setAnnForm({ ...annForm, course: e.target.value })}
+                  >
+                    <option value="all">All Assigned Courses (CS101, CS205, CS312)</option>
+                    <option value="CS101">CS101 - Data Structures</option>
+                    <option value="CS101L">CS101L - Data Structures Lab</option>
+                    <option value="CS205">CS205 - Operating Systems</option>
+                    <option value="CS312">CS312 - Database Systems</option>
+                  </select>
+                </div>
+
+                <div className="fd-form-field">
+                  <label className="fd-form-label">Target Section:</label>
+                  <select
+                    className="fd-config-select"
+                    value={annForm.section}
+                    onChange={e => setAnnForm({ ...annForm, section: e.target.value })}
+                  >
+                    <option value="all">All Sections (Cohort-wide)</option>
+                    <option value="Section A">Section A</option>
+                    <option value="Section B">Section B</option>
+                    <option value="Batch A1">Batch A1 (Lab)</option>
+                    <option value="Batch A2">Batch A2 (Lab)</option>
+                  </select>
+                </div>
+
+                <div className="fd-form-field">
+                  <label className="fd-form-label">Announcement Priority:</label>
+                  <select
+                    className="fd-config-select"
+                    value={annForm.priority}
+                    onChange={e => setAnnForm({ ...annForm, priority: e.target.value })}
+                  >
+                    <option value="Urgent Notice">🚨 Urgent Notice</option>
+                    <option value="Schedule Change">🗓️ Schedule Change</option>
+                    <option value="Deadline">⚠️ Deadline Reminder</option>
+                    <option value="General Update">📢 General Announcement</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="fd-form-field">
+                <label className="fd-form-label">Announcement Subject / Headline:</label>
+                <input
+                  type="text"
+                  className="fd-input"
+                  placeholder="e.g. Mandatory 75% Attendance Requirement for CAT-2"
+                  value={annForm.title}
+                  onChange={e => setAnnForm({ ...annForm, title: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="fd-form-field">
+                <label className="fd-form-label">Announcement Body / Content:</label>
+                <textarea
+                  className="fd-textarea"
+                  rows={4}
+                  placeholder="Type the full announcement message for students..."
+                  value={annForm.content}
+                  onChange={e => setAnnForm({ ...annForm, content: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="fd-ann-submit-row">
+                <button type="submit" className="fd-btn-primary">
+                  <MegaphoneIcon size={14} color="#FFF" />
+                  <span>Publish Announcement</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Published Announcements Feed */}
+          <div className="fd-ann-feed-card">
+            <div className="fd-table-header-bar">
+              <div>
+                <h3 className="fd-card-title">Recent Broadcast History</h3>
+                <p className="fd-table-header-meta">Published announcements and student read receipt metrics</p>
+              </div>
+              <span className="fd-context-pill">{announcements.length} Broadcasts</span>
+            </div>
+
+            <div className="fd-ann-feed-list">
+              {announcements.map((a) => (
+                <div key={a.id} className="fd-ann-item-card">
+                  <div className="fd-aic-top">
+                    <span className="fd-sub-code-pill font-mono">{a.course}</span>
+                    <span className="fd-ann-priority-pill">{a.priority}</span>
+                    <span className="fd-aic-date">{a.date}</span>
+                  </div>
+
+                  <h4 className="fd-aic-title">{a.title}</h4>
+                  <p className="fd-aic-content">{a.content}</p>
+
+                  <div className="fd-aic-footer">
+                    <span className="fd-aic-author">Published by {a.author}</span>
+                    <span className="fd-aic-receipts">✓ {a.readCount}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Discrepancy Notice Modal ──────────────────────────── */}
+      {activeNoticeTarget && (
+        <DiscrepancyNoticeModal
+          targetItem={activeNoticeTarget}
+          onClose={() => setActiveNoticeTarget(null)}
+          onSendNotice={handleSendNotice}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  MAIN COMPONENT: FACULTY DASHBOARD PAGE
 // ═══════════════════════════════════════════════════════════════
 export default function FacultyDashboardPage() {
@@ -9272,8 +10721,8 @@ export default function FacultyDashboardPage() {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search);
       const t = p.get('tab');
-      if (t && ['dashboard', 'attendance', 'students', 'reports', 'qr', 'timetable', 'assignments', 'settings'].includes(t)) {
-        return t;
+      if (t && ['dashboard', 'attendance', 'students', 'reports', 'qr', 'timetable', 'assignments', 'communications', 'notifications', 'settings'].includes(t)) {
+        return t === 'notifications' ? 'communications' : t;
       }
     }
     return 'dashboard';
@@ -9421,6 +10870,31 @@ export default function FacultyDashboardPage() {
 
           <div className="fd-topbar-right">
             <span className="fd-topbar-date">{topbarDate}</span>
+
+            {/* Quick Direct Messages Shortcut */}
+            <button
+              type="button"
+              className="fd-topbar-icon-action"
+              onClick={() => handleNav('communications')}
+              title="Direct Messages (2 unread)"
+              aria-label="Direct Messages"
+            >
+              <MessageSquareIcon size={16} color="#162F44" />
+              <span className="fd-topbar-badge">2</span>
+            </button>
+
+            {/* Quick Notifications & Alerts Shortcut */}
+            <button
+              type="button"
+              className="fd-topbar-icon-action"
+              onClick={() => handleNav('communications')}
+              title="Attendance Notifications & Alerts (4 unread)"
+              aria-label="Notifications & Alerts"
+            >
+              <BellIcon size={16} color="#162F44" />
+              <span className="fd-topbar-badge warning">4</span>
+            </button>
+
             <div className="fd-role-badge">
               <IdCardIcon size={14} color="#162F44" />
               <span>Faculty</span>
@@ -9468,16 +10942,25 @@ export default function FacultyDashboardPage() {
             />
           )}
 
-          {activeTab === 'qr' && (
-            <TabQR onShowToast={showToast} liveData={liveData} user={user} />
-          )}
-
           {activeTab === 'timetable' && (
-            <TabTimetable onShowToast={showToast} onNav={navigate} user={user} liveData={liveData} />
+            <TabTimetable onShowToast={showToast} onNav={handleNav} user={user} liveData={liveData} />
           )}
 
           {activeTab === 'assignments' && (
             <TabAssignments user={user} liveData={liveData} onShowToast={showToast} />
+          )}
+
+          {(activeTab === 'communications' || activeTab === 'notifications') && (
+            <TabCommunications
+              user={user}
+              onNav={handleNav}
+              onShowToast={showToast}
+              liveData={liveData}
+            />
+          )}
+
+          {activeTab === 'qr' && (
+            <TabQR onShowToast={showToast} liveData={liveData} user={user} />
           )}
 
           {activeTab === 'settings' && (
