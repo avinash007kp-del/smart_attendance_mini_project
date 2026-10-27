@@ -2188,9 +2188,29 @@ function TabSettings({ user }) {
 export default function StudentDashboardPage() {
   const { user, logout } = useAuth()
   const router           = useRouter()
-  const [activeTab, setActiveTab]     = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem('attentify_student_sidebar_collapsed') === 'true'
+      } catch (e) {}
+    }
+    return false
+  })
+
+  const handleToggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setSidebarOpen(o => !o)
+    } else {
+      setSidebarCollapsed(prev => {
+        const next = !prev
+        try {
+          localStorage.setItem('attentify_student_sidebar_collapsed', String(next))
+        } catch (e) {}
+        return next
+      })
+    }
+  }
   const attData = useAttendanceData(user?.email)
 
   const isSessionActive = () => !!localStorage.getItem('active_qr_session')
@@ -2253,7 +2273,7 @@ export default function StudentDashboardPage() {
       {sidebarOpen && <div className="sd-backdrop" onClick={() => setSidebarOpen(false)} />}
 
       {/* ── Fixed Sidebar ─────────────────────────────────────── */}
-      <aside className={`sd-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`sd-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sd-sidebar-brand">
           <AttentifyLogo size={23} color="#162F44" />
           <span className="sd-sidebar-name">ATTENTIFY</span>
@@ -2307,9 +2327,9 @@ export default function StudentDashboardPage() {
         <header className="sd-topbar">
           <div className="sd-topbar-left">
             <button
-              className="sd-hamburger"
-              onClick={() => setSidebarOpen(o => !o)}
-              title="Toggle Sidebar"
+              className={`sd-hamburger ${sidebarCollapsed ? 'sidebar-hidden' : ''}`}
+              onClick={handleToggleSidebar}
+              title={sidebarCollapsed ? "Show Navigation Menu" : "Hide Navigation Menu"}
               aria-label="Toggle Sidebar"
             >
               <HamburgerIcon size={18} color="#162F44" />

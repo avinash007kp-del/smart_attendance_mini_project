@@ -11660,6 +11660,42 @@ export default function FacultyDashboardPage() {
   };
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem('attentify_faculty_sidebar_collapsed') === 'true';
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  });
+
+  const handleToggleSidebar = useCallback(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setSidebarOpen(prev => !prev);
+    } else {
+      setSidebarCollapsed(prev => {
+        const next = !prev;
+        try {
+          localStorage.setItem('attentify_faculty_sidebar_collapsed', String(next));
+        } catch (e) {}
+        return next;
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleToggleSidebar]);
+
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrModalCourse, setQrModalCourse] = useState('CS101');
   const [toastMsg, setToastMsg] = useState(null);
@@ -11718,11 +11754,22 @@ export default function FacultyDashboardPage() {
       )}
 
       {/* ── Fixed Left Sidebar (~212px) ──────────────────────── */}
-      <aside className={`fd-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`fd-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         {/* Brand */}
         <div className="fd-sidebar-brand">
-          <AttentifyLogo size={22} color="#162F44" />
-          <span className="fd-sidebar-name">ATTENTIFY</span>
+          <div className="fd-sidebar-brand-left">
+            <AttentifyLogo size={22} color="#162F44" />
+            <span className="fd-sidebar-name">ATTENTIFY</span>
+          </div>
+          <button
+            type="button"
+            className="fd-sidebar-close-btn"
+            onClick={handleToggleSidebar}
+            title="Hide Navigation Menu"
+            aria-label="Hide Navigation Menu"
+          >
+            <XIcon size={15} />
+          </button>
         </div>
 
         {/* Navigation Items */}
@@ -11791,9 +11838,11 @@ export default function FacultyDashboardPage() {
           <div className="fd-topbar-left">
             <button
               type="button"
-              className="fd-hamburger-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              title="Toggle Navigation Menu"
+              className={`fd-hamburger-btn ${sidebarCollapsed ? 'sidebar-hidden' : ''}`}
+              onClick={handleToggleSidebar}
+              title={sidebarCollapsed ? "Show Navigation Menu (Ctrl+B)" : "Hide Navigation Menu (Ctrl+B)"}
+              aria-label={sidebarCollapsed ? "Show Navigation Menu" : "Hide Navigation Menu"}
+              aria-expanded={!sidebarCollapsed}
             >
               <HamburgerIcon size={18} />
             </button>

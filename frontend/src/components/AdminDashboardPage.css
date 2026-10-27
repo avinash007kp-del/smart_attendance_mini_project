@@ -56,7 +56,16 @@
   flex-direction: column;
   padding: 24px 22px;
   z-index: 50;
-  transition: transform 0.25s ease, margin-left 0.25s ease;
+  transition: transform 0.25s ease, margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, visibility 0.25s ease;
+  will-change: margin-left, transform;
+}
+
+/* Collapsed / Hidden state on Desktop */
+.ad-sidebar.collapsed {
+  margin-left: calc(-1 * var(--ad-sidebar-width));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .ad-sidebar-brand {
@@ -952,12 +961,20 @@
     top: 0;
     bottom: 0;
     left: 0;
+    margin-left: 0 !important;
     transform: translateX(-100%);
     box-shadow: 8px 0 24px rgba(0, 0, 0, 0.15);
   }
 
   .ad-sidebar.open {
     transform: translateX(0);
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .ad-sidebar.collapsed {
+    margin-left: 0 !important;
   }
 
   .ad-overlay {

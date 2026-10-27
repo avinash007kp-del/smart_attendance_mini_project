@@ -58,15 +58,49 @@
   flex-direction: column;
   padding: 22px 14px 18px 14px;
   z-index: 50;
-  transition: transform 0.25s ease, margin-left 0.25s ease;
+  transition: transform 0.25s ease, margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, visibility 0.25s ease;
+  will-change: margin-left, transform;
+}
+
+/* Collapsed / Hidden state on Desktop */
+.fd-sidebar.collapsed {
+  margin-left: calc(-1 * var(--fd-sidebar-width));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .fd-sidebar-brand {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  padding: 2px 8px 24px 8px;
+  padding: 2px 4px 24px 8px;
   user-select: none;
+}
+
+.fd-sidebar-brand-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fd-sidebar-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--fd-text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.fd-sidebar-close-btn:hover {
+  color: var(--fd-navy);
+  background-color: rgba(22, 47, 68, 0.08);
 }
 
 .fd-sidebar-name {
@@ -243,15 +277,25 @@
   color: var(--fd-text-secondary);
   cursor: pointer;
   padding: 6px;
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
 }
 
 .fd-hamburger-btn:hover {
   color: var(--fd-navy);
+  background-color: rgba(22, 47, 68, 0.06);
+}
+
+.fd-hamburger-btn:active {
+  transform: scale(0.94);
+}
+
+.fd-hamburger-btn.sidebar-hidden {
+  color: var(--fd-navy);
+  background-color: rgba(22, 47, 68, 0.08);
 }
 
 .fd-page-label {
@@ -1675,12 +1719,20 @@
     top: 0;
     left: 0;
     bottom: 0;
+    margin-left: 0 !important;
     transform: translateX(-100%);
     box-shadow: 4px 0 24px rgba(22, 47, 68, 0.15);
   }
 
   .fd-sidebar.open {
     transform: translateX(0);
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .fd-sidebar.collapsed {
+    margin-left: 0 !important;
   }
 
   .fd-topbar {

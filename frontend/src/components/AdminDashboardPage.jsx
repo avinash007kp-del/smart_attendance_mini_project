@@ -2447,6 +2447,29 @@ export default function AdminDashboardPage() {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem('attentify_admin_sidebar_collapsed') === 'true';
+      } catch (e) {}
+    }
+    return false;
+  });
+
+  const handleToggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 900) {
+      setSidebarOpen(o => !o);
+    } else {
+      setSidebarCollapsed(prev => {
+        const next = !prev;
+        try {
+          localStorage.setItem('attentify_admin_sidebar_collapsed', String(next));
+        } catch (e) {}
+        return next;
+      });
+    }
+  };
+
   const [users, setUsers] = useState([
     { id: 'ADM001', name: 'Arjun Patel',    email: 'arjun.admin@attentify.ac.in',  role: 'admin',   dept: 'CS', status: 'active' },
     { id: 'FAC001', name: 'Dr. Rajan Kumar', email: 'rajan.kumar@attentify.ac.in',  role: 'teacher', dept: 'CS', status: 'active' },
@@ -2540,7 +2563,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* ── Left Sidebar (232px) ── */}
-      <aside className={`ad-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`ad-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         {/* Brand */}
         <div className="ad-sidebar-brand">
           <AttentifyLogo size={26} color="#162F44" />
@@ -2606,9 +2629,10 @@ export default function AdminDashboardPage() {
           <div className="ad-topbar-left">
             <button
               type="button"
-              className="ad-hamburger"
-              onClick={() => setSidebarOpen(o => !o)}
+              className={`ad-hamburger ${sidebarCollapsed ? 'sidebar-hidden' : ''}`}
+              onClick={handleToggleSidebar}
               aria-label="Toggle navigation"
+              title={sidebarCollapsed ? "Show Navigation Menu" : "Hide Navigation Menu"}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#20384D" strokeWidth="2" strokeLinecap="round">
                 <line x1="3" y1="12" x2="21" y2="12" />
