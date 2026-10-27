@@ -28,6 +28,15 @@ import {
   CheckIcon,
   BookOpenIcon,
   UserCheckIcon,
+  CalendarIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  SendIcon,
+  FileTextIcon,
+  PrinterIcon,
+  PlusIcon,
+  FilterIcon,
 } from './AdminDashboardIcons';
 import './AdminDashboardPage.css';
 
@@ -59,11 +68,12 @@ const SYSTEM_HEALTH = [
 ];
 
 const NAV_ITEMS = [
-  { id: 'overview',    label: 'Overview',           icon: GridIcon     },
-  { id: 'departments', label: 'Departments',        icon: BuildingIcon },
-  { id: 'faculty',     label: 'Faculty Management', icon: IdCardIcon   },
-  { id: 'users',       label: 'User Management',    icon: UsersIcon    },
-  { id: 'settings',    label: 'Settings',           icon: SettingsIcon },
+  { id: 'overview',    label: 'Overview',             icon: GridIcon     },
+  { id: 'departments', label: 'Departments',          icon: BuildingIcon },
+  { id: 'faculty',     label: 'Faculty Management',   icon: IdCardIcon   },
+  { id: 'timetable',   label: 'Timetable Management', icon: CalendarIcon },
+  { id: 'users',       label: 'User Management',      icon: UsersIcon    },
+  { id: 'settings',    label: 'Settings',             icon: SettingsIcon },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -95,6 +105,15 @@ function TabOverview({ user, users, onNav, onQuickAction }) {
           <div className="ad-ellipse-wrap" aria-hidden="true">
             <BrandEllipse width={50} height={32} />
           </div>
+          <button
+            type="button"
+            className="ad-btn-outline"
+            onClick={() => onNav('timetable')}
+            title="Manage Weekly Schedule, Slot Allocations & Room Bookings"
+          >
+            <CalendarIcon size={16} />
+            <span>Timetable</span>
+          </button>
           <button
             type="button"
             className="ad-btn-outline"
@@ -1928,6 +1947,2074 @@ function RemoveFacultyModal({ faculty, onClose, onConfirm }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  TIMETABLE MANAGEMENT DATASETS & CATALOGS
+// ═══════════════════════════════════════════════════════════════
+const CLASSROOMS_CATALOG = [
+  { id: 'R301', name: 'Room 301', type: 'Lecture Hall', capacity: 70, building: 'Main Academic Block' },
+  { id: 'R302', name: 'Room 302', type: 'Lecture Hall', capacity: 70, building: 'Main Academic Block' },
+  { id: 'R405', name: 'Room 405', type: 'Smart Classroom', capacity: 60, building: 'Science Annex' },
+  { id: 'R406', name: 'Room 406', type: 'Lecture Hall', capacity: 65, building: 'Science Annex' },
+  { id: 'L102', name: 'Computing Lab 1', type: 'Lab', capacity: 45, building: 'Turing Wing' },
+  { id: 'L204', name: 'Hardware & DSP Lab', type: 'Lab', capacity: 35, building: 'Bose Block' },
+  { id: 'L301', name: 'Microbiology Lab', type: 'Lab', capacity: 30, building: 'Bio-Research Center' },
+  { id: 'SHA',  name: 'Seminar Hall A', type: 'Auditorium', capacity: 180, building: 'Admin Block' },
+];
+
+const TIME_SLOTS_CATALOG = [
+  { id: '09:00-10:00', label: '09:00 AM - 10:00 AM', period: 1, type: 'academic' },
+  { id: '10:00-11:00', label: '10:00 AM - 11:00 AM', period: 2, type: 'academic' },
+  { id: '11:15-12:15', label: '11:15 AM - 12:15 PM', period: 3, type: 'academic' },
+  { id: '12:15-13:15', label: '12:15 PM - 01:15 PM', period: 4, type: 'academic' },
+  { id: '14:00-15:00', label: '02:00 PM - 03:00 PM', period: 5, type: 'academic' },
+  { id: '15:00-16:00', label: '03:00 PM - 04:00 PM', period: 6, type: 'academic' },
+  { id: '16:00-17:00', label: '04:00 PM - 05:00 PM', period: 7, type: 'academic' },
+];
+
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const SEMESTERS_CATALOG = [
+  { id: 'Sem 1', name: 'Semester 1 (Year 1)' },
+  { id: 'Sem 3', name: 'Semester 3 (Year 2)' },
+  { id: 'Sem 5', name: 'Semester 5 (Year 3)' },
+  { id: 'Sem 7', name: 'Semester 7 (Year 4)' },
+];
+
+const SESSION_TYPES = ['Lecture', 'Tutorial', 'Laboratory', 'Seminar'];
+
+const INITIAL_TIMETABLE = [
+  {
+    id: 'TT-101',
+    dept: 'CS',
+    semester: 'Sem 5',
+    section: 'Section A',
+    courseCode: 'CS312',
+    courseTitle: 'Database Management Systems',
+    sessionType: 'Lecture',
+    facultyId: 'FAC001',
+    facultyName: 'Dr. Rajan Kumar',
+    day: 'Monday',
+    timeSlot: '09:00-10:00',
+    roomId: 'R301',
+    roomName: 'Room 301',
+    status: 'published',
+  },
+  {
+    id: 'TT-102',
+    dept: 'CS',
+    semester: 'Sem 7',
+    section: 'Section A',
+    courseCode: 'CS401',
+    courseTitle: 'Artificial Intelligence & ML',
+    sessionType: 'Lecture',
+    facultyId: 'FAC001',
+    facultyName: 'Dr. Rajan Kumar',
+    day: 'Monday',
+    timeSlot: '10:00-11:00',
+    roomId: 'R302',
+    roomName: 'Room 302',
+    status: 'published',
+  },
+  {
+    id: 'TT-103',
+    dept: 'CS',
+    semester: 'Sem 3',
+    section: 'Section A',
+    courseCode: 'CS101',
+    courseTitle: 'Data Structures & Algorithms',
+    sessionType: 'Lecture',
+    facultyId: 'FAC003',
+    facultyName: 'Avinash K P',
+    day: 'Monday',
+    timeSlot: '11:15-12:15',
+    roomId: 'R301',
+    roomName: 'Room 301',
+    status: 'published',
+  },
+  {
+    id: 'TT-104',
+    dept: 'EC',
+    semester: 'Sem 5',
+    section: 'Section A',
+    courseCode: 'EC201',
+    courseTitle: 'Digital Signal Processing',
+    sessionType: 'Lecture',
+    facultyId: 'FAC002',
+    facultyName: 'Prof. Meera Iyer',
+    day: 'Tuesday',
+    timeSlot: '09:00-10:00',
+    roomId: 'R302',
+    roomName: 'Room 302',
+    status: 'published',
+  },
+  {
+    id: 'TT-105',
+    dept: 'CS',
+    semester: 'Sem 3',
+    section: 'Section A',
+    courseCode: 'CS101L',
+    courseTitle: 'Data Structures Laboratory',
+    sessionType: 'Laboratory',
+    facultyId: 'FAC003',
+    facultyName: 'Avinash K P',
+    day: 'Tuesday',
+    timeSlot: '14:00-15:00',
+    roomId: 'L102',
+    roomName: 'Computing Lab 1',
+    status: 'published',
+  },
+  {
+    id: 'TT-106',
+    dept: 'CS',
+    semester: 'Sem 5',
+    section: 'Section B',
+    courseCode: 'CS205',
+    courseTitle: 'Operating Systems & Architecture',
+    sessionType: 'Lecture',
+    facultyId: 'FAC001',
+    facultyName: 'Dr. Rajan Kumar',
+    day: 'Wednesday',
+    timeSlot: '09:00-10:00',
+    roomId: 'R405',
+    roomName: 'Room 405',
+    status: 'published',
+  },
+  {
+    id: 'TT-107',
+    dept: 'CS',
+    semester: 'Sem 5',
+    section: 'Section A',
+    courseCode: 'CS312',
+    courseTitle: 'Database Management Systems',
+    sessionType: 'Lecture',
+    facultyId: 'FAC001',
+    facultyName: 'Dr. Rajan Kumar',
+    day: 'Wednesday',
+    timeSlot: '10:00-11:00',
+    roomId: 'R301',
+    roomName: 'Room 301',
+    status: 'published',
+  },
+  {
+    id: 'TT-108',
+    dept: 'EC',
+    semester: 'Sem 5',
+    section: 'Section B',
+    courseCode: 'EC201',
+    courseTitle: 'Digital Signal Processing',
+    sessionType: 'Lecture',
+    facultyId: 'FAC002',
+    facultyName: 'Prof. Meera Iyer',
+    day: 'Thursday',
+    timeSlot: '11:15-12:15',
+    roomId: 'R302',
+    roomName: 'Room 302',
+    status: 'published',
+  },
+  {
+    id: 'TT-109',
+    dept: 'CS',
+    semester: 'Sem 5',
+    section: 'Section A',
+    courseCode: 'CS312L',
+    courseTitle: 'DBMS Practical Laboratory',
+    sessionType: 'Laboratory',
+    facultyId: 'FAC001',
+    facultyName: 'Dr. Rajan Kumar',
+    day: 'Thursday',
+    timeSlot: '14:00-15:00',
+    roomId: 'L102',
+    roomName: 'Computing Lab 1',
+    status: 'published',
+  },
+  {
+    id: 'TT-110',
+    dept: 'CS',
+    semester: 'Sem 7',
+    section: 'Section A',
+    courseCode: 'CS401',
+    courseTitle: 'Artificial Intelligence & ML',
+    sessionType: 'Lecture',
+    facultyId: 'FAC001',
+    facultyName: 'Dr. Rajan Kumar',
+    day: 'Friday',
+    timeSlot: '09:00-10:00',
+    roomId: 'R301',
+    roomName: 'Room 301',
+    status: 'published',
+  },
+  {
+    id: 'TT-111',
+    dept: 'CS',
+    semester: 'Sem 3',
+    section: 'Section A',
+    courseCode: 'CS101',
+    courseTitle: 'Data Structures & Algorithms',
+    sessionType: 'Lecture',
+    facultyId: 'FAC003',
+    facultyName: 'Avinash K P',
+    day: 'Friday',
+    timeSlot: '10:00-11:00',
+    roomId: 'R301',
+    roomName: 'Room 301',
+    status: 'published',
+  },
+  {
+    id: 'TT-112',
+    dept: 'EC',
+    semester: 'Sem 5',
+    section: 'Section A',
+    courseCode: 'EC201L',
+    courseTitle: 'Signals & Hardware Lab',
+    sessionType: 'Laboratory',
+    facultyId: 'FAC002',
+    facultyName: 'Prof. Meera Iyer',
+    day: 'Friday',
+    timeSlot: '14:00-15:00',
+    roomId: 'L204',
+    roomName: 'Hardware & DSP Lab',
+    status: 'published',
+  },
+];
+
+const INITIAL_CHANGE_REQUESTS = [
+  {
+    id: 'REQ-101',
+    slotId: 'TT-107',
+    facultyId: 'FAC001',
+    facultyName: 'Dr. Rajan Kumar',
+    dept: 'CS',
+    subject: 'CS312 - Database Management Systems',
+    currentSlot: { day: 'Wednesday', timeSlot: '10:00-11:00', roomId: 'R301', roomName: 'Room 301', section: 'Section A', semester: 'Sem 5' },
+    proposedSlot: { day: 'Friday', timeSlot: '14:00-15:00', roomId: 'R302', roomName: 'Room 302', section: 'Section A', semester: 'Sem 5' },
+    reason: 'Department Board of Studies review meeting scheduled for Wednesday 10 AM.',
+    status: 'pending',
+    submittedAt: '26 Oct 2026, 04:15 PM',
+    adminRemarks: '',
+  },
+  {
+    id: 'REQ-102',
+    slotId: 'TT-105',
+    facultyId: 'FAC003',
+    facultyName: 'Avinash K P',
+    dept: 'CS',
+    subject: 'CS101L - Data Structures Laboratory',
+    currentSlot: { day: 'Tuesday', timeSlot: '14:00-15:00', roomId: 'L102', roomName: 'Computing Lab 1', section: 'Section A', semester: 'Sem 3' },
+    proposedSlot: { day: 'Thursday', timeSlot: '11:15-12:15', roomId: 'L102', roomName: 'Computing Lab 1', section: 'Section A', semester: 'Sem 3' },
+    reason: 'Scheduled maintenance of server cluster in Lab 1 during Tuesday afternoon.',
+    status: 'pending',
+    submittedAt: '27 Oct 2026, 09:30 AM',
+    adminRemarks: '',
+  },
+  {
+    id: 'REQ-098',
+    slotId: 'TT-104',
+    facultyId: 'FAC002',
+    facultyName: 'Prof. Meera Iyer',
+    dept: 'EC',
+    subject: 'EC201 - Digital Signal Processing',
+    currentSlot: { day: 'Tuesday', timeSlot: '09:00-10:00', roomId: 'R302', roomName: 'Room 302', section: 'Section A', semester: 'Sem 5' },
+    proposedSlot: { day: 'Tuesday', timeSlot: '11:15-12:15', roomId: 'R405', roomName: 'Room 405', section: 'Section A', semester: 'Sem 5' },
+    reason: 'Guest lecture arranged on DSP algorithms with industry expert.',
+    status: 'approved',
+    submittedAt: '24 Oct 2026, 02:20 PM',
+    adminRemarks: 'Approved. Classroom 405 confirmed available.',
+  },
+];
+
+// Conflict Detection Engine
+function detectSlotConflicts(candidate, allSlots, ignoreSlotId = null) {
+  const conflicts = [];
+  if (!candidate.day || !candidate.timeSlot) return conflicts;
+
+  const others = allSlots.filter(s => s.id !== ignoreSlotId);
+  for (const s of others) {
+    if (s.day === candidate.day && s.timeSlot === candidate.timeSlot) {
+      // 1. Faculty conflict
+      if (candidate.facultyId && s.facultyId === candidate.facultyId) {
+        conflicts.push({
+          type: 'faculty',
+          title: 'Faculty Double-Booking Conflict',
+          severity: 'error',
+          message: `${candidate.facultyName || 'Selected Faculty'} is already scheduled for ${s.courseCode} (${s.section}) in ${s.roomName} at this time.`,
+          conflictingSlot: s,
+        });
+      }
+      // 2. Room conflict
+      if (candidate.roomId && s.roomId === candidate.roomId) {
+        conflicts.push({
+          type: 'classroom',
+          title: 'Classroom Collision Conflict',
+          severity: 'error',
+          message: `${candidate.roomName || 'Selected Room'} is already booked for ${s.courseCode} (${s.facultyName}, ${s.section}) at this time.`,
+          conflictingSlot: s,
+        });
+      }
+      // 3. Section collision
+      if (
+        candidate.dept &&
+        candidate.semester &&
+        candidate.section &&
+        s.dept === candidate.dept &&
+        s.semester === candidate.semester &&
+        s.section === candidate.section
+      ) {
+        conflicts.push({
+          type: 'section',
+          title: 'Section Schedule Collision',
+          severity: 'error',
+          message: `${candidate.dept} ${candidate.semester} ${candidate.section} already has a session (${s.courseCode} with ${s.facultyName}) at this time.`,
+          conflictingSlot: s,
+        });
+      }
+    }
+  }
+  return conflicts;
+}
+
+function findAllTimetableConflicts(allSlots) {
+  const collisions = [];
+  for (let i = 0; i < allSlots.length; i++) {
+    for (let j = i + 1; j < allSlots.length; j++) {
+      const a = allSlots[i];
+      const b = allSlots[j];
+      if (a.day === b.day && a.timeSlot === b.timeSlot) {
+        if (a.facultyId && b.facultyId && a.facultyId === b.facultyId) {
+          collisions.push({
+            id: `c-fac-${a.id}-${b.id}`,
+            type: 'faculty',
+            title: 'Faculty Double-Booking',
+            day: a.day,
+            timeSlot: a.timeSlot,
+            slotA: a,
+            slotB: b,
+            description: `${a.facultyName} is scheduled simultaneously for ${a.courseCode} (${a.roomName}) and ${b.courseCode} (${b.roomName}).`,
+          });
+        }
+        if (a.roomId && b.roomId && a.roomId === b.roomId) {
+          collisions.push({
+            id: `c-room-${a.id}-${b.id}`,
+            type: 'classroom',
+            title: 'Classroom Collision',
+            day: a.day,
+            timeSlot: a.timeSlot,
+            slotA: a,
+            slotB: b,
+            description: `${a.roomName} is booked for two classes at the same time: ${a.courseCode} and ${b.courseCode}.`,
+          });
+        }
+        if (a.dept === b.dept && a.semester === b.semester && a.section === b.section) {
+          collisions.push({
+            id: `c-sec-${a.id}-${b.id}`,
+            type: 'section',
+            title: 'Section Schedule Overlap',
+            day: a.day,
+            timeSlot: a.timeSlot,
+            slotA: a,
+            slotB: b,
+            description: `${a.dept} ${a.semester} ${a.section} has two lectures booked at this time: ${a.courseCode} and ${b.courseCode}.`,
+          });
+        }
+      }
+    }
+  }
+  return collisions;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MODAL: CREATE / EDIT TIMETABLE SLOT
+// ═══════════════════════════════════════════════════════════════
+function CreateEditSlotModal({
+  isOpen,
+  onClose,
+  onSave,
+  editingSlot,
+  initialDefaults,
+  timetableList,
+  facultyList,
+}) {
+  if (!isOpen) return null;
+
+  const defaultDept = initialDefaults?.dept || editingSlot?.dept || 'CS';
+  const defaultCourses = COURSE_CATALOG.filter(c => c.dept === defaultDept);
+
+  const [form, setForm] = useState({
+    dept: defaultDept,
+    semester: editingSlot?.semester || initialDefaults?.semester || 'Sem 5',
+    section: editingSlot?.section || initialDefaults?.section || 'Section A',
+    courseCode: editingSlot?.courseCode || defaultCourses[0]?.code || 'CS312',
+    sessionType: editingSlot?.sessionType || defaultCourses[0]?.type || 'Lecture',
+    facultyId: editingSlot?.facultyId || facultyList.find(f => f.dept === defaultDept)?.id || facultyList[0]?.id || 'FAC001',
+    day: editingSlot?.day || initialDefaults?.day || 'Monday',
+    timeSlot: editingSlot?.timeSlot || initialDefaults?.timeSlot || '09:00-10:00',
+    roomId: editingSlot?.roomId || 'R301',
+  });
+
+  const [overrideWarning, setOverrideWarning] = useState(false);
+
+  // Auto-update courses when department changes
+  const handleDeptChange = (dept) => {
+    const deptCourses = COURSE_CATALOG.filter(c => c.dept === dept);
+    const deptFaculty = facultyList.filter(f => f.dept === dept);
+    setForm(prev => ({
+      ...prev,
+      dept,
+      courseCode: deptCourses[0]?.code || '',
+      sessionType: deptCourses[0]?.type || 'Lecture',
+      facultyId: deptFaculty[0]?.id || facultyList[0]?.id || '',
+    }));
+  };
+
+  const handleCourseChange = (code) => {
+    const course = COURSE_CATALOG.find(c => c.code === code);
+    setForm(prev => ({
+      ...prev,
+      courseCode: code,
+      sessionType: course?.type === 'Lab' ? 'Laboratory' : 'Lecture',
+    }));
+  };
+
+  // Live conflict evaluation
+  const activeConflicts = useMemo(() => {
+    const facultyObj = facultyList.find(f => f.id === form.facultyId);
+    const roomObj = CLASSROOMS_CATALOG.find(r => r.id === form.roomId);
+    const courseObj = COURSE_CATALOG.find(c => c.code === form.courseCode);
+
+    const candidate = {
+      ...form,
+      facultyName: facultyObj?.name || 'Selected Faculty',
+      roomName: roomObj?.name || 'Selected Room',
+      courseTitle: courseObj?.title || form.courseCode,
+    };
+    return detectSlotConflicts(candidate, timetableList, editingSlot?.id);
+  }, [form, timetableList, editingSlot, facultyList]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (activeConflicts.length > 0 && !overrideWarning) {
+      alert('Please review and resolve the scheduling conflicts or check the override authorization box before saving.');
+      return;
+    }
+
+    const facultyObj = facultyList.find(f => f.id === form.facultyId);
+    const roomObj = CLASSROOMS_CATALOG.find(r => r.id === form.roomId);
+    const courseObj = COURSE_CATALOG.find(c => c.code === form.courseCode);
+
+    onSave({
+      ...form,
+      facultyName: facultyObj?.name || 'Instructor',
+      roomName: roomObj?.name || form.roomId,
+      courseTitle: courseObj?.title || form.courseCode,
+      status: 'published',
+    });
+  };
+
+  const selectedRoom = CLASSROOMS_CATALOG.find(r => r.id === form.roomId);
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card ad-modal-large" onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <h3 className="ad-modal-title">
+            {editingSlot ? 'Edit Timetable Session' : 'Schedule Timetable Session'}
+          </h3>
+          <span className="ad-type-badge theory" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
+            {editingSlot ? editingSlot.id : 'New Slot'}
+          </span>
+        </div>
+        <p className="ad-modal-desc">
+          Assign subject, instructor, semester, section, classroom, and weekly time slot with real-time conflict checking.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          {/* Live Conflict Banner */}
+          {activeConflicts.length > 0 && (
+            <div className="ad-conflict-alert-box">
+              <div className="ad-conflict-alert-header">
+                <AlertTriangleIcon size={16} color="#B5822C" />
+                <span>Scheduling Conflict Warning ({activeConflicts.length})</span>
+              </div>
+              <div className="ad-conflict-alert-list">
+                {activeConflicts.map((c, idx) => (
+                  <div key={idx} className="ad-conflict-item">
+                    <strong>{c.title}:</strong> {c.message}
+                  </div>
+                ))}
+              </div>
+              <label className="ad-override-check-label">
+                <input
+                  type="checkbox"
+                  checked={overrideWarning}
+                  onChange={e => setOverrideWarning(e.target.checked)}
+                />
+                <span>Acknowledge scheduling warning and proceed (e.g. combined elective/joint seminar)</span>
+              </label>
+            </div>
+          )}
+
+          <div className="ad-form-grid-2">
+            {/* Department */}
+            <div className="ad-form-group">
+              <label className="ad-form-label">Department</label>
+              <select
+                className="ad-select"
+                value={form.dept}
+                onChange={e => handleDeptChange(e.target.value)}
+                required
+              >
+                {DEPARTMENTS.map(d => (
+                  <option key={d.id} value={d.id}>{d.id} — {d.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Semester */}
+            <div className="ad-form-group">
+              <label className="ad-form-label">Semester</label>
+              <select
+                className="ad-select"
+                value={form.semester}
+                onChange={e => setForm(f => ({ ...f, semester: e.target.value }))}
+                required
+              >
+                {SEMESTERS_CATALOG.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="ad-form-grid-2">
+            {/* Class & Section */}
+            <div className="ad-form-group">
+              <label className="ad-form-label">Class Section / Batch</label>
+              <select
+                className="ad-select"
+                value={form.section}
+                onChange={e => setForm(f => ({ ...f, section: e.target.value }))}
+                required
+              >
+                {SECTIONS_CATALOG.map(sec => (
+                  <option key={sec} value={sec}>{sec}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Session Type */}
+            <div className="ad-form-group">
+              <label className="ad-form-label">Session Format</label>
+              <select
+                className="ad-select"
+                value={form.sessionType}
+                onChange={e => setForm(f => ({ ...f, sessionType: e.target.value }))}
+                required
+              >
+                {SESSION_TYPES.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Subject / Course */}
+          <div className="ad-form-group">
+            <label className="ad-form-label">Course / Subject</label>
+            <select
+              className="ad-select"
+              value={form.courseCode}
+              onChange={e => handleCourseChange(e.target.value)}
+              required
+            >
+              {COURSE_CATALOG.filter(c => c.dept === form.dept).map(c => (
+                <option key={c.code} value={c.code}>
+                  {c.code} — {c.title} ({c.type})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Faculty Instructor */}
+          <div className="ad-form-group">
+            <label className="ad-form-label">Faculty Instructor</label>
+            <select
+              className="ad-select"
+              value={form.facultyId}
+              onChange={e => setForm(f => ({ ...f, facultyId: e.target.value }))}
+              required
+            >
+              {facultyList.map(fac => (
+                <option key={fac.id} value={fac.id}>
+                  {fac.name} ({fac.dept} · {fac.designation})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="ad-form-grid-2">
+            {/* Day of Week */}
+            <div className="ad-form-group">
+              <label className="ad-form-label">Day of Week</label>
+              <select
+                className="ad-select"
+                value={form.day}
+                onChange={e => setForm(f => ({ ...f, day: e.target.value }))}
+                required
+              >
+                {DAYS_OF_WEEK.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Time Slot */}
+            <div className="ad-form-group">
+              <label className="ad-form-label">Time Slot</label>
+              <select
+                className="ad-select"
+                value={form.timeSlot}
+                onChange={e => setForm(f => ({ ...f, timeSlot: e.target.value }))}
+                required
+              >
+                {TIME_SLOTS_CATALOG.map(t => (
+                  <option key={t.id} value={t.id}>{t.label} (Period {t.period})</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Classroom / Laboratory */}
+          <div className="ad-form-group">
+            <label className="ad-form-label">
+              Classroom / Laboratory Location
+              {selectedRoom && (
+                <span style={{ fontWeight: 400, color: 'var(--ad-text-secondary)', marginLeft: '8px' }}>
+                  ({selectedRoom.capacity} seats · {selectedRoom.building})
+                </span>
+              )}
+            </label>
+            <select
+              className="ad-select"
+              value={form.roomId}
+              onChange={e => setForm(f => ({ ...f, roomId: e.target.value }))}
+              required
+            >
+              {CLASSROOMS_CATALOG.map(r => (
+                <option key={r.id} value={r.id}>
+                  {r.name} — {r.type} ({r.capacity} seats, {r.building})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="ad-modal-actions" style={{ marginTop: '24px' }}>
+            <button type="button" className="ad-btn-outline" onClick={onClose}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="ad-btn-primary"
+              disabled={activeConflicts.length > 0 && !overrideWarning}
+            >
+              <CheckIcon size={16} />
+              <span>{editingSlot ? 'Update Session' : 'Save Session'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MODAL: PUBLISH / UPDATE TIMETABLE
+// ═══════════════════════════════════════════════════════════════
+function PublishTimetableModal({
+  isOpen,
+  onClose,
+  onPublish,
+  timetableList,
+  publishedInfo,
+  facultyList,
+}) {
+  if (!isOpen) return null;
+
+  const [version, setVersion] = useState('v2.5 (Revised Fall 2026)');
+  const [effectiveDate, setEffectiveDate] = useState('2026-11-02');
+  const [notifyFaculty, setNotifyFaculty] = useState(true);
+  const [notifyStudents, setNotifyStudents] = useState(true);
+  const [syncDisplays, setSyncDisplays] = useState(true);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onPublish({ version, effectiveDate, notifyFaculty, notifyStudents, syncDisplays });
+  };
+
+  const uniqueRooms = new Set(timetableList.map(s => s.roomId)).size;
+  const uniqueFaculty = new Set(timetableList.map(s => s.facultyId)).size;
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card" onClick={e => e.stopPropagation()}>
+        <h3 className="ad-modal-title">Publish Timetable Schedule</h3>
+        <p className="ad-modal-desc">
+          Publishing makes the weekly schedule active for faculty mark-attendance portals, student scanners, and digital displays.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="ad-assign-faculty-summary">
+            <div className="ad-avatar-circle" style={{ backgroundColor: 'var(--ad-navy)' }}>
+              <CalendarIcon size={18} color="#fff" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '13.5px', color: 'var(--ad-navy)' }}>
+                Term Scope: {timetableList.length} Scheduled Sessions
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--ad-text-secondary)', marginTop: '2px' }}>
+                {uniqueFaculty} Instructors Allocated · {uniqueRooms} Academic Rooms Utilized
+              </div>
+            </div>
+          </div>
+
+          <div className="ad-form-group">
+            <label className="ad-form-label">Timetable Release Version</label>
+            <input
+              type="text"
+              className="ad-input"
+              value={version}
+              onChange={e => setVersion(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="ad-form-group">
+            <label className="ad-form-label">Effective From Date</label>
+            <input
+              type="date"
+              className="ad-input"
+              value={effectiveDate}
+              onChange={e => setEffectiveDate(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '16px' }}>
+            <label className="ad-assign-check-label">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={notifyFaculty}
+                  onChange={e => setNotifyFaculty(e.target.checked)}
+                />
+                <span style={{ fontSize: '13px', color: 'var(--ad-text-primary)' }}>
+                  Send push notification & calendar sync to all assigned faculty ({uniqueFaculty})
+                </span>
+              </div>
+            </label>
+
+            <label className="ad-assign-check-label">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={notifyStudents}
+                  onChange={e => setNotifyStudents(e.target.checked)}
+                />
+                <span style={{ fontSize: '13px', color: 'var(--ad-text-primary)' }}>
+                  Broadcast timetable schedule updates to all enrolled student dashboards
+                </span>
+              </div>
+            </label>
+
+            <label className="ad-assign-check-label">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={syncDisplays}
+                  onChange={e => setSyncDisplays(e.target.checked)}
+                />
+                <span style={{ fontSize: '13px', color: 'var(--ad-text-primary)' }}>
+                  Synchronize physical classroom digital display signage boards
+                </span>
+              </div>
+            </label>
+          </div>
+
+          <div className="ad-modal-actions" style={{ marginTop: '24px' }}>
+            <button type="button" className="ad-btn-outline" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="ad-btn-primary">
+              <SendIcon size={15} />
+              <span>Publish Schedule Now</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MODAL: REVIEW / HANDLE TIMETABLE CHANGE REQUEST
+// ═══════════════════════════════════════════════════════════════
+function ReviewChangeRequestModal({
+  isOpen,
+  onClose,
+  request,
+  onApprove,
+  onReject,
+  timetableList,
+}) {
+  if (!isOpen || !request) return null;
+
+  const [remarks, setRemarks] = useState('');
+  const [rejectMode, setRejectMode] = useState(false);
+
+  // Proposed slot conflict pre-check
+  const proposedConflicts = useMemo(() => {
+    const candidate = {
+      day: request.proposedSlot.day,
+      timeSlot: request.proposedSlot.timeSlot,
+      facultyId: request.facultyId,
+      facultyName: request.facultyName,
+      roomId: request.proposedSlot.roomId,
+      roomName: request.proposedSlot.roomName,
+      dept: request.dept,
+      semester: request.proposedSlot.semester,
+      section: request.proposedSlot.section,
+    };
+    return detectSlotConflicts(candidate, timetableList, request.slotId);
+  }, [request, timetableList]);
+
+  const hasConflicts = proposedConflicts.length > 0;
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card ad-modal-large" onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <h3 className="ad-modal-title">Review Timetable Change Request</h3>
+          <span className={`ad-status-pill ${request.status}`}>
+            <span className="ad-status-dot" />
+            <span>{request.status.toUpperCase()}</span>
+          </span>
+        </div>
+        <p className="ad-modal-desc">
+          Request ID: <code>#{request.id}</code> · Submitted on {request.submittedAt}
+        </p>
+
+        {/* Faculty summary */}
+        <div className="ad-assign-faculty-summary">
+          <div className="ad-avatar-circle" style={{ backgroundColor: 'var(--ad-navy)' }}>
+            {request.facultyName.slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--ad-navy)' }}>
+              {request.facultyName} ({request.dept} Department)
+            </div>
+            <div style={{ fontSize: '12.5px', color: 'var(--ad-text-primary)', marginTop: '2px' }}>
+              Subject: <strong>{request.subject}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Current vs Proposed Grid */}
+        <div className="ad-slot-compare-grid">
+          <div className="ad-compare-card current">
+            <span className="ad-compare-badge current">Current Slot</span>
+            <div className="ad-compare-day">{request.currentSlot.day}</div>
+            <div className="ad-compare-time">{request.currentSlot.timeSlot}</div>
+            <div className="ad-compare-meta">
+              <span>{request.currentSlot.roomName}</span> · <span>{request.currentSlot.semester} {request.currentSlot.section}</span>
+            </div>
+          </div>
+
+          <div className="ad-compare-arrow">&rarr;</div>
+
+          <div className="ad-compare-card proposed">
+            <span className="ad-compare-badge proposed">Requested Slot</span>
+            <div className="ad-compare-day">{request.proposedSlot.day}</div>
+            <div className="ad-compare-time">{request.proposedSlot.timeSlot}</div>
+            <div className="ad-compare-meta">
+              <span>{request.proposedSlot.roomName}</span> · <span>{request.proposedSlot.semester} {request.proposedSlot.section}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Reason Box */}
+        <div className="ad-request-reason-box">
+          <span className="ad-reason-lbl">Reason Provided by Instructor:</span>
+          <p className="ad-reason-text">"{request.reason}"</p>
+        </div>
+
+        {/* Conflict Pre-Check Banner */}
+        {hasConflicts ? (
+          <div className="ad-conflict-alert-box" style={{ marginTop: '16px' }}>
+            <div className="ad-conflict-alert-header">
+              <AlertTriangleIcon size={16} color="#B5822C" />
+              <span>Scheduling Collision for Requested Slot:</span>
+            </div>
+            <div className="ad-conflict-alert-list">
+              {proposedConflicts.map((c, idx) => (
+                <div key={idx} className="ad-conflict-item">
+                  <strong>{c.title}:</strong> {c.message}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="ad-conflict-clean-box" style={{ marginTop: '16px' }}>
+            <CheckCircleIcon size={16} color="#2D634C" />
+            <span>Feasibility Verified: Proposed room and instructor are free at that time (0 collisions).</span>
+          </div>
+        )}
+
+        {/* Rejection Remarks Form */}
+        {rejectMode && (
+          <div className="ad-form-group" style={{ marginTop: '16px' }}>
+            <label className="ad-form-label">Administrative Remarks / Reason for Rejection</label>
+            <textarea
+              className="ad-textarea"
+              rows={3}
+              placeholder="e.g. Requested classroom is reserved for university examination duty; please propose another slot."
+              value={remarks}
+              onChange={e => setRemarks(e.target.value)}
+              required
+            />
+          </div>
+        )}
+
+        <div className="ad-modal-actions" style={{ marginTop: '24px' }}>
+          <button type="button" className="ad-btn-outline" onClick={onClose}>
+            Close
+          </button>
+
+          {request.status === 'pending' && !rejectMode && (
+            <>
+              <button
+                type="button"
+                className="ad-btn-outline"
+                style={{ color: '#C3665B', borderColor: 'rgba(195,102,91,0.4)' }}
+                onClick={() => setRejectMode(true)}
+              >
+                <XCircleIcon size={16} />
+                <span>Reject...</span>
+              </button>
+              <button
+                type="button"
+                className="ad-btn-primary"
+                onClick={() => onApprove(request)}
+              >
+                <CheckCircleIcon size={16} />
+                <span>Approve & Update Timetable</span>
+              </button>
+            </>
+          )}
+
+          {request.status === 'pending' && rejectMode && (
+            <button
+              type="button"
+              className="ad-btn-danger"
+              onClick={() => onReject(request, remarks)}
+            >
+              <XCircleIcon size={16} />
+              <span>Confirm Rejection</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MODAL: DELETE TIMETABLE SLOT CONFIRMATION
+// ═══════════════════════════════════════════════════════════════
+function DeleteSlotModal({ isOpen, onClose, slot, onConfirm }) {
+  if (!isOpen || !slot) return null;
+
+  return (
+    <div className="ad-modal-backdrop" onClick={onClose}>
+      <div className="ad-modal-card" onClick={e => e.stopPropagation()}>
+        <h3 className="ad-modal-title">Remove Scheduled Session?</h3>
+        <p className="ad-modal-desc">
+          Are you sure you want to remove <strong>{slot.courseCode} ({slot.courseTitle})</strong> on <strong>{slot.day} {slot.timeSlot}</strong> from <strong>{slot.roomName}</strong>?
+        </p>
+
+        <div className="ad-danger-notice-box">
+          <p>
+            <strong>Warning:</strong> This session will be removed from the active timetable and unlinked from {slot.facultyName}'s schedule.
+          </p>
+        </div>
+
+        <div className="ad-modal-actions" style={{ marginTop: '20px' }}>
+          <button type="button" className="ad-btn-outline" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="ad-btn-danger"
+            onClick={() => onConfirm(slot)}
+          >
+            <TrashIcon size={15} />
+            <span>Confirm Deletion</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MAIN TAB: TIMETABLE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function TabTimetableManagement({
+  timetableList,
+  setTimetableList,
+  changeRequests,
+  setChangeRequests,
+  timetablePublishedInfo,
+  setTimetablePublishedInfo,
+  facultyList,
+  onShowToast,
+}) {
+  const [activeSubTab, setActiveSubTab] = useState('matrix'); // 'matrix', 'directory', 'conflicts', 'requests'
+
+  // Filters
+  const [filterDept, setFilterDept] = useState('all');
+  const [filterSem, setFilterSem] = useState('all');
+  const [filterSec, setFilterSec] = useState('all');
+  const [filterFaculty, setFilterFaculty] = useState('all');
+  const [filterRoom, setFilterRoom] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [matrixViewBy, setMatrixViewBy] = useState('class'); // 'class', 'faculty', 'room'
+  const [requestFilter, setRequestFilter] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
+
+  // Modals
+  const [slotModalOpen, setSlotModalOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [initialSlotDefaults, setInitialSlotDefaults] = useState(null);
+  const [deleteConfirmSlot, setDeleteConfirmSlot] = useState(null);
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [reviewRequestModal, setReviewRequestModal] = useState(null);
+
+  // Conflicts calculation across all slots
+  const allConflicts = useMemo(() => {
+    return findAllTimetableConflicts(timetableList);
+  }, [timetableList]);
+
+  // Pending change requests count
+  const pendingRequestsCount = useMemo(() => {
+    return changeRequests.filter(r => r.status === 'pending').length;
+  }, [changeRequests]);
+
+  // Filtered slots
+  const filteredSlots = useMemo(() => {
+    return timetableList.filter(slot => {
+      if (filterDept !== 'all' && slot.dept !== filterDept) return false;
+      if (filterSem !== 'all' && slot.semester !== filterSem) return false;
+      if (filterSec !== 'all' && slot.section !== filterSec) return false;
+      if (filterFaculty !== 'all' && slot.facultyId !== filterFaculty) return false;
+      if (filterRoom !== 'all' && slot.roomId !== filterRoom) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const match =
+          slot.courseCode.toLowerCase().includes(q) ||
+          slot.courseTitle.toLowerCase().includes(q) ||
+          slot.facultyName.toLowerCase().includes(q) ||
+          slot.roomName.toLowerCase().includes(q) ||
+          slot.section.toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [timetableList, filterDept, filterSem, filterSec, filterFaculty, filterRoom, searchQuery]);
+
+  // Unique metrics for KPI Strip
+  const totalSlotsCount = timetableList.length;
+  const uniqueFacultyCount = useMemo(() => new Set(timetableList.map(s => s.facultyId).filter(Boolean)).size, [timetableList]);
+  const uniqueRoomsCount = useMemo(() => new Set(timetableList.map(s => s.roomId).filter(Boolean)).size, [timetableList]);
+
+  // Handlers for Add / Edit / Delete
+  const handleOpenAddSlot = (defaults = null) => {
+    setEditingSlot(null);
+    setInitialSlotDefaults(defaults);
+    setSlotModalOpen(true);
+  };
+
+  const handleOpenEditSlot = (slot) => {
+    setEditingSlot(slot);
+    setInitialSlotDefaults(null);
+    setSlotModalOpen(true);
+  };
+
+  const handleSaveSlot = (slotData) => {
+    if (editingSlot) {
+      setTimetableList(prev => prev.map(s => s.id === editingSlot.id ? { ...slotData, id: s.id } : s));
+      onShowToast(`✓ Timetable session ${slotData.courseCode} updated.`);
+    } else {
+      const newId = `TT-${String(Date.now()).slice(-4)}`;
+      setTimetableList(prev => [...prev, { ...slotData, id: newId }]);
+      onShowToast(`✓ New session ${slotData.courseCode} scheduled.`);
+    }
+    setSlotModalOpen(false);
+  };
+
+  const handleDeleteSlot = (slot) => {
+    setTimetableList(prev => prev.filter(s => s.id !== slot.id));
+    setDeleteConfirmSlot(null);
+    onShowToast(`🗑 Timetable slot ${slot.courseCode} removed.`);
+  };
+
+  // Change request approve/reject
+  const handleApproveRequest = (request) => {
+    const candidate = {
+      day: request.proposedSlot.day,
+      timeSlot: request.proposedSlot.timeSlot,
+      facultyId: request.facultyId,
+      facultyName: request.facultyName,
+      roomId: request.proposedSlot.roomId,
+      roomName: request.proposedSlot.roomName,
+      dept: request.dept,
+      semester: request.proposedSlot.semester,
+      section: request.proposedSlot.section,
+    };
+    const conflicts = detectSlotConflicts(candidate, timetableList, request.slotId);
+    if (conflicts.length > 0) {
+      if (!window.confirm(`⚠️ Scheduling Conflict Warning:\n${conflicts[0].message}\n\nDo you want to proceed and approve anyway?`)) {
+        return;
+      }
+    }
+
+    setTimetableList(prev => prev.map(slot => {
+      if (slot.id === request.slotId) {
+        return {
+          ...slot,
+          day: request.proposedSlot.day,
+          timeSlot: request.proposedSlot.timeSlot,
+          roomId: request.proposedSlot.roomId,
+          roomName: request.proposedSlot.roomName,
+        };
+      }
+      return slot;
+    }));
+
+    setChangeRequests(prev => prev.map(r => r.id === request.id ? {
+      ...r,
+      status: 'approved',
+      adminRemarks: 'Approved by Administrator. Timetable automatically synced.',
+    } : r));
+
+    setReviewRequestModal(null);
+    onShowToast(`✓ Change Request #${request.id} approved! Timetable updated.`);
+  };
+
+  const handleRejectRequest = (request, remarks) => {
+    setChangeRequests(prev => prev.map(r => r.id === request.id ? {
+      ...r,
+      status: 'rejected',
+      adminRemarks: remarks || 'Declined by Administrator.',
+    } : r));
+    setReviewRequestModal(null);
+    onShowToast(`✕ Change Request #${request.id} rejected.`);
+  };
+
+  // Publish timetable
+  const handlePublishTimetable = ({ version, effectiveDate }) => {
+    setTimetableList(prev => prev.map(s => ({ ...s, status: 'published' })));
+    setTimetablePublishedInfo({
+      version,
+      effectiveDate,
+      publishedAt: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      isDraft: false,
+    });
+    setPublishModalOpen(false);
+    onShowToast(`🚀 Timetable ${version} published! Notifications broadcasted.`);
+  };
+
+  // Export CSV
+  const handleExportCSV = () => {
+    const headers = ['Slot ID', 'Day', 'Time Slot', 'Department', 'Semester', 'Section', 'Course Code', 'Course Title', 'Type', 'Faculty ID', 'Faculty Name', 'Classroom', 'Status'];
+    const rows = filteredSlots.map(s => [
+      s.id,
+      s.day,
+      s.timeSlot,
+      s.dept,
+      s.semester,
+      s.section,
+      s.courseCode,
+      `"${s.courseTitle}"`,
+      s.sessionType,
+      s.facultyId,
+      `"${s.facultyName}"`,
+      `"${s.roomName}"`,
+      s.status,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `attentify_timetable_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    onShowToast('📥 Timetable exported as CSV.');
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Check if a specific slot ID has a collision in allConflicts
+  const slotHasConflict = (slotId) => {
+    return allConflicts.some(c => c.slotA.id === slotId || c.slotB.id === slotId);
+  };
+
+  return (
+    <div className="ad-tab-content">
+      {/* ── Page Header & Quick Actions ── */}
+      <div className="ad-welcome-header">
+        <div>
+          <h1 className="ad-welcome-title">Timetable Management</h1>
+          <p className="ad-welcome-date">
+            Academic Schedule & Scheduling Engine · Active Release: <strong>{timetablePublishedInfo.version}</strong>
+          </p>
+        </div>
+        <div className="ad-welcome-actions">
+          <button
+            type="button"
+            className="ad-btn-outline"
+            onClick={handleExportCSV}
+            title="Download Timetable CSV"
+          >
+            <DownloadIcon size={16} />
+            <span>Export CSV</span>
+          </button>
+          <button
+            type="button"
+            className="ad-btn-outline"
+            onClick={handlePrint}
+            title="Print printable timetable grid"
+          >
+            <PrinterIcon size={16} />
+            <span>Print</span>
+          </button>
+          <button
+            type="button"
+            className="ad-btn-outline"
+            onClick={() => setPublishModalOpen(true)}
+            title="Publish or update timetable to faculty and students"
+          >
+            <SendIcon size={16} />
+            <span>Publish Schedule</span>
+          </button>
+          <button
+            type="button"
+            className="ad-btn-primary"
+            onClick={() => handleOpenAddSlot()}
+            title="Add a new class or lab slot"
+          >
+            <PlusIcon size={16} />
+            <span>Add Slot</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── KPI Metric Strip ── */}
+      <div className="ad-faculty-kpi-strip">
+        <div className="ad-fk-card">
+          <div className="ad-fk-top">
+            <span className="ad-fk-lbl">Scheduled Sessions</span>
+            <CalendarIcon size={17} color="#162F44" />
+          </div>
+          <div className="ad-fk-val">{totalSlotsCount}</div>
+          <div className="ad-fk-sub">Across 6 academic depts</div>
+        </div>
+
+        <div className="ad-fk-card">
+          <div className="ad-fk-top">
+            <span className="ad-fk-lbl">Instructors Assigned</span>
+            <UsersIcon size={17} color="#557E6D" />
+          </div>
+          <div className="ad-fk-val">{uniqueFacultyCount}</div>
+          <div className="ad-fk-sub">Active faculty members</div>
+        </div>
+
+        <div className="ad-fk-card">
+          <div className="ad-fk-top">
+            <span className="ad-fk-lbl">Rooms & Labs Allocated</span>
+            <BuildingIcon size={17} color="#6B8294" />
+          </div>
+          <div className="ad-fk-val">{uniqueRoomsCount}</div>
+          <div className="ad-fk-sub">Across campus blocks</div>
+        </div>
+
+        <div
+          className="ad-fk-card"
+          onClick={() => setActiveSubTab(allConflicts.length > 0 ? 'conflicts' : 'requests')}
+          style={{ cursor: 'pointer' }}
+          title={allConflicts.length > 0 ? "Click to view scheduling conflicts" : "Click to view change requests"}
+        >
+          <div className="ad-fk-top">
+            <span className="ad-fk-lbl">Conflicts & Requests</span>
+            {allConflicts.length > 0 ? (
+              <AlertTriangleIcon size={17} color="#C3665B" />
+            ) : (
+              <CheckCircleIcon size={17} color="#557E6D" />
+            )}
+          </div>
+          <div className="ad-fk-val" style={{ color: allConflicts.length > 0 ? '#C3665B' : 'inherit' }}>
+            {allConflicts.length > 0 ? `${allConflicts.length} Conflict` : `${pendingRequestsCount} Pending`}
+          </div>
+          <div className="ad-fk-sub" style={{ color: allConflicts.length > 0 ? '#C3665B' : '#557E6D', fontWeight: 600 }}>
+            {allConflicts.length > 0 ? 'Requires Resolution →' : 'Zero Collisions · All Clear'}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Sub-Navigation Bar ── */}
+      <div className="ad-timetable-subnav">
+        <button
+          type="button"
+          className={`ad-tt-subnav-btn ${activeSubTab === 'matrix' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('matrix')}
+        >
+          <CalendarIcon size={16} />
+          <span>Weekly Timetable Matrix</span>
+        </button>
+
+        <button
+          type="button"
+          className={`ad-tt-subnav-btn ${activeSubTab === 'directory' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('directory')}
+        >
+          <ClipboardListIcon size={16} />
+          <span>Session Directory</span>
+        </button>
+
+        <button
+          type="button"
+          className={`ad-tt-subnav-btn ${activeSubTab === 'conflicts' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('conflicts')}
+        >
+          <AlertTriangleIcon size={16} />
+          <span>Conflict Inspector</span>
+          {allConflicts.length > 0 && (
+            <span className="ad-tt-badge-count danger">{allConflicts.length}</span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          className={`ad-tt-subnav-btn ${activeSubTab === 'requests' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('requests')}
+        >
+          <FileTextIcon size={16} />
+          <span>Change Requests</span>
+          {pendingRequestsCount > 0 && (
+            <span className="ad-tt-badge-count">{pendingRequestsCount}</span>
+          )}
+        </button>
+      </div>
+
+      {/* ── Filters Toolbar ── */}
+      <div className="ad-faculty-toolbar">
+        <div className="ad-search-box-wrap">
+          <span className="ad-search-icon-abs">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#758087" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            className="ad-search-input"
+            placeholder="Search by course, faculty, room or section..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="ad-search-clear" onClick={() => setSearchQuery('')}>×</button>
+          )}
+        </div>
+
+        <div className="ad-toolbar-filters">
+          {/* Department */}
+          <div className="ad-filter-select-wrap">
+            <span className="ad-filter-lbl">Dept:</span>
+            <select
+              className="ad-filter-select"
+              value={filterDept}
+              onChange={e => setFilterDept(e.target.value)}
+            >
+              <option value="all">All Depts</option>
+              {DEPARTMENTS.map(d => (
+                <option key={d.id} value={d.id}>{d.id}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Semester */}
+          <div className="ad-filter-select-wrap">
+            <span className="ad-filter-lbl">Sem:</span>
+            <select
+              className="ad-filter-select"
+              value={filterSem}
+              onChange={e => setFilterSem(e.target.value)}
+            >
+              <option value="all">All Semesters</option>
+              {SEMESTERS_CATALOG.map(s => (
+                <option key={s.id} value={s.id}>{s.id}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Section */}
+          <div className="ad-filter-select-wrap">
+            <span className="ad-filter-lbl">Section:</span>
+            <select
+              className="ad-filter-select"
+              value={filterSec}
+              onChange={e => setFilterSec(e.target.value)}
+            >
+              <option value="all">All Sections</option>
+              {SECTIONS_CATALOG.map(sec => (
+                <option key={sec} value={sec}>{sec}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Matrix view selector */}
+          {activeSubTab === 'matrix' && (
+            <div className="ad-filter-select-wrap">
+              <span className="ad-filter-lbl">View By:</span>
+              <select
+                className="ad-filter-select"
+                value={matrixViewBy}
+                onChange={e => setMatrixViewBy(e.target.value)}
+              >
+                <option value="class">Class & Section</option>
+                <option value="faculty">Faculty Instructor</option>
+                <option value="room">Classroom & Lab</option>
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Sub-Tab 1: Weekly Timetable Matrix ── */}
+      {activeSubTab === 'matrix' && (
+        <div className="ad-card" style={{ padding: '20px', overflowX: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div>
+              <h2 className="ad-panel-title">Weekly Schedule Matrix</h2>
+              <p style={{ fontSize: '12.5px', color: 'var(--ad-text-secondary)', marginTop: '2px' }}>
+                Click any slot to edit session details, or click on an empty cell (+) to schedule a class at that time.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="ad-course-code-badge theory">Theory Lecture</span>
+              <span className="ad-course-code-badge lab">Practical Lab</span>
+              {allConflicts.length > 0 && (
+                <span className="ad-course-code-badge" style={{ backgroundColor: '#F8EEEB', color: '#C3665B', border: '1px solid rgba(195,102,91,0.3)' }}>
+                  ⚠️ Conflict Alert
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="ad-timetable-grid-wrap">
+            <table className="ad-timetable-matrix-table">
+              <thead>
+                <tr>
+                  <th className="ad-tt-col-day">Day / Time</th>
+                  <th>09:00 - 10:00<div className="ad-tt-period-lbl">Period 1</div></th>
+                  <th>10:00 - 11:00<div className="ad-tt-period-lbl">Period 2</div></th>
+                  <th className="ad-tt-break-col">11:00 - 11:15<div className="ad-tt-period-lbl">Tea Break</div></th>
+                  <th>11:15 - 12:15<div className="ad-tt-period-lbl">Period 3</div></th>
+                  <th>12:15 - 01:15<div className="ad-tt-period-lbl">Period 4</div></th>
+                  <th className="ad-tt-break-col">01:15 - 02:00<div className="ad-tt-period-lbl">Lunch Break</div></th>
+                  <th>02:00 - 03:00<div className="ad-tt-period-lbl">Period 5</div></th>
+                  <th>03:00 - 04:00<div className="ad-tt-period-lbl">Period 6</div></th>
+                  <th>04:00 - 05:00<div className="ad-tt-period-lbl">Period 7</div></th>
+                </tr>
+              </thead>
+              <tbody>
+                {DAYS_OF_WEEK.map(day => (
+                  <tr key={day}>
+                    <td className="ad-tt-day-cell">
+                      <div className="ad-tt-day-name">{day}</div>
+                      <div className="ad-tt-day-sub">
+                        {filteredSlots.filter(s => s.day === day).length} Classes
+                      </div>
+                    </td>
+
+                    {/* Period 1 */}
+                    <SlotCell
+                      day={day}
+                      timeSlot="09:00-10:00"
+                      slots={filteredSlots}
+                      hasConflict={slotHasConflict}
+                      onEdit={handleOpenEditSlot}
+                      onDelete={setDeleteConfirmSlot}
+                      onAdd={handleOpenAddSlot}
+                    />
+
+                    {/* Period 2 */}
+                    <SlotCell
+                      day={day}
+                      timeSlot="10:00-11:00"
+                      slots={filteredSlots}
+                      hasConflict={slotHasConflict}
+                      onEdit={handleOpenEditSlot}
+                      onDelete={setDeleteConfirmSlot}
+                      onAdd={handleOpenAddSlot}
+                    />
+
+                    {/* Tea Break Pillar */}
+                    <td className="ad-tt-break-cell" title="Tea & Refreshment Break">
+                      <div className="ad-tt-break-text">☕ BREAK</div>
+                    </td>
+
+                    {/* Period 3 */}
+                    <SlotCell
+                      day={day}
+                      timeSlot="11:15-12:15"
+                      slots={filteredSlots}
+                      hasConflict={slotHasConflict}
+                      onEdit={handleOpenEditSlot}
+                      onDelete={setDeleteConfirmSlot}
+                      onAdd={handleOpenAddSlot}
+                    />
+
+                    {/* Period 4 */}
+                    <SlotCell
+                      day={day}
+                      timeSlot="12:15-13:15"
+                      slots={filteredSlots}
+                      hasConflict={slotHasConflict}
+                      onEdit={handleOpenEditSlot}
+                      onDelete={setDeleteConfirmSlot}
+                      onAdd={handleOpenAddSlot}
+                    />
+
+                    {/* Lunch Break Pillar */}
+                    <td className="ad-tt-break-cell" title="Lunch Break">
+                      <div className="ad-tt-break-text">🍱 LUNCH</div>
+                    </td>
+
+                    {/* Period 5 */}
+                    <SlotCell
+                      day={day}
+                      timeSlot="14:00-15:00"
+                      slots={filteredSlots}
+                      hasConflict={slotHasConflict}
+                      onEdit={handleOpenEditSlot}
+                      onDelete={setDeleteConfirmSlot}
+                      onAdd={handleOpenAddSlot}
+                    />
+
+                    {/* Period 6 */}
+                    <SlotCell
+                      day={day}
+                      timeSlot="15:00-16:00"
+                      slots={filteredSlots}
+                      hasConflict={slotHasConflict}
+                      onEdit={handleOpenEditSlot}
+                      onDelete={setDeleteConfirmSlot}
+                      onAdd={handleOpenAddSlot}
+                    />
+
+                    {/* Period 7 */}
+                    <SlotCell
+                      day={day}
+                      timeSlot="16:00-17:00"
+                      slots={filteredSlots}
+                      hasConflict={slotHasConflict}
+                      onEdit={handleOpenEditSlot}
+                      onDelete={setDeleteConfirmSlot}
+                      onAdd={handleOpenAddSlot}
+                    />
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sub-Tab 2: Session Directory (Table View) ── */}
+      {activeSubTab === 'directory' && (
+        <div className="ad-card" style={{ padding: '0' }}>
+          <div style={{ padding: '18px 24px 14px 24px', borderBottom: '1px solid var(--ad-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h2 className="ad-panel-title">All Timetable Sessions ({filteredSlots.length})</h2>
+              <p style={{ fontSize: '12.5px', color: 'var(--ad-text-secondary)', marginTop: '2px' }}>
+                Complete registry of lectures and laboratories scheduled across departments and rooms.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="ad-btn-outline"
+              onClick={handleExportCSV}
+            >
+              <DownloadIcon size={15} />
+              <span>Download CSV</span>
+            </button>
+          </div>
+
+          <div className="ad-table-wrap">
+            <table className="ad-table">
+              <thead>
+                <tr>
+                  <th>Day & Time</th>
+                  <th>Course / Subject</th>
+                  <th>Class / Section</th>
+                  <th>Faculty Instructor</th>
+                  <th>Room / Lab</th>
+                  <th>Format</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSlots.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="ad-table-empty-wrap">
+                      <p style={{ color: 'var(--ad-text-secondary)', fontSize: '13.5px' }}>
+                        No timetable slots match the current filter criteria.
+                      </p>
+                      <button
+                        type="button"
+                        className="ad-link-btn"
+                        style={{ marginTop: '8px' }}
+                        onClick={() => {
+                          setFilterDept('all');
+                          setFilterSem('all');
+                          setFilterSec('all');
+                          setSearchQuery('');
+                        }}
+                      >
+                        Reset all filters
+                      </button>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSlots.map(slot => {
+                    const hasConflict = slotHasConflict(slot.id);
+                    return (
+                      <tr key={slot.id} style={hasConflict ? { backgroundColor: 'rgba(195,102,91,0.04)' } : undefined}>
+                        <td>
+                          <div style={{ fontWeight: 600, color: 'var(--ad-navy)', fontSize: '13.5px' }}>
+                            {slot.day}
+                          </div>
+                          <div style={{ fontSize: '11.5px', color: 'var(--ad-text-secondary)' }}>
+                            {slot.timeSlot}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span className={`ad-course-code-badge ${slot.sessionType === 'Laboratory' ? 'lab' : 'theory'}`}>
+                              {slot.courseCode}
+                            </span>
+                            <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--ad-navy)' }}>
+                              {slot.courseTitle}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <span className="ad-dept-pill" style={{ marginRight: '6px' }}>{slot.dept}</span>
+                          <span style={{ fontSize: '12.5px', color: 'var(--ad-text-primary)' }}>
+                            {slot.semester} · {slot.section}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="ad-avatar-circle" style={{ width: '28px', height: '28px', fontSize: '11px' }}>
+                              {slot.facultyName.slice(0, 2).toUpperCase()}
+                            </div>
+                            <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ad-text-primary)' }}>
+                              {slot.facultyName}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ad-navy)' }}>
+                            {slot.roomName}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className={`ad-type-badge ${slot.sessionType === 'Laboratory' ? 'lab' : 'theory'}`}>
+                            {slot.sessionType}
+                          </span>
+                        </td>
+
+                        <td>
+                          {hasConflict ? (
+                            <span className="ad-status-pill inactive" title="Conflict detected with another session">
+                              <span className="ad-status-dot" />
+                              <span>Conflict</span>
+                            </span>
+                          ) : (
+                            <span className="ad-status-pill active">
+                              <span className="ad-status-dot" />
+                              <span>Published</span>
+                            </span>
+                          )}
+                        </td>
+
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="ad-action-btns-row" style={{ justifyContent: 'flex-end' }}>
+                            <button
+                              type="button"
+                              className="ad-action-icon-btn"
+                              title="Edit slot details"
+                              onClick={() => handleOpenEditSlot(slot)}
+                            >
+                              <EditIcon size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              className="ad-action-icon-btn danger"
+                              title="Delete this slot"
+                              onClick={() => setDeleteConfirmSlot(slot)}
+                            >
+                              <TrashIcon size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sub-Tab 3: Conflict Inspector ── */}
+      {activeSubTab === 'conflicts' && (
+        <div className="ad-card" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div>
+              <h2 className="ad-panel-title">Scheduling Conflict Inspector</h2>
+              <p style={{ fontSize: '13px', color: 'var(--ad-text-secondary)', marginTop: '2px' }}>
+                Automated multi-constraint conflict detector scanning faculty double-bookings, classroom overlaps, and section collisions.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="ad-btn-primary"
+              onClick={() => handleOpenAddSlot()}
+            >
+              <PlusIcon size={15} />
+              <span>Schedule New Slot</span>
+            </button>
+          </div>
+
+          {allConflicts.length === 0 ? (
+            <div className="ad-conflict-all-clear-box">
+              <div className="ad-clear-icon-circle">
+                <CheckCircleIcon size={32} color="#2D634C" />
+              </div>
+              <h3 style={{ fontFamily: 'var(--ad-font-serif)', fontSize: '20px', color: 'var(--ad-navy)', marginBottom: '6px' }}>
+                All Clear: Zero Scheduling Collisions Detected
+              </h3>
+              <p style={{ fontSize: '13.5px', color: 'var(--ad-text-secondary)', maxWidth: '520px', lineHeight: 1.5 }}>
+                Every faculty instructor is scheduled for at most one class per time slot, and all classrooms have clean non-overlapping bookings across all {totalSlotsCount} sessions.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="ad-conflict-summary-banner">
+                <AlertTriangleIcon size={20} color="#C3665B" />
+                <div>
+                  <strong>{allConflicts.length} Conflict(s) Require Resolution</strong>
+                  <p style={{ fontSize: '12.5px', color: '#8F382E', margin: '2px 0 0 0' }}>
+                    Double bookings may prevent faculty from starting attendance sessions or cause student room assignment confusion.
+                  </p>
+                </div>
+              </div>
+
+              {allConflicts.map((c, index) => (
+                <div key={c.id || index} className="ad-conflict-card-row">
+                  <div className="ad-conflict-card-left">
+                    <span className="ad-conflict-type-pill">{c.title}</span>
+                    <div className="ad-conflict-time-badge">
+                      <ClockIcon size={14} />
+                      <span>{c.day} · {c.timeSlot}</span>
+                    </div>
+                    <p className="ad-conflict-desc-text">{c.description}</p>
+                  </div>
+
+                  <div className="ad-conflict-slots-pair">
+                    <div className="ad-conflict-slot-subcard">
+                      <div className="ad-css-code">{c.slotA.courseCode} ({c.slotA.dept})</div>
+                      <div className="ad-css-teacher">{c.slotA.facultyName}</div>
+                      <div className="ad-css-meta">{c.slotA.roomName} · {c.slotA.section}</div>
+                      <button
+                        type="button"
+                        className="ad-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: '11.5px', marginTop: '6px' }}
+                        onClick={() => handleOpenEditSlot(c.slotA)}
+                      >
+                        Reschedule Slot A
+                      </button>
+                    </div>
+
+                    <div style={{ color: 'var(--ad-text-secondary)', fontWeight: 700, fontSize: '13px' }}>VS</div>
+
+                    <div className="ad-conflict-slot-subcard">
+                      <div className="ad-css-code">{c.slotB.courseCode} ({c.slotB.dept})</div>
+                      <div className="ad-css-teacher">{c.slotB.facultyName}</div>
+                      <div className="ad-css-meta">{c.slotB.roomName} · {c.slotB.section}</div>
+                      <button
+                        type="button"
+                        className="ad-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: '11.5px', marginTop: '6px' }}
+                        onClick={() => handleOpenEditSlot(c.slotB)}
+                      >
+                        Reschedule Slot B
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Sub-Tab 4: Change Requests Queue ── */}
+      {activeSubTab === 'requests' && (
+        <div className="ad-card" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h2 className="ad-panel-title">Faculty Timetable Change Requests</h2>
+              <p style={{ fontSize: '13px', color: 'var(--ad-text-secondary)', marginTop: '2px' }}>
+                Review and approve faculty reschedule and classroom swap proposals with one-click schedule updates.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {['all', 'pending', 'approved', 'rejected'].map(st => (
+                <button
+                  key={st}
+                  type="button"
+                  className={`ad-section-check-pill ${requestFilter === st ? 'active' : ''}`}
+                  onClick={() => setRequestFilter(st)}
+                  style={{ textTransform: 'capitalize' }}
+                >
+                  {st === 'pending' ? `Pending (${pendingRequestsCount})` : st}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {changeRequests
+              .filter(r => requestFilter === 'all' || r.status === requestFilter)
+              .map(request => (
+                <div key={request.id} className="ad-request-card">
+                  <div className="ad-request-card-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div className="ad-avatar-circle" style={{ backgroundColor: 'var(--ad-navy)' }}>
+                        {request.facultyName.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '14.5px', color: 'var(--ad-navy)' }}>
+                          {request.facultyName}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--ad-text-secondary)' }}>
+                          {request.dept} Department · Request ID: <code>#{request.id}</code> · Submitted {request.submittedAt}
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className={`ad-status-pill ${request.status}`}>
+                      <span className="ad-status-dot" />
+                      <span>{request.status.toUpperCase()}</span>
+                    </span>
+                  </div>
+
+                  <div className="ad-slot-compare-grid" style={{ margin: '14px 0' }}>
+                    <div className="ad-compare-card current">
+                      <span className="ad-compare-badge current">Current Slot</span>
+                      <div className="ad-compare-day">{request.currentSlot.day}</div>
+                      <div className="ad-compare-time">{request.currentSlot.timeSlot}</div>
+                      <div className="ad-compare-meta">{request.currentSlot.roomName} · {request.subject}</div>
+                    </div>
+
+                    <div className="ad-compare-arrow">&rarr;</div>
+
+                    <div className="ad-compare-card proposed">
+                      <span className="ad-compare-badge proposed">Requested Slot</span>
+                      <div className="ad-compare-day">{request.proposedSlot.day}</div>
+                      <div className="ad-compare-time">{request.proposedSlot.timeSlot}</div>
+                      <div className="ad-compare-meta">{request.proposedSlot.roomName} · {request.subject}</div>
+                    </div>
+                  </div>
+
+                  <div className="ad-request-reason-box">
+                    <span className="ad-reason-lbl">Instructor's Reason:</span>
+                    <p className="ad-reason-text">"{request.reason}"</p>
+                  </div>
+
+                  {request.adminRemarks && (
+                    <div style={{ marginTop: '8px', fontSize: '12.5px', color: 'var(--ad-text-secondary)', fontStyle: 'italic' }}>
+                      Admin Remarks: "{request.adminRemarks}"
+                    </div>
+                  )}
+
+                  <div className="ad-request-card-footer">
+                    <button
+                      type="button"
+                      className="ad-btn-outline"
+                      onClick={() => setReviewRequestModal(request)}
+                    >
+                      <FileTextIcon size={14} />
+                      <span>{request.status === 'pending' ? 'Review & Decide...' : 'View Details'}</span>
+                    </button>
+
+                    {request.status === 'pending' && (
+                      <button
+                        type="button"
+                        className="ad-btn-primary"
+                        onClick={() => handleApproveRequest(request)}
+                      >
+                        <CheckCircleIcon size={14} />
+                        <span>Quick Approve</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modals ── */}
+      <CreateEditSlotModal
+        isOpen={slotModalOpen}
+        onClose={() => setSlotModalOpen(false)}
+        onSave={handleSaveSlot}
+        editingSlot={editingSlot}
+        initialDefaults={initialSlotDefaults}
+        timetableList={timetableList}
+        facultyList={facultyList}
+      />
+
+      <PublishTimetableModal
+        isOpen={publishModalOpen}
+        onClose={() => setPublishModalOpen(false)}
+        onPublish={handlePublishTimetable}
+        timetableList={timetableList}
+        publishedInfo={timetablePublishedInfo}
+        facultyList={facultyList}
+      />
+
+      <ReviewChangeRequestModal
+        isOpen={!!reviewRequestModal}
+        onClose={() => setReviewRequestModal(null)}
+        request={reviewRequestModal}
+        onApprove={handleApproveRequest}
+        onReject={handleRejectRequest}
+        timetableList={timetableList}
+      />
+
+      <DeleteSlotModal
+        isOpen={!!deleteConfirmSlot}
+        onClose={() => setDeleteConfirmSlot(null)}
+        slot={deleteConfirmSlot}
+        onConfirm={handleDeleteSlot}
+      />
+    </div>
+  );
+}
+
+// Helper cell component for the weekly timetable matrix
+function SlotCell({ day, timeSlot, slots, hasConflict, onEdit, onDelete, onAdd }) {
+  const matching = slots.filter(s => s.day === day && s.timeSlot === timeSlot);
+
+  if (matching.length === 0) {
+    return (
+      <td
+        className="ad-tt-empty-cell"
+        onClick={() => onAdd({ day, timeSlot })}
+        title={`Click to schedule class on ${day} at ${timeSlot}`}
+      >
+        <span className="ad-tt-cell-add-icon">+</span>
+      </td>
+    );
+  }
+
+  return (
+    <td className="ad-tt-active-cell">
+      <div className="ad-tt-cards-stack">
+        {matching.map(slot => {
+          const isConflicted = hasConflict(slot.id);
+          return (
+            <div
+              key={slot.id}
+              className={`ad-tt-session-card ${slot.sessionType === 'Laboratory' ? 'lab' : 'theory'} ${isConflicted ? 'conflicted' : ''}`}
+            >
+              <div className="ad-tt-sc-top">
+                <span className="ad-tt-sc-code">{slot.courseCode}</span>
+                <span className="ad-tt-sc-room">{slot.roomName}</span>
+              </div>
+
+              <div className="ad-tt-sc-title" title={slot.courseTitle}>
+                {slot.courseTitle}
+              </div>
+
+              <div className="ad-tt-sc-bottom">
+                <span className="ad-tt-sc-teacher">{slot.facultyName.split(' ')[0]} {slot.facultyName.split(' ')[1] || ''}</span>
+                <span className="ad-tt-sc-sec">{slot.semester.replace('Semester ', 'S')} · {slot.section.replace('Section ', '')}</span>
+              </div>
+
+              {isConflicted && (
+                <div className="ad-tt-sc-alert" title="Scheduling Conflict Detected!">
+                  ⚠️ Conflict
+                </div>
+              )}
+
+              {/* Hover quick action overlay */}
+              <div className="ad-tt-sc-actions">
+                <button
+                  type="button"
+                  className="ad-tt-sc-action-btn"
+                  title="Edit session"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(slot);
+                  }}
+                >
+                  <EditIcon size={12} />
+                </button>
+                <button
+                  type="button"
+                  className="ad-tt-sc-action-btn danger"
+                  title="Remove session"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(slot);
+                  }}
+                >
+                  <TrashIcon size={12} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </td>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  TAB: USER MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 function TabUsers({ users, setUsers, onShowToast }) {
@@ -2480,6 +4567,14 @@ export default function AdminDashboardPage() {
   ]);
 
   const [facultyList, setFacultyList] = useState(INITIAL_FACULTY);
+  const [timetableList, setTimetableList] = useState(INITIAL_TIMETABLE);
+  const [changeRequests, setChangeRequests] = useState(INITIAL_CHANGE_REQUESTS);
+  const [timetablePublishedInfo, setTimetablePublishedInfo] = useState({
+    version: 'v2.4 (Published)',
+    effectiveDate: '2026-11-01',
+    publishedAt: '24 Oct 2026, 11:00 AM',
+    isDraft: false,
+  });
 
   const [toastMessage, setToastMessage] = useState('');
   const [activeModal, setActiveModal] = useState(null); // 'broadcast', 'lock', 'logs', 'addDept', 'addUser'
@@ -2673,6 +4768,19 @@ export default function AdminDashboardPage() {
               setFacultyList={setFacultyList}
               users={users}
               setUsers={setUsers}
+              onShowToast={showToast}
+            />
+          )}
+
+          {activeTab === 'timetable' && (
+            <TabTimetableManagement
+              timetableList={timetableList}
+              setTimetableList={setTimetableList}
+              changeRequests={changeRequests}
+              setChangeRequests={setChangeRequests}
+              timetablePublishedInfo={timetablePublishedInfo}
+              setTimetablePublishedInfo={setTimetablePublishedInfo}
+              facultyList={facultyList}
               onShowToast={showToast}
             />
           )}
