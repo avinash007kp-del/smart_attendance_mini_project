@@ -367,6 +367,41 @@ function TabOverview({ user, onNav, attData }) {
 // ═══════════════════════════════════════════════════════════
 //  TAB: ATTENDANCE
 // ═══════════════════════════════════════════════════════════
+function StatCard({ icon, label, value, sub, color }) {
+  return (
+    <div style={{
+      background: 'var(--sd-card-bg, #ffffff)',
+      border: `1px solid ${color}33`,
+      borderRadius: 12,
+      padding: '1rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.85rem',
+      flex: 1,
+      minWidth: 150
+    }}>
+      <div style={{
+        fontSize: '1.4rem',
+        background: `${color}18`,
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0
+      }}>
+        {icon}
+      </div>
+      <div>
+        <div style={{ fontSize: '1.25rem', fontWeight: 700, color, lineHeight: 1.2 }}>{value}</div>
+        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--sd-text, #162F44)' }}>{label}</div>
+        {sub && <div style={{ fontSize: '0.74rem', color: 'var(--sd-muted, #707C85)' }}>{sub}</div>}
+      </div>
+    </div>
+  )
+}
+
 function TabAttendance({ attData }) {
   const { courses, totalAttended, totalClasses, overallPct, loading } = attData
   const [filter, setFilter] = useState('all')
@@ -545,20 +580,44 @@ function TabScanner({ user }) {
 // ─── Session Lock Banner ──────────────────────────────────────────────────────
 function SessionLockBanner() {
   const [session, setSession] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('active_qr_session') || 'null') } catch { return null }
+    try {
+      const raw = localStorage.getItem('active_qr_session')
+      if (!raw) return null
+      const s = JSON.parse(raw)
+      if (s?.expiresAt && s.expiresAt < Date.now()) {
+        localStorage.removeItem('active_qr_session')
+        return null
+      }
+      return s
+    } catch { return null }
   })
   const [timeLeft, setTimeLeft] = useState(null)
 
   useEffect(() => {
     const check = () => {
       try {
-        const s = JSON.parse(localStorage.getItem('active_qr_session') || 'null')
+        const raw = localStorage.getItem('active_qr_session')
+        if (!raw) {
+          setSession(null)
+          setTimeLeft(null)
+          return
+        }
+        const s = JSON.parse(raw)
+        if (s?.expiresAt && s.expiresAt < Date.now()) {
+          localStorage.removeItem('active_qr_session')
+          setSession(null)
+          setTimeLeft(null)
+          return
+        }
         setSession(s)
         if (s?.expiresAt) {
           const left = Math.max(0, Math.ceil((s.expiresAt - Date.now()) / 1000))
           setTimeLeft(left)
         }
-      } catch { setSession(null) }
+      } catch {
+        setSession(null)
+        setTimeLeft(null)
+      }
     }
     check()
     const id = setInterval(check, 1000)
@@ -2188,6 +2247,15 @@ function TabSettings({ user }) {
 export default function StudentDashboardPage() {
   const { user, logout } = useAuth()
   const router           = useRouter()
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const hash = window.location.hash.replace('#', '')
+        if (hash) return hash
+      } catch (e) {}
+    }
+    return 'overview'
+  })
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -2213,7 +2281,21 @@ export default function StudentDashboardPage() {
   }
   const attData = useAttendanceData(user?.email)
 
-  const isSessionActive = () => !!localStorage.getItem('active_qr_session')
+  const isSessionActive = () => {
+    if (typeof window === 'undefined') return false
+    try {
+      const raw = localStorage.getItem('active_qr_session')
+      if (!raw) return false
+      const s = JSON.parse(raw)
+      if (s?.expiresAt && s.expiresAt < Date.now()) {
+        localStorage.removeItem('active_qr_session')
+        return false
+      }
+      return true
+    } catch {
+      return false
+    }
+  }
 
   const handleNav = (id) => {
     // If student is currently on scanner tab AND a QR session is active, block navigation away
@@ -2229,7 +2311,7 @@ export default function StudentDashboardPage() {
   // Block logout during active session
   const handleLogout = () => {
     if (isSessionActive()) {
-      alert('\ud83d\udea8 Cannot log out!\n\nA QR session is active. Scan the QR code to mark attendance first.')
+      alert('🚨 Cannot log out!\n\nA QR session is active. Scan the QR code to mark attendance first.')
       return
     }
     logout(); router.replace('/login')
@@ -2240,7 +2322,7 @@ export default function StudentDashboardPage() {
     const blockClose = (e) => {
       if (activeTab === 'scanner' && isSessionActive()) {
         e.preventDefault()
-        e.returnValue = '\ud83d\udea8 QR session is active! Leaving will mark you ABSENT.'
+        e.returnValue = '🚨 QR session is active! Leaving will mark you ABSENT.'
         return e.returnValue
       }
     }
@@ -2251,7 +2333,7 @@ export default function StudentDashboardPage() {
   // Auto-navigate to scanner when a QR session appears (polls every 2s)
   useEffect(() => {
     const id = setInterval(() => {
-      if (localStorage.getItem('active_qr_session') && activeTab !== 'scanner') {
+      if (isSessionActive() && activeTab !== 'scanner') {
         setActiveTab('scanner')
       }
     }, 2000)
