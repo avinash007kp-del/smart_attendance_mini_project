@@ -14,3 +14,4 @@ Pillow
 tf-keras
 certifi
 python-dotenv
+werkzeug
