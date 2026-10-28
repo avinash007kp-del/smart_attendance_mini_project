@@ -922,7 +922,6 @@ function useFacultyData() {
   const API = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
   const fetchAll = useCallback(async () => {
-    setLoading(true);
     try {
       const [attRes, usersRes] = await Promise.all([
         fetch(`${API}/attendance/`),
@@ -939,6 +938,32 @@ function useFacultyData() {
 
   useEffect(() => {
     fetchAll();
+
+    const handleUpdate = () => {
+      fetchAll();
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === 'attentify_attendance_updated' || e.key === 'active_qr_session') {
+        fetchAll();
+      }
+    };
+
+    window.addEventListener('attendance_marked', handleUpdate);
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', fetchAll);
+
+    // Live auto-polling every 4 seconds to catch student QR / face scans in real-time
+    const pollInterval = setInterval(() => {
+      fetchAll();
+    }, 4000);
+
+    return () => {
+      window.removeEventListener('attendance_marked', handleUpdate);
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', fetchAll);
+      clearInterval(pollInterval);
+    };
   }, [fetchAll]);
 
   const students = users.filter(u => u.role === 'student');
@@ -997,11 +1022,25 @@ function GenerateQRModal({ isOpen, onClose, onSessionStarted, defaultCourse = 'C
       setActiveSession(sessionObj);
       setTimeLeft(durationSec);
 
+      try {
+        localStorage.setItem('active_qr_session', JSON.stringify({
+          course_id: course.trim(),
+          token,
+          duration: durationSec,
+          expiresAt: Date.now() + durationSec * 1000
+        }));
+        window.dispatchEvent(new Event('storage'));
+      } catch(e) {}
+
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timerRef.current);
+            try {
+              localStorage.removeItem('active_qr_session');
+              window.dispatchEvent(new Event('storage'));
+            } catch(e) {}
             return 0;
           }
           return prev - 1;
@@ -1025,11 +1064,25 @@ function GenerateQRModal({ isOpen, onClose, onSessionStarted, defaultCourse = 'C
       setActiveSession(sessionObj);
       setTimeLeft(durationSec);
 
+      try {
+        localStorage.setItem('active_qr_session', JSON.stringify({
+          course_id: course.trim(),
+          token: fallbackToken,
+          duration: durationSec,
+          expiresAt: Date.now() + durationSec * 1000
+        }));
+        window.dispatchEvent(new Event('storage'));
+      } catch(e) {}
+
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timerRef.current);
+            try {
+              localStorage.removeItem('active_qr_session');
+              window.dispatchEvent(new Event('storage'));
+            } catch(e) {}
             return 0;
           }
           return prev - 1;
@@ -1044,11 +1097,19 @@ function GenerateQRModal({ isOpen, onClose, onSessionStarted, defaultCourse = 'C
     if (timerRef.current) clearInterval(timerRef.current);
     setActiveSession(null);
     setTimeLeft(0);
+    try {
+      localStorage.removeItem('active_qr_session');
+      window.dispatchEvent(new Event('storage'));
+    } catch(e) {}
   };
 
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      try {
+        localStorage.removeItem('active_qr_session');
+        window.dispatchEvent(new Event('storage'));
+      } catch(e) {}
     };
   }, []);
 
