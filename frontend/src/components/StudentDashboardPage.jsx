@@ -543,9 +543,232 @@ function StatCard({ icon, label, value, sub, color }) {
   )
 }
 
+// ═══════════════════════════════════════════════════════════
+//  OVERALL ATTENDANCE GRAPH COMPONENT
+// ═══════════════════════════════════════════════════════════
+function OverallAttendanceGraph({ overallPct, totalAttended, totalClasses, courses }) {
+  const [timeframe, setTimeframe] = useState('weekly') // 'weekly' | 'monthly'
+  const [activeTooltip, setActiveTooltip] = useState(null)
+
+  // 8 weeks historical trend points ending at current dynamic overallPct
+  const weeklyData = [
+    { label: 'Week 1', pct: 82, attended: 4, total: 5 },
+    { label: 'Week 2', pct: 86, attended: 5, total: 6 },
+    { label: 'Week 3', pct: 80, attended: 4, total: 5 },
+    { label: 'Week 4', pct: 89, attended: 8, total: 9 },
+    { label: 'Week 5', pct: 92, attended: 6, total: 6 },
+    { label: 'Week 6', pct: 85, attended: 5, total: 6 },
+    { label: 'Week 7', pct: 89, attended: 7, total: 8 },
+    { label: 'Current', pct: overallPct, attended: totalAttended, total: totalClasses }
+  ]
+
+  const monthlyData = [
+    { month: 'August', attended: 16, total: 18, pct: 89 },
+    { month: 'September', attended: 22, total: 25, pct: 88 },
+    { month: 'October', attended: 20, total: 22, pct: 91 },
+    { month: 'Current', attended: totalAttended, total: totalClasses, pct: overallPct }
+  ]
+
+  // Graph SVG coordinates (ViewBox: 0 0 650 220)
+  const getY = (val) => {
+    const clamped = Math.max(40, Math.min(100, val))
+    return Math.round(185 - ((clamped - 40) / 60) * 145)
+  }
+  const getX = (idx) => 45 + idx * 80
+
+  const points = weeklyData.map((d, i) => ({ x: getX(i), y: getY(d.pct), ...d }))
+  
+  let pathD = `M ${points[0].x} ${points[0].y}`
+  for (let i = 0; i < points.length - 1; i++) {
+    const curr = points[i]
+    const next = points[i + 1]
+    const mx = (curr.x + next.x) / 2
+    pathD += ` C ${mx} ${curr.y}, ${mx} ${next.y}, ${next.x} ${next.y}`
+  }
+  const areaD = `${pathD} L ${points[points.length - 1].x} 185 L ${points[0].x} 185 Z`
+  const cutoffY = getY(75)
+
+  return (
+    <div className="sd-card sd-graph-card">
+      <div className="sd-graph-header">
+        <div>
+          <div className="sd-graph-badge">📈 Overall Attendance Analytics</div>
+          <h3 className="sd-graph-title">Attendance Trajectory & Trends</h3>
+          <p className="sd-graph-subtitle">Semester progression measured against the 75% institutional attendance threshold</p>
+        </div>
+        <div className="sd-graph-toggles">
+          <button
+            type="button"
+            className={`sd-toggle-pill ${timeframe === 'weekly' ? 'active' : ''}`}
+            onClick={() => setTimeframe('weekly')}
+          >
+            Weekly Trend
+          </button>
+          <button
+            type="button"
+            className={`sd-toggle-pill ${timeframe === 'monthly' ? 'active' : ''}`}
+            onClick={() => setTimeframe('monthly')}
+          >
+            Monthly View
+          </button>
+        </div>
+      </div>
+
+      {timeframe === 'weekly' ? (
+        <div className="sd-chart-wrapper">
+          <svg className="sd-chart-svg" viewBox="0 0 650 220" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="attAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#557E6D" stopOpacity="0.35" />
+                <stop offset="60%" stopColor="#557E6D" stopOpacity="0.10" />
+                <stop offset="100%" stopColor="#557E6D" stopOpacity="0.00" />
+              </linearGradient>
+            </defs>
+
+            {/* Horizontal Gridlines */}
+            {[100, 85, 75, 60].map(val => (
+              <g key={val}>
+                <line
+                  x1="45"
+                  y1={getY(val)}
+                  x2="615"
+                  y2={getY(val)}
+                  stroke={val === 75 ? '#B5822C' : '#E7E8E2'}
+                  strokeDasharray={val === 75 ? '5 5' : 'none'}
+                  strokeWidth={val === 75 ? '1.5' : '1'}
+                  opacity={val === 75 ? 0.9 : 0.6}
+                />
+                <text
+                  x="38"
+                  y={getY(val) + 4}
+                  textAnchor="end"
+                  fontSize="10"
+                  fill={val === 75 ? '#B5822C' : '#8C9CA8'}
+                  fontWeight={val === 75 ? '700' : '500'}
+                >
+                  {val}%
+                </text>
+              </g>
+            ))}
+
+            {/* 75% Cutoff Tag */}
+            <g transform={`translate(515, ${cutoffY - 12})`}>
+              <rect x="0" y="0" width="100" height="18" rx="4" fill="#FBF4E8" stroke="#B5822C" strokeWidth="1" />
+              <text x="50" y="12" textAnchor="middle" fontSize="9.5" fontWeight="700" fill="#B5822C">
+                75% Target Line
+              </text>
+            </g>
+
+            {/* Area and Line Curve */}
+            <path d={areaD} fill="url(#attAreaGrad)" />
+            <path d={pathD} fill="none" stroke="#557E6D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+
+            {/* Data Points */}
+            {points.map((pt, i) => (
+              <g
+                key={i}
+                className="sd-chart-pt-group"
+                onMouseEnter={() => setActiveTooltip(pt)}
+                onMouseLeave={() => setActiveTooltip(null)}
+                style={{ cursor: 'pointer' }}
+              >
+                <circle
+                  cx={pt.x}
+                  cy={pt.y}
+                  r={i === points.length - 1 ? 6.5 : 4.5}
+                  fill={i === points.length - 1 ? '#162F44' : '#557E6D'}
+                  stroke="#FFFFFF"
+                  strokeWidth="2.5"
+                />
+                <text x={pt.x} y="206" textAnchor="middle" fontSize="11" fill="#758087" fontWeight="500">
+                  {pt.label}
+                </text>
+              </g>
+            ))}
+          </svg>
+
+          {/* Interactive Tooltip Card */}
+          {activeTooltip && (
+            <div
+              className="sd-chart-tooltip"
+              style={{
+                left: `${(activeTooltip.x / 650) * 100}%`,
+                top: `${(activeTooltip.y / 220) * 100}%`
+              }}
+            >
+              <div className="sd-tip-title">{activeTooltip.label}</div>
+              <div className="sd-tip-val">{activeTooltip.pct}% Attendance</div>
+              <div className="sd-tip-sub">{activeTooltip.attended}/{activeTooltip.total} classes attended</div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Monthly breakdown bar chart */
+        <div className="sd-monthly-bars">
+          {monthlyData.map(m => {
+            const p = m.pct
+            const color = pctColor(p)
+            return (
+              <div key={m.month} className="sd-mbar-col">
+                <div className="sd-mbar-track">
+                  <div className="sd-mbar-fill" style={{ height: `${p}%`, background: color }}>
+                    <span className="sd-mbar-val">{p}%</span>
+                  </div>
+                  <div className="sd-mbar-cutoff" style={{ bottom: '75%' }} title="75% Target" />
+                </div>
+                <div className="sd-mbar-label">{m.month}</div>
+                <div className="sd-mbar-sub">{m.attended}/{m.total} classes</div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Analytics Insights Bar below chart */}
+      <div className="sd-graph-insights">
+        <div className="sd-insight-item">
+          <span className="sd-insight-icon">🎯</span>
+          <div>
+            <div className="sd-insight-title">Compliance Standing</div>
+            <div className="sd-insight-val" style={{ color: overallPct >= 75 ? '#557E6D' : '#BC6D61' }}>
+              {overallPct >= 85 ? '🌟 Excellent Standing (≥85%)' : overallPct >= 75 ? '⚠️ Safe Standing (75–84%)' : '🚨 At Risk (<75%)'}
+            </div>
+          </div>
+        </div>
+        <div className="sd-insight-item">
+          <span className="sd-insight-icon">🛡️</span>
+          <div>
+            <div className="sd-insight-title">Absence Buffer</div>
+            <div className="sd-insight-val">
+              {overallPct >= 75
+                ? `Can miss ~${Math.max(0, Math.floor((totalAttended - 0.75 * totalClasses) / 0.75))} more classes`
+                : `Need ${Math.max(0, Math.ceil((0.75 * totalClasses - totalAttended) / 0.25))} consecutive classes`}
+            </div>
+          </div>
+        </div>
+        <div className="sd-insight-item">
+          <span className="sd-insight-icon">🔥</span>
+          <div>
+            <div className="sd-insight-title">Active Streak</div>
+            <div className="sd-insight-val" style={{ color: '#B5822C' }}>
+              6 Consecutive Classes Attended
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB: ATTENDANCE (Overall Graph + Subject Dropdown)
+// ═══════════════════════════════════════════════════════════
 function TabAttendance({ attData }) {
-  const { courses, totalAttended, totalClasses, overallPct, loading } = attData
+  const { courses, totalAttended, totalClasses, overallPct, loading, logs = [] } = attData
+  const [selectedSubject, setSelectedSubject] = useState('all')
   const [filter, setFilter] = useState('all')
+
+  const selectedCourseObj = courses.find(c => c.id === selectedSubject)
 
   const filtered = filter === 'all' ? courses : courses.filter(c => {
     const p = pct(c)
@@ -564,93 +787,293 @@ function TabAttendance({ attData }) {
 
   return (
     <div className="sd-tab-content">
+      {/* ── Page Header ─────────────────────────────────────── */}
       <div className="sd-section-header">
         <div>
-          <h2 className="sd-section-title">📊 My Attendance</h2>
-          <p className="sd-section-sub">Semester-wide attendance breakdown per course</p>
-        </div>
-        <div className="sd-filter-pills">
-          {[
-            { v: 'all', label: 'All', color: '' },
-            { v: 'safe', label: '✅ Safe (≥85%)', color: '#34d399' },
-            { v: 'warning', label: '⚠️ Warning', color: '#fbbf24' },
-            { v: 'risk', label: '🚨 Risk (<75%)', color: '#f87171' },
-          ].map(f => (
-            <button
-              key={f.v}
-              id={`att-filter-${f.v}`}
-              className={`sd-pill ${filter === f.v ? 'active' : ''}`}
-              style={filter === f.v && f.color ? { background: `${f.color}22`, color: f.color, borderColor: `${f.color}55` } : {}}
-              onClick={() => setFilter(f.v)}
-            >
-              {f.label}
-            </button>
-          ))}
+          <h2 className="sd-section-title">📊 Attendance Intelligence</h2>
+          <p className="sd-section-sub">Comprehensive semester attendance analytics, graph trajectory and subject metrics</p>
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* ── 1. Overall Attendance Graph ──────────────────────── */}
+      <OverallAttendanceGraph
+        overallPct={overallPct}
+        totalAttended={totalAttended}
+        totalClasses={totalClasses}
+        courses={courses}
+      />
+
+      {/* ── 2. Summary Metric Cards Row ──────────────────────── */}
       <div className="sd-attend-summary-row">
-        <StatCard icon="📊" label="Overall" value={`${overallPct}%`} sub={`${totalAttended}/${totalClasses}`} color="#a78bfa" />
-        <StatCard icon="✅" label="Safe courses"    value={courses.filter(c => pct(c) >= 85).length} sub="≥ 85%"  color="#34d399" />
-        <StatCard icon="⚠️" label="Warning courses" value={courses.filter(c => pct(c) >= 75 && pct(c) < 85).length} sub="75–84%" color="#fbbf24" />
-        <StatCard icon="🚨" label="Risk courses"    value={courses.filter(c => pct(c) < 75).length} sub="< 75%"  color="#f87171" />
+        <StatCard icon="📊" label="Overall Attendance" value={`${overallPct}%`} sub={`${totalAttended}/${totalClasses} classes attended`} color="#557E6D" />
+        <StatCard icon="✅" label="Safe Subjects"    value={courses.filter(c => pct(c) >= 85).length} sub="≥ 85% attendance"  color="#557E6D" />
+        <StatCard icon="⚠️" label="Warning Subjects" value={courses.filter(c => pct(c) >= 75 && pct(c) < 85).length} sub="75–84% threshold" color="#B5822C" />
+        <StatCard icon="🚨" label="At Risk Subjects" value={courses.filter(c => pct(c) < 75).length} sub="< 75% cutoff"  color="#C3665B" />
       </div>
 
-      {/* Course cards */}
-      <div className="sd-attend-cards">
-        {filtered.map(c => {
-          const p = pct(c)
-          const safe = Math.max(0, Math.ceil((0.75 * c.total - c.attended)))
-          const canMiss = Math.max(0, Math.floor(c.total - c.attended - (0.25 * (c.total + 10))))
-          const color = pctColor(p)
-          return (
-            <div key={c.id} className="sd-attend-card" style={{ '--ccolor': c.color }}>
-              <div className="sd-attend-card-top">
-                <div>
-                  <span className="sd-course-code" style={{ color: c.color }}>{c.id}</span>
-                  <h4 className="sd-attend-card-name">{c.name}</h4>
-                  <span className="sd-attend-faculty">👨‍🏫 {c.faculty}</span>
-                </div>
-                <div className="sd-attend-ring-wrap">
-                  <svg className="sd-attend-ring" viewBox="0 0 60 60">
-                    <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-                    <circle
-                      cx="30" cy="30" r="24" fill="none"
-                      stroke={color} strokeWidth="5"
-                      strokeDasharray={`${2 * Math.PI * 24}`}
-                      strokeDashoffset={`${2 * Math.PI * 24 * (1 - p / 100)}`}
-                      strokeLinecap="round"
-                      transform="rotate(-90 30 30)"
-                    />
-                  </svg>
-                  <span className="sd-attend-ring-pct" style={{ color }}>{p}%</span>
-                </div>
+      {/* ── 3. Subject-Wise Dropdown Toolbar ─────────────────── */}
+      <div className="sd-att-toolbar">
+        <div className="sd-subject-dropdown-wrap">
+          <label className="sd-control-label" htmlFor="att-subject-dropdown">
+            <span>🔍</span> Subject-Wise View:
+          </label>
+          <div className="sd-select-wrapper">
+            <select
+              id="att-subject-dropdown"
+              className="sd-subject-select"
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+            >
+              <option value="all">📚 All Subjects (Comparative Overview)</option>
+              {courses.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.id} — {c.name} ({pct(c)}%)
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {selectedSubject === 'all' && (
+          <div className="sd-filter-pills">
+            {[
+              { v: 'all', label: 'All Subjects', color: '' },
+              { v: 'safe', label: '✅ Safe (≥85%)', color: '#557E6D' },
+              { v: 'warning', label: '⚠️ Warning (75–84%)', color: '#B5822C' },
+              { v: 'risk', label: '🚨 At Risk (<75%)', color: '#C3665B' },
+            ].map(f => (
+              <button
+                key={f.v}
+                id={`att-filter-${f.v}`}
+                className={`sd-pill ${filter === f.v ? 'active' : ''}`}
+                style={filter === f.v && f.color ? { background: `${f.color}15`, color: f.color, borderColor: `${f.color}44` } : {}}
+                onClick={() => setFilter(f.v)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── 4. Subject Detail Spotlight OR All Subjects Grid ─── */}
+      {selectedSubject !== 'all' && selectedCourseObj ? (
+        /* Spotlight Card for specific subject selected via dropdown */
+        <div className="sd-card sd-spotlight-card" style={{ '--ccolor': selectedCourseObj.color }}>
+          <div className="sd-spotlight-top">
+            <div className="sd-spotlight-info">
+              <div className="sd-spotlight-tags">
+                <span className="sd-course-tag" style={{ background: `${selectedCourseObj.color}22`, color: selectedCourseObj.color }}>
+                  {selectedCourseObj.id}
+                </span>
+                <span className="sd-course-badge" style={{ background: '#E8F2EC', color: '#557E6D' }}>Enrolled</span>
+              </div>
+              <h3 className="sd-spotlight-title">{selectedCourseObj.name}</h3>
+              <p className="sd-spotlight-meta">
+                👨‍🏫 Faculty: <strong>{selectedCourseObj.faculty}</strong> &nbsp;·&nbsp;
+                📍 Room: <strong>{selectedCourseObj.room}</strong> &nbsp;·&nbsp;
+                🕐 Schedule: <strong>{selectedCourseObj.schedule}</strong>
+              </p>
+            </div>
+
+            <button
+              className="sd-back-btn"
+              onClick={() => setSelectedSubject('all')}
+            >
+              ← Back to All Subjects
+            </button>
+          </div>
+
+          <div className="sd-spotlight-grid">
+            {/* Big Circular Progress */}
+            <div className="sd-spotlight-gauge-box">
+              <div className="sd-spotlight-gauge-wrap">
+                {(() => {
+                  const p = pct(selectedCourseObj)
+                  const col = pctColor(p)
+                  const r = 48
+                  const circ = 2 * Math.PI * r
+                  const offset = circ * (1 - p / 100)
+                  return (
+                    <svg className="sd-spotlight-svg" viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r={r} fill="none" stroke="#E7E8E2" strokeWidth="8" />
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r={r}
+                        fill="none"
+                        stroke={col}
+                        strokeWidth="8"
+                        strokeLinecap="round"
+                        strokeDasharray={circ}
+                        strokeDashoffset={offset}
+                        transform="rotate(-90 60 60)"
+                        style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                      />
+                      <text x="60" y="58" textAnchor="middle" fontSize="22" fontWeight="700" fill="#162F44">{p}%</text>
+                      <text x="60" y="74" textAnchor="middle" fontSize="10.5" fill="#758087" fontWeight="500">Attendance</text>
+                    </svg>
+                  )
+                })()}
               </div>
 
-              <div className="sd-attend-bar-wrap">
-                <div className="sd-attend-bar-track">
-                  <div className="sd-attend-bar-fill" style={{ width: `${p}%`, background: color }} />
-                  <div className="sd-attend-bar-min-line" style={{ left: '75%' }} title="75% minimum" />
-                </div>
-                <span className="sd-attend-bar-label">{c.attended} / {c.total} classes attended</span>
-              </div>
-
-              <div className="sd-attend-card-footer">
-                {p >= 75 ? (
-                  <span style={{ color: '#34d399', fontSize: '0.78rem' }}>
-                    ✅ Can afford to miss ~{Math.max(0, Math.floor(c.attended - 0.75 * c.total + (c.total - c.attended)))} more class(es)
-                  </span>
+              <div className="sd-spotlight-status-tag">
+                {pct(selectedCourseObj) >= 85 ? (
+                  <span className="sd-badge sd-badge-present">✅ Safe Standing</span>
+                ) : pct(selectedCourseObj) >= 75 ? (
+                  <span className="sd-badge sd-badge-late">⚠️ Warning Threshold</span>
                 ) : (
-                  <span style={{ color: '#f87171', fontSize: '0.78rem' }}>
-                    🚨 Need {safe} more class(es) to reach 75%
-                  </span>
+                  <span className="sd-badge sd-badge-absent">🚨 At Risk</span>
                 )}
               </div>
             </div>
-          )
-        })}
-      </div>
+
+            {/* Metrics Breakdown */}
+            <div className="sd-spotlight-metrics-box">
+              <div className="sd-spot-stats-row">
+                <div className="sd-spot-stat">
+                  <div className="sd-spot-stat-label">Classes Attended</div>
+                  <div className="sd-spot-stat-val" style={{ color: '#557E6D' }}>{selectedCourseObj.attended}</div>
+                  <div className="sd-spot-stat-sub">of {selectedCourseObj.total} held</div>
+                </div>
+                <div className="sd-spot-stat">
+                  <div className="sd-spot-stat-label">Classes Missed</div>
+                  <div className="sd-spot-stat-val" style={{ color: '#BC6D61' }}>{selectedCourseObj.total - selectedCourseObj.attended}</div>
+                  <div className="sd-spot-stat-sub">unattended</div>
+                </div>
+                <div className="sd-spot-stat">
+                  <div className="sd-spot-stat-label">Required for 75%</div>
+                  <div className="sd-spot-stat-val">{Math.ceil(0.75 * selectedCourseObj.total)}</div>
+                  <div className="sd-spot-stat-sub">minimum classes</div>
+                </div>
+              </div>
+
+              {/* Attendance Allowance Simulation Box */}
+              <div className="sd-simulation-box">
+                {pct(selectedCourseObj) >= 75 ? (
+                  <div className="sd-sim-positive">
+                    <span className="sd-sim-icon">🎉</span>
+                    <div>
+                      <strong>Attendance Buffer Active:</strong>
+                      <p>
+                        You can safely miss up to <strong>{Math.max(0, Math.floor(selectedCourseObj.attended - 0.75 * selectedCourseObj.total))}</strong> more upcoming class(es) without dropping below the mandatory 75% cutoff.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="sd-sim-negative">
+                    <span className="sd-sim-icon">⚠️</span>
+                    <div>
+                      <strong>Attendance Recovery Required:</strong>
+                      <p>
+                        You must attend the next <strong>{Math.max(0, Math.ceil((0.75 * selectedCourseObj.total - selectedCourseObj.attended)))}</strong> consecutive classes without absence to achieve 75% compliance.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Subject Attendance History Table */}
+          <div className="sd-spotlight-history">
+            <h4 className="sd-spotlight-subhead">📋 Recent Verification Logs for {selectedCourseObj.id}</h4>
+            {logs.filter(l => (l.course_id === selectedCourseObj.id || l.course === selectedCourseObj.id)).length === 0 ? (
+              <p style={{ color: 'var(--sd-muted)', fontSize: '0.85rem', padding: '1rem 0' }}>
+                No recent attendance scans logged yet for {selectedCourseObj.name}.
+              </p>
+            ) : (
+              <div className="sd-table-wrap">
+                <table className="sd-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Date & Time</th>
+                      <th>Verification Method</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logs
+                      .filter(l => (l.course_id === selectedCourseObj.id || l.course === selectedCourseObj.id))
+                      .slice(0, 5)
+                      .map((log, idx) => (
+                        <tr key={log._id || log.id || idx}>
+                          <td>{idx + 1}</td>
+                          <td>{log.date || (log.timestamp ? new Date(log.timestamp).toLocaleDateString('en-GB') : 'Recent')}</td>
+                          <td><span className="sd-method-badge">👁️ Face & QR Verified</span></td>
+                          <td><span className="sd-badge sd-badge-present">✅ Present</span></td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Full Grid of All Subjects */
+        <div className="sd-attend-cards">
+          {filtered.map(c => {
+            const p = pct(c)
+            const safe = Math.max(0, Math.ceil((0.75 * c.total - c.attended)))
+            const color = pctColor(p)
+            return (
+              <div key={c.id} className="sd-attend-card" style={{ '--ccolor': c.color }}>
+                <div className="sd-attend-card-top">
+                  <div>
+                    <span className="sd-course-code" style={{ color: c.color }}>{c.id}</span>
+                    <h4 className="sd-attend-card-name">{c.name}</h4>
+                    <span className="sd-attend-faculty">👨‍🏫 {c.faculty}</span>
+                  </div>
+                  <div className="sd-attend-ring-wrap">
+                    <svg className="sd-attend-ring" viewBox="0 0 60 60">
+                      <circle cx="30" cy="30" r="24" fill="none" stroke="#E7E8E2" strokeWidth="5" />
+                      <circle
+                        cx="30" cy="30" r="24" fill="none"
+                        stroke={color} strokeWidth="5"
+                        strokeDasharray={`${2 * Math.PI * 24}`}
+                        strokeDashoffset={`${2 * Math.PI * 24 * (1 - p / 100)}`}
+                        strokeLinecap="round"
+                        transform="rotate(-90 30 30)"
+                      />
+                    </svg>
+                    <span className="sd-attend-ring-pct" style={{ color }}>{p}%</span>
+                  </div>
+                </div>
+
+                <div className="sd-attend-bar-wrap">
+                  <div className="sd-attend-bar-track">
+                    <div className="sd-attend-bar-fill" style={{ width: `${p}%`, background: color }} />
+                    <div className="sd-attend-bar-min-line" style={{ left: '75%' }} title="75% minimum" />
+                  </div>
+                  <span className="sd-attend-bar-label">{c.attended} / {c.total} classes attended</span>
+                </div>
+
+                <div className="sd-attend-card-footer">
+                  {p >= 75 ? (
+                    <span style={{ color: '#557E6D', fontSize: '0.82rem', fontWeight: 600 }}>
+                      ✅ Can afford to miss ~{Math.max(0, Math.floor(c.attended - 0.75 * c.total))} more class(es)
+                    </span>
+                  ) : (
+                    <span style={{ color: '#BC6D61', fontSize: '0.82rem', fontWeight: 600 }}>
+                      🚨 Need {safe} more class(es) to reach 75%
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="sd-card-drill-btn"
+                    onClick={() => setSelectedSubject(c.id)}
+                    title="View Detailed Breakdown"
+                  >
+                    View Details →
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -1676,59 +2099,176 @@ function ScannerFaceContent({ user, onVerified }) {
 // ═══════════════════════════════════════════════════════════
 function TabClasses({ attData }) {
   const [selected, setSelected] = useState(null)
+  const [activeDay, setActiveDay] = useState('Monday')
   const coursesList = attData?.courses || COURSES
   const scheduleList = attData?.todaySchedule || TODAY_SCHEDULE
 
+  const dayScheduleMap = {
+    'Monday': [
+      { time: '9:00 AM - 10:30 AM', course: 'CS101', name: 'Data Structures', room: 'Lab 3', faculty: 'Prof. Sharma', type: 'Lab & Practical', status: scheduleList.find(s => s.course === 'CS101')?.status || 'upcoming' },
+      { time: '2:00 PM - 3:30 PM', course: 'CS312', name: 'Database Systems', room: 'Room 7', faculty: 'Prof. Meera', type: 'Lecture', status: scheduleList.find(s => s.course === 'CS312')?.status || 'upcoming' },
+    ],
+    'Tuesday': [
+      { time: '11:00 AM - 12:30 PM', course: 'CS205', name: 'Operating Systems', room: 'Room 12', faculty: 'Dr. Rajan', type: 'Theory Lecture', status: scheduleList.find(s => s.course === 'CS205')?.status || 'upcoming' },
+    ],
+    'Wednesday': [
+      { time: '9:00 AM - 10:30 AM', course: 'CS101', name: 'Data Structures', room: 'Lab 3', faculty: 'Prof. Sharma', type: 'Practical Session', status: scheduleList.find(s => s.course === 'CS101')?.status || 'upcoming' },
+      { time: '2:00 PM - 3:30 PM', course: 'CS312', name: 'Database Systems', room: 'Room 7', faculty: 'Prof. Meera', type: 'Lab Session', status: scheduleList.find(s => s.course === 'CS312')?.status || 'upcoming' },
+    ],
+    'Thursday': [
+      { time: '11:00 AM - 12:30 PM', course: 'CS205', name: 'Operating Systems', room: 'Room 12', faculty: 'Dr. Rajan', type: 'Theory Lecture', status: scheduleList.find(s => s.course === 'CS205')?.status || 'upcoming' },
+    ],
+    'Friday': [
+      { time: '9:00 AM - 10:30 AM', course: 'CS101', name: 'Data Structures', room: 'Lab 3', faculty: 'Prof. Sharma', type: 'Doubt Clearing & Quiz', status: scheduleList.find(s => s.course === 'CS101')?.status || 'upcoming' },
+    ]
+  }
+
+  const courseSyllabus = {
+    'CS101': [
+      { mod: 'Module 1', title: 'Arrays, Linked Lists & Complexity Analysis', status: 'Completed' },
+      { mod: 'Module 2', title: 'Stacks, Queues & Priority Queues', status: 'Completed' },
+      { mod: 'Module 3', title: 'Trees, Binary Search Trees & AVL Balancing', status: 'In Progress' },
+      { mod: 'Module 4', title: 'Graphs, Traversal & Shortest Path Algorithms', status: 'Upcoming' },
+    ],
+    'CS205': [
+      { mod: 'Module 1', title: 'OS Structures & Process Scheduling', status: 'Completed' },
+      { mod: 'Module 2', title: 'Process Synchronization & Semaphores', status: 'Completed' },
+      { mod: 'Module 3', title: 'Deadlock Avoidance & Bankers Algorithm', status: 'In Progress' },
+      { mod: 'Module 4', title: 'Virtual Memory, Paging & File Systems', status: 'Upcoming' },
+    ],
+    'CS312': [
+      { mod: 'Module 1', title: 'Relational Model & Relational Algebra', status: 'Completed' },
+      { mod: 'Module 2', title: 'Advanced SQL, Views & Constraints', status: 'Completed' },
+      { mod: 'Module 3', title: 'Database Normalization (1NF, 2NF, 3NF, BCNF)', status: 'In Progress' },
+      { mod: 'Module 4', title: 'Transaction Management & ACID Properties', status: 'Upcoming' },
+    ]
+  }
+
   return (
     <div className="sd-tab-content">
+      {/* ── Header ─────────────────────────────────────────── */}
       <div className="sd-section-header">
         <div>
-          <h2 className="sd-section-title">📚 My Classes</h2>
-          <p className="sd-section-sub">All enrolled courses for this semester</p>
+          <h2 className="sd-section-title">📚 Enrolled Classes & Academic Roster</h2>
+          <p className="sd-section-sub">Curriculum details, faculty schedules, and attendance metrics for this semester</p>
         </div>
-        <span className="sd-role-badge">{coursesList.length} Courses</span>
       </div>
 
+      {/* ── Academic Summary Metrics ──────────────────────── */}
+      <div className="sd-classes-metrics-bar">
+        <div className="sd-cmetric-card">
+          <span className="sd-cmetric-icon">📖</span>
+          <div>
+            <div className="sd-cmetric-label">Enrolled Courses</div>
+            <div className="sd-cmetric-val">{coursesList.length} Active Courses</div>
+          </div>
+        </div>
+        <div className="sd-cmetric-card">
+          <span className="sd-cmetric-icon">🎓</span>
+          <div>
+            <div className="sd-cmetric-label">Semester Standing</div>
+            <div className="sd-cmetric-val">Semester 6 · Computer Science</div>
+          </div>
+        </div>
+        <div className="sd-cmetric-card">
+          <span className="sd-cmetric-icon">⭐</span>
+          <div>
+            <div className="sd-cmetric-label">Total Credits</div>
+            <div className="sd-cmetric-val">18 Credit Units</div>
+          </div>
+        </div>
+        <div className="sd-cmetric-card">
+          <span className="sd-cmetric-icon">⏱️</span>
+          <div>
+            <div className="sd-cmetric-label">Weekly Contact</div>
+            <div className="sd-cmetric-val">22 Hours / Week</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Enrolled Course Cards Grid ──────────────────────── */}
       <div className="sd-classes-grid">
         {coursesList.map(c => {
           const p = pct(c)
           const color = pctColor(p)
           const isSelected = selected === c.id
+          const syllabus = courseSyllabus[c.id] || []
           return (
             <div
               key={c.id}
               id={`class-${c.id}`}
               className={`sd-class-card ${isSelected ? 'selected' : ''}`}
               style={{ '--ccolor': c.color }}
-              onClick={() => setSelected(isSelected ? null : c.id)}
             >
               <div className="sd-class-card-header">
-                <div className="sd-class-dot" style={{ background: c.color }} />
-                <span className="sd-course-code" style={{ color: c.color }}>{c.id}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="sd-course-tag" style={{ background: `${c.color}22`, color: c.color }}>{c.id}</span>
+                  <span className="sd-class-type-tag">Core Theory + Lab</span>
+                </div>
                 <span className={`sd-badge sd-badge-${p >= 85 ? 'present' : p >= 75 ? 'late' : 'absent'}`}>{p}%</span>
               </div>
+
               <h4 className="sd-class-name">{c.name}</h4>
-              <p className="sd-class-faculty">👨‍🏫 {c.faculty}</p>
-              <p className="sd-class-schedule">🕐 {c.schedule}</p>
-              <p className="sd-class-room">📍 {c.room}</p>
+
+              <div className="sd-class-meta-chips">
+                <div className="sd-class-meta-chip">
+                  <span className="sd-cm-avatar">{c.faculty ? c.faculty.replace('Prof. ', '').replace('Dr. ', '')[0] : 'F'}</span>
+                  <span>{c.faculty}</span>
+                </div>
+                <div className="sd-class-meta-chip">
+                  <span>📍 {c.room}</span>
+                </div>
+                <div className="sd-class-meta-chip">
+                  <span>🕐 {c.schedule}</span>
+                </div>
+              </div>
 
               <div className="sd-class-progress-wrap">
                 <div className="sd-mini-bar-track">
                   <div className="sd-mini-bar-fill" style={{ width: `${p}%`, background: color }} />
+                  <div className="sd-mini-bar-cutoff" style={{ left: '75%' }} title="75% Requirement" />
                 </div>
-                <span style={{ fontSize: '0.75rem', color }}>{c.attended}/{c.total} classes</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginTop: 4 }}>
+                  <span style={{ color: 'var(--sd-text-secondary)' }}>{c.attended} of {c.total} classes attended</span>
+                  <span style={{ color, fontWeight: 700 }}>
+                    {p >= 85 ? 'Safe Standing' : p >= 75 ? 'Caution' : 'Under 75%'}
+                  </span>
+                </div>
               </div>
+
+              {/* Expander Toggle */}
+              <button
+                type="button"
+                className="sd-class-expand-btn"
+                onClick={() => setSelected(isSelected ? null : c.id)}
+              >
+                {isSelected ? '▲ Hide Syllabus & Details' : '▼ View Syllabus & Module Details'}
+              </button>
 
               {isSelected && (
                 <div className="sd-class-detail-expand">
-                  <div className="sd-class-detail-row"><span>Attended</span><strong>{c.attended}</strong></div>
-                  <div className="sd-class-detail-row"><span>Total</span><strong>{c.total}</strong></div>
-                  <div className="sd-class-detail-row"><span>Absent</span><strong>{c.total - c.attended}</strong></div>
+                  <div className="sd-class-detail-row"><span>Classes Attended</span><strong>{c.attended}</strong></div>
+                  <div className="sd-class-detail-row"><span>Total Conducted</span><strong>{c.total}</strong></div>
+                  <div className="sd-class-detail-row"><span>Absences</span><strong>{c.total - c.attended}</strong></div>
                   <div className="sd-class-detail-row">
-                    <span>Status</span>
+                    <span>Attendance Status</span>
                     <strong style={{ color }}>
-                      {p >= 85 ? '✅ Safe' : p >= 75 ? '⚠️ Warning' : '🚨 At Risk'}
+                      {p >= 85 ? '✅ Safe (Above 85%)' : p >= 75 ? '⚠️ Warning (75–84%)' : '🚨 At Risk (<75%)'}
                     </strong>
+                  </div>
+
+                  {/* Modules Outline */}
+                  <div className="sd-syllabus-block">
+                    <div className="sd-syllabus-heading">📖 Curriculum Modules:</div>
+                    {syllabus.map((syl, sIdx) => (
+                      <div key={sIdx} className="sd-syllabus-item">
+                        <span className="sd-syl-mod">{syl.mod}:</span>
+                        <span className="sd-syl-title">{syl.title}</span>
+                        <span className={`sd-syl-status ${syl.status.toLowerCase().replace(' ', '-')}`}>
+                          {syl.status}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1737,26 +2277,56 @@ function TabClasses({ attData }) {
         })}
       </div>
 
-      {/* Today's timetable */}
-      <div className="sd-card">
-        <h3 className="sd-card-title">🗓️ Today's Timetable</h3>
+      {/* ── Timetable Section with Day Tabs ─────────────────── */}
+      <div className="sd-card sd-timetable-card">
+        <div className="sd-tt-header-row">
+          <div>
+            <h3 className="sd-card-title" style={{ margin: 0 }}>🗓️ Weekly Timetable</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--sd-text-secondary)', marginTop: 2 }}>
+              Daily lecture slots, lab allocations and live attendance status
+            </p>
+          </div>
+
+          <div className="sd-day-tabs">
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(d => (
+              <button
+                key={d}
+                type="button"
+                className={`sd-day-tab ${activeDay === d ? 'active' : ''}`}
+                onClick={() => setActiveDay(d)}
+              >
+                {d.slice(0, 3)}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="sd-timetable">
-          {scheduleList.map((s, i) => (
-            <div key={i} className={`sd-timetable-row ${s.status}`}>
-              <div className="sd-tt-time">{s.time}</div>
-              <div className="sd-tt-line">
-                <div className="sd-tt-dot" style={{ background: s.status === 'done' ? '#34d399' : '#a78bfa' }} />
-                {i < scheduleList.length - 1 && <div className="sd-tt-vline" />}
+          {(dayScheduleMap[activeDay] || []).length === 0 ? (
+            <p style={{ color: 'var(--sd-text-secondary)', padding: '1.5rem 0', textAlign: 'center' }}>
+              No scheduled classes on this day.
+            </p>
+          ) : (
+            (dayScheduleMap[activeDay] || []).map((s, i, arr) => (
+              <div key={i} className={`sd-timetable-row ${s.status}`}>
+                <div className="sd-tt-time">{s.time}</div>
+                <div className="sd-tt-line">
+                  <div className="sd-tt-dot" style={{ background: s.status === 'done' ? '#557E6D' : '#162F44' }} />
+                  {i < arr.length - 1 && <div className="sd-tt-vline" />}
+                </div>
+                <div className="sd-tt-body">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="sd-tt-name">{s.name}</span>
+                    <span className="sd-class-type-tag">{s.type}</span>
+                  </div>
+                  <span className="sd-tt-meta">{s.course} · 📍 {s.room} · 👨‍🏫 {s.faculty}</span>
+                </div>
+                <span className={`sd-badge ${s.status === 'done' ? 'sd-badge-present' : 'sd-badge-upcoming'}`}>
+                  {s.status === 'done' ? '✅ Attended' : '🕐 Upcoming'}
+                </span>
               </div>
-              <div className="sd-tt-body">
-                <span className="sd-tt-name">{s.name}</span>
-                <span className="sd-tt-meta">{s.course} · {s.room}</span>
-              </div>
-              <span className={`sd-badge ${s.status === 'done' ? 'sd-badge-present' : 'sd-badge-upcoming'}`}>
-                {s.status === 'done' ? '✅ Done' : '🕐 Upcoming'}
-              </span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -1829,106 +2399,421 @@ function TabTimetable() {
 // ═══════════════════════════════════════════════════════════
 function TabStudentAssignments() {
   const API = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'
-  const [assignments, setAssignments] = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [filter, setFilter]           = useState('all')
+  const [serverAssignments, setServerAssignments] = useState([])
+  const [loading, setLoading]                     = useState(true)
+  const [filter, setFilter]                       = useState('all')
+  const [filterCourse, setFilterCourse]           = useState('all')
+  const [searchQ, setSearchQ]                     = useState('')
+  
+  // Local submission records state
+  const [submissions, setSubmissions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sd_student_submissions')
+      if (saved) return JSON.parse(saved)
+    } catch(e) {}
+    return {
+      'seed_asgn_3': { submittedAt: '2026-10-14T10:30:00Z', note: 'GitHub: github.com/student/b-tree-sim', status: 'graded', score: 18, feedback: 'Well structured implementation.' }
+    }
+  })
+
+  // Active submission modal state
+  const [submittingAsgn, setSubmittingAsgn] = useState(null)
+  const [submissionText, setSubmissionText] = useState('')
+  const [submittingState, setSubmittingState] = useState('idle')
 
   useEffect(() => {
     fetch(`${API}/assignments/`)
       .then(r => r.ok ? r.json() : [])
-      .then(data => setAssignments(data))
+      .then(data => setServerAssignments(data))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
+  // Default seeded assignments for rich offline/demo fallback
+  const defaultAssignments = [
+    {
+      _id: 'seed_asgn_1',
+      course: 'CS101',
+      title: 'AVL Tree Self-Balancing & Rotation Algorithms',
+      description: 'Implement an AVL Tree class in C++ or Python with automatic left, right, left-right and right-left rotations. Include a test harness verifying balance factor integrity.',
+      due_date: '2026-11-05T23:59:00Z',
+      created_at: '2026-10-20T09:00:00Z',
+      faculty: 'Prof. Sharma',
+      marks: 25
+    },
+    {
+      _id: 'seed_asgn_2',
+      course: 'CS205',
+      title: 'POSIX Thread Synchronization & Dining Philosophers Solution',
+      description: 'Solve the classical Dining Philosophers problem using POSIX mutexes and condition variables. Ensure starvation-free deadlock prevention with performance benchmarks.',
+      due_date: '2026-11-08T23:59:00Z',
+      created_at: '2026-10-22T11:00:00Z',
+      faculty: 'Dr. Rajan',
+      marks: 20
+    },
+    {
+      _id: 'seed_asgn_3',
+      course: 'CS312',
+      title: 'Relational Database Schema Normalization (3NF & BCNF)',
+      description: 'Normalize an unnormalized university ERP invoice and grades dataset into third normal form (3NF) and Boyce-Codd normal form (BCNF). Submit relational schemas and SQL DDL scripts.',
+      due_date: '2026-10-15T23:59:00Z',
+      created_at: '2026-10-05T14:00:00Z',
+      faculty: 'Prof. Meera',
+      marks: 20
+    },
+    {
+      _id: 'seed_asgn_4',
+      course: 'CS101',
+      title: 'Dijkstra & A* Graph Pathfinding Benchmark',
+      description: 'Design and compare shortest-path routing on sparse vs dense weighted graphs using Priority Queue Fibonacci heaps. Submit benchmark graphs and complexity writeup.',
+      due_date: '2026-11-15T23:59:00Z',
+      created_at: '2026-10-25T16:00:00Z',
+      faculty: 'Prof. Sharma',
+      marks: 30
+    }
+  ]
+
+  // Merge server assignments with fallback defaults
+  const allAssignments = [
+    ...serverAssignments,
+    ...defaultAssignments.filter(d => !serverAssignments.some(s => (s._id || s.id) === d._id))
+  ]
+
   const now = new Date()
-  const filtered = assignments.filter(a => {
+
+  const handleOpenSubmit = (asgn) => {
+    setSubmittingAsgn(asgn)
+    setSubmissionText('')
+    setSubmittingState('idle')
+  }
+
+  const handleConfirmSubmit = (e) => {
+    e.preventDefault()
+    if (!submittingAsgn) return
+    setSubmittingState('saving')
+    setTimeout(() => {
+      const record = {
+        submittedAt: new Date().toISOString(),
+        note: submissionText || 'Online text submission attached.',
+        status: 'submitted',
+        score: null,
+        feedback: 'Awaiting faculty assessment.'
+      }
+      setSubmissions(prev => {
+        const next = { ...prev, [submittingAsgn._id]: record }
+        try { localStorage.setItem('sd_student_submissions', JSON.stringify(next)) } catch(e) {}
+        return next
+      })
+      setSubmittingState('success')
+      setTimeout(() => {
+        setSubmittingAsgn(null)
+      }, 1200)
+    }, 800)
+  }
+
+  // Filtered list
+  const filtered = allAssignments.filter(a => {
     const due = a.due_date || a.dueDate
-    if (filter === 'active') return !due || new Date(due) >= now
-    if (filter === 'past')   return due && new Date(due) < now
+    const isSubmitted = !!submissions[a._id]
+    const isOverdue = due && new Date(due) < now && !isSubmitted
+
+    if (filter === 'active' && (isSubmitted || isOverdue)) return false
+    if (filter === 'submitted' && !isSubmitted) return false
+    if (filter === 'past' && !isOverdue) return false
+
+    if (filterCourse !== 'all' && a.course !== filterCourse) return false
+
+    if (searchQ.trim()) {
+      const q = searchQ.toLowerCase()
+      const matchTitle = (a.title || '').toLowerCase().includes(q)
+      const matchDesc = (a.description || '').toLowerCase().includes(q)
+      const matchCourse = (a.course || '').toLowerCase().includes(q)
+      if (!matchTitle && !matchDesc && !matchCourse) return false
+    }
+
     return true
   })
-  const isOverdue = (a) => { const d = a.due_date || a.dueDate; return d && new Date(d) < now }
+
+  const submittedCount = Object.keys(submissions).length
+  const activeCount = allAssignments.filter(a => {
+    const due = a.due_date || a.dueDate
+    return !submissions[a._id] && (!due || new Date(due) >= now)
+  }).length
+  const overdueCount = allAssignments.filter(a => {
+    const due = a.due_date || a.dueDate
+    return !submissions[a._id] && due && new Date(due) < now
+  }).length
 
   return (
     <div className="sd-tab-content">
+      {/* ── Page Header ─────────────────────────────────────── */}
       <div className="sd-section-header">
         <div>
-          <h2 className="sd-section-title">📝 Assignments</h2>
-          <p className="sd-section-sub">Assignments posted by your faculty</p>
+          <h2 className="sd-section-title">📝 Assignments & Coursework</h2>
+          <p className="sd-section-sub">Coursework deliverables, laboratory writeups, deadlines and grade feedback</p>
         </div>
+      </div>
+
+      {/* ── Summary Metrics Bar ──────────────────────────────── */}
+      <div className="sd-asgn-metrics-bar">
+        <div className="sd-ametric-card">
+          <span className="sd-ametric-icon">📚</span>
+          <div>
+            <div className="sd-ametric-label">Total Coursework</div>
+            <div className="sd-ametric-val">{allAssignments.length} Assigned</div>
+          </div>
+        </div>
+        <div className="sd-ametric-card">
+          <span className="sd-ametric-icon">⏳</span>
+          <div>
+            <div className="sd-ametric-label">Active & Due Soon</div>
+            <div className="sd-ametric-val" style={{ color: '#557E6D' }}>{activeCount} Pending</div>
+          </div>
+        </div>
+        <div className="sd-ametric-card">
+          <span className="sd-ametric-icon">✅</span>
+          <div>
+            <div className="sd-ametric-label">Turned In</div>
+            <div className="sd-ametric-val" style={{ color: '#162F44' }}>{submittedCount} Submitted</div>
+          </div>
+        </div>
+        <div className="sd-ametric-card">
+          <span className="sd-ametric-icon">⏰</span>
+          <div>
+            <div className="sd-ametric-label">Past Due</div>
+            <div className="sd-ametric-val" style={{ color: overdueCount > 0 ? '#C3665B' : 'inherit' }}>
+              {overdueCount} Overdue
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Filters & Search Toolbar ────────────────────────── */}
+      <div className="sd-asgn-toolbar">
+        <div className="sd-asgn-search-box">
+          <input
+            id="asgn-search-input"
+            className="sd-input sd-input-search"
+            placeholder="🔍 Search coursework title, topic or keyword…"
+            value={searchQ}
+            onChange={e => setSearchQ(e.target.value)}
+          />
+          {searchQ && (
+            <button className="sd-search-clear" onClick={() => setSearchQ('')}>✕</button>
+          )}
+        </div>
+
+        <select
+          id="asgn-course-select"
+          className="sd-select sd-asgn-select"
+          value={filterCourse}
+          onChange={e => setFilterCourse(e.target.value)}
+        >
+          <option value="all">All Courses</option>
+          <option value="CS101">CS101 — Data Structures</option>
+          <option value="CS205">CS205 — Operating Systems</option>
+          <option value="CS312">CS312 — Database Systems</option>
+        </select>
+
         <div className="sd-filter-pills">
-          {['all','active','past'].map(f => (
-            <button key={f} id={`asgn-filter-${f}`}
-              className={`sd-pill ${filter === f ? 'active' : ''}`}
-              onClick={() => setFilter(f)}>
-              {f === 'all' ? 'All' : f === 'active' ? '✅ Active' : '⏰ Past Due'}
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'active', label: '⏳ Active' },
+            { id: 'submitted', label: '✅ Submitted' },
+            { id: 'past', label: '⏰ Past Due' },
+          ].map(f => (
+            <button
+              key={f.id}
+              type="button"
+              id={`asgn-pill-${f.id}`}
+              className={`sd-pill ${filter === f.id ? 'active' : ''}`}
+              onClick={() => setFilter(f.id)}
+            >
+              {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      {loading && <p style={{color:'var(--sd-muted)', padding:'1rem 0'}}>Loading assignments…</p>}
-
-      {!loading && assignments.length === 0 && (
-        <div className="sd-card" style={{textAlign:'center', padding:'3rem'}}>
-          <div style={{fontSize:'3rem', marginBottom:'0.75rem'}}>📭</div>
-          <p style={{color:'var(--sd-muted)'}}>No assignments yet. Your faculty hasn't posted any.</p>
+      {/* ── Assignment Cards Grid ───────────────────────────── */}
+      {filtered.length === 0 ? (
+        <div className="sd-card" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📭</div>
+          <p style={{ color: 'var(--sd-text-secondary)', fontSize: '0.95rem' }}>No assignments match your search or filter.</p>
+          <button
+            className="sd-secondary-btn"
+            style={{ marginTop: '0.85rem' }}
+            onClick={() => { setFilter('all'); setFilterCourse('all'); setSearchQ('') }}
+          >
+            Reset Filters
+          </button>
         </div>
-      )}
+      ) : (
+        <div className="sd-asgn-grid">
+          {filtered.map(a => {
+            const due = a.due_date || a.dueDate
+            const isSub = !!submissions[a._id]
+            const subData = submissions[a._id]
+            const isOverdue = due && new Date(due) < now && !isSub
 
-      {!loading && filtered.length === 0 && assignments.length > 0 && (
-        <div className="sd-card" style={{textAlign:'center', padding:'2rem', color:'var(--sd-muted)'}}>
-          No assignments match this filter.
-        </div>
-      )}
+            let dueDays = null
+            if (due) {
+              const diffMs = new Date(due) - now
+              dueDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+            }
 
-      <div style={{display:'grid', gap:'1rem'}}>
-        {filtered.map(a => {
-          const due    = a.due_date || a.dueDate
-          const posted = a.created_at || a.createdAt
-          const overdue = isOverdue(a)
-          return (
-            <div key={a._id} className="sd-card" style={{
-              borderLeft: `4px solid ${overdue ? '#f87171' : '#34d399'}`,
-              padding: '1.25rem'
-            }}>
-              <div style={{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'0.5rem', marginBottom:'0.5rem'}}>
-                <div style={{display:'flex', gap:'0.5rem', alignItems:'center', flexWrap:'wrap'}}>
-                  <span style={{background:'rgba(167,139,250,0.15)', color:'#a78bfa', borderRadius:6, padding:'2px 10px', fontSize:'0.8rem', fontWeight:700}}>{a.course}</span>
-                  {overdue
-                    ? <span style={{background:'rgba(248,113,113,0.15)', color:'#f87171', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>⏰ PAST DUE</span>
-                    : due
-                      ? <span style={{background:'rgba(52,211,153,0.15)', color:'#34d399', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>✅ ACTIVE</span>
-                      : <span style={{background:'rgba(96,165,250,0.15)', color:'#60a5fa', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>📌 ONGOING</span>
-                  }
+            return (
+              <div
+                key={a._id}
+                className="sd-card sd-asgn-card"
+                style={{
+                  borderLeft: `4px solid ${isSub ? '#557E6D' : isOverdue ? '#C3665B' : '#B5822C'}`
+                }}
+              >
+                <div className="sd-asgn-card-top">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span className="sd-course-tag" style={{ background: '#E8ECE8', color: '#162F44' }}>
+                      {a.course}
+                    </span>
+                    {isSub ? (
+                      <span className="sd-badge sd-badge-present">✅ Submitted</span>
+                    ) : isOverdue ? (
+                      <span className="sd-badge sd-badge-absent">⏰ Past Due</span>
+                    ) : (
+                      <span className="sd-badge sd-badge-late">
+                        {dueDays === 0 ? 'Due Today' : dueDays === 1 ? 'Due Tomorrow' : `Due in ${dueDays} days`}
+                      </span>
+                    )}
+                  </div>
+                  {a.marks && (
+                    <span className="sd-asgn-marks-badge">🏆 {a.marks} Marks</span>
+                  )}
                 </div>
-                {a.marks && (
-                  <span style={{fontWeight:700, color:'#fbbf24'}}>🏆 {a.marks} Marks</span>
+
+                <h3 className="sd-asgn-title">{a.title}</h3>
+
+                {a.description && (
+                  <p className="sd-asgn-desc">{a.description}</p>
                 )}
+
+                <div className="sd-asgn-meta-row">
+                  {due && (
+                    <span className="sd-asgn-due-chip" style={{ color: isOverdue ? '#C3665B' : 'inherit' }}>
+                      📅 Due: <strong>{new Date(due).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+                    </span>
+                  )}
+                  {a.faculty && <span>👨‍🏫 By: <strong>{a.faculty}</strong></span>}
+                </div>
+
+                {/* Submission Status or Action */}
+                <div className="sd-asgn-action-bar">
+                  {isSub ? (
+                    <div className="sd-asgn-sub-info">
+                      <span style={{ color: '#557E6D', fontWeight: 600, fontSize: '0.82rem' }}>
+                        Turned in on {new Date(subData.submittedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                      </span>
+                      {subData.score !== null && subData.score !== undefined ? (
+                        <span className="sd-asgn-grade-pill">Score: {subData.score}/{a.marks}</span>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--sd-text-secondary)' }}>Awaiting review</span>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="sd-primary-btn sd-asgn-submit-btn"
+                      onClick={() => handleOpenSubmit(a)}
+                    >
+                      📤 Submit Work
+                    </button>
+                  )}
+                </div>
               </div>
+            )
+          })}
+        </div>
+      )}
 
-              <h3 style={{margin:'0 0 0.4rem', fontSize:'1.05rem', fontWeight:700}}>{a.title}</h3>
+      {/* ── Interactive Submission Modal ─────────────────────── */}
+      {submittingAsgn && (
+        <div className="sd-pay-overlay">
+          <div className="sd-pay-modal sd-asgn-modal">
+            {submittingState !== 'saving' && (
+              <button className="sd-pay-close" onClick={() => setSubmittingAsgn(null)}>✕</button>
+            )}
 
-              {a.description && (
-                <p style={{fontSize:'0.88rem', color:'var(--sd-muted)', margin:'0 0 0.75rem', lineHeight:1.5}}>
-                  {a.description}
-                </p>
-              )}
-
-              <div style={{display:'flex', gap:'1.5rem', fontSize:'0.82rem', color:'var(--sd-muted)', flexWrap:'wrap'}}>
-                {due && (
-                  <span style={{color: overdue ? '#f87171' : 'inherit'}}>
-                    📅 Due: <strong>{new Date(due).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong>
-                  </span>
-                )}
-                {a.faculty && <span>👨‍🏫 By: <strong>{a.faculty}</strong></span>}
-                {posted && <span>🕒 Posted: {new Date(posted).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>}
-              </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <span className="sd-course-tag" style={{ background: '#E8ECE8', color: '#162F44', marginBottom: 6, display: 'inline-block' }}>
+                {submittingAsgn.course}
+              </span>
+              <h2 style={{ fontFamily: 'var(--sd-font-serif)', fontSize: '1.25rem', color: '#162F44' }}>
+                Submit Coursework
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--sd-text-secondary)', marginTop: 4 }}>
+                {submittingAsgn.title}
+              </p>
             </div>
-          )
-        })}
-      </div>
+
+            {submittingState === 'success' ? (
+              <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎉</div>
+                <h3 style={{ color: '#557E6D', fontWeight: 700 }}>Assignment Submitted!</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--sd-text-secondary)', marginTop: 4 }}>
+                  Your coursework has been timestamped and sent to {submittingAsgn.faculty}.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleConfirmSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#162F44', display: 'block', marginBottom: 4 }}>
+                    Submission Link / GitHub Repo / Solution Notes:
+                  </label>
+                  <textarea
+                    className="sd-input"
+                    rows={4}
+                    placeholder="Paste your GitHub repository link or write your submission notes here..."
+                    value={submissionText}
+                    onChange={e => setSubmissionText(e.target.value)}
+                    required
+                    style={{ width: '100%', resize: 'vertical' }}
+                  />
+                </div>
+
+                <div style={{
+                  border: '2px dashed var(--sd-border)',
+                  borderRadius: 8,
+                  padding: '1.25rem',
+                  textAlign: 'center',
+                  background: 'rgba(22, 47, 68, 0.02)'
+                }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>📎</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#162F44' }}>Attach Project Archive or Report (Optional)</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--sd-text-secondary)', marginTop: 2 }}>PDF, ZIP, IPYNB up to 25MB</div>
+                  <input type="file" style={{ marginTop: 8, fontSize: '0.78rem' }} />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
+                  <button
+                    type="button"
+                    className="sd-secondary-btn"
+                    onClick={() => setSubmittingAsgn(null)}
+                    disabled={submittingState === 'saving'}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="sd-primary-btn"
+                    disabled={submittingState === 'saving'}
+                  >
+                    {submittingState === 'saving' ? 'Submitting…' : 'Confirm Submission ✅'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1936,7 +2821,7 @@ function TabStudentAssignments() {
 // ═══════════════════════════════════════════════════════════
 //  TAB: BILLS & PAYMENTS
 // ═══════════════════════════════════════════════════════════
-function TabBills() {
+function TabBills({ user }) {
   const [bills, setBills] = useState(() => {
     try {
       const saved = localStorage.getItem('sd_student_bills')
@@ -1945,15 +2830,17 @@ function TabBills() {
     
     // Default seeded bills
     return [
-      { id: 'tuition_2026', title: 'Tuition Fee (Spring Semester 2026)', category: 'Academic', amount: 75000, status: 'unpaid', icon: '🎓', dueDate: '2026-06-15', description: 'Regular academic tuition fees for computer science courses.' },
-      { id: 'hostel_2026', title: 'Hostel Rent & Mess Charges', category: 'Hostel', amount: 32000, status: 'unpaid', icon: '🏢', dueDate: '2026-06-01', description: 'Accommodation charges including high-speed internet & mess meal plans.' },
-      { id: 'exam_2026', title: 'Semester Examination Registration Fee', category: 'Exams', amount: 4500, status: 'unpaid', icon: '📝', dueDate: '2026-05-25', description: 'Registration fees for final end-semester theoretical & lab examinations.' },
-      { id: 'lib_fine_2026', title: 'Library Late Book Return Fine', category: 'Library', amount: 350, status: 'paid', icon: '📚', dueDate: '2026-05-10', description: 'Overdue charges for "Introduction to Algorithms" book kept for 14 extra days.', paidOn: '2026-05-12T14:32:00Z', method: 'UPI' }
+      { id: 'tuition_2026', title: 'Tuition Fee (Spring Semester 2026)', category: 'Academic', invoiceNo: 'INV-2026-081', amount: 75000, status: 'unpaid', icon: '🎓', dueDate: '2026-06-15', description: 'Regular academic tuition fees for 6th semester Computer Science curriculum.' },
+      { id: 'hostel_2026', title: 'Hostel Rent & Mess Charges', category: 'Hostel', invoiceNo: 'INV-2026-042', amount: 32000, status: 'unpaid', icon: '🏢', dueDate: '2026-06-01', description: 'Accommodation charges including high-speed campus Wi-Fi & meal plans.' },
+      { id: 'exam_2026', title: 'Semester Examination Registration Fee', category: 'Exams', invoiceNo: 'INV-2026-019', amount: 4500, status: 'unpaid', icon: '📝', dueDate: '2026-05-25', description: 'Registration fees for final end-semester theoretical & lab examinations.' },
+      { id: 'lib_fine_2026', title: 'Library Late Book Return Fine', category: 'Library', invoiceNo: 'INV-2026-004', amount: 350, status: 'paid', icon: '📚', dueDate: '2026-05-10', description: 'Overdue charges for "Introduction to Algorithms" book kept for 14 extra days.', paidOn: '2026-05-12T14:32:00Z', method: 'UPI' }
     ]
   })
 
-  const [activeBill, setActiveBill] = useState(null)
-  const [payMethod, setPayMethod]   = useState('card') // 'card' | 'upi' | 'net'
+  const [filterCat, setFilterCat]       = useState('all')
+  const [activeBill, setActiveBill]     = useState(null)
+  const [receiptBill, setReceiptBill]   = useState(null)
+  const [payMethod, setPayMethod]       = useState('card') // 'card' | 'upi' | 'net'
   const [paymentState, setPaymentState] = useState('idle') // 'idle' | 'processing' | 'success'
 
   // Card form fields
@@ -1976,7 +2863,7 @@ function TabBills() {
     setActiveBill(bill)
     setPaymentState('idle')
     setCardNum('')
-    setCardName('')
+    setCardName(user?.name ? user.name.toUpperCase() : 'STUDENT NAME')
     setCardExpiry('')
     setCardCvv('')
     setUpiId('')
@@ -2004,8 +2891,8 @@ function TabBills() {
         } : b))
         setPaymentState('idle')
         setActiveBill(null)
-      }, 1800)
-    }, 2200)
+      }, 1600)
+    }, 2000)
   }
 
   const formatCardNum = (val) => {
@@ -2022,41 +2909,142 @@ function TabBills() {
     return clear
   }
 
+  const totalOutstanding = bills.filter(b => b.status === 'unpaid').reduce((s, b) => s + b.amount, 0)
+  const totalPaid = bills.filter(b => b.status === 'paid').reduce((s, b) => s + b.amount, 0)
+
+  const filteredBills = filterCat === 'all' ? bills : bills.filter(b => b.category.toLowerCase() === filterCat.toLowerCase())
+
   return (
     <div className="sd-tab-content">
+      {/* ── Page Header ─────────────────────────────────────── */}
       <div className="sd-section-header">
         <div>
-          <h2 className="sd-section-title">💳 Fees, Bills & Payments</h2>
-          <p className="sd-section-sub">Pay tuition fees, exam fees, hostel charges, and clear fines securely</p>
+          <h2 className="sd-section-title">💳 Tuition Fees, Invoices & Accounts</h2>
+          <p className="sd-section-sub">Institutional fee schedule, outstanding balances, digital payment portal and payment receipts</p>
         </div>
       </div>
 
+      {/* ── Financial Summary Metrics Banner ────────────────── */}
+      <div className="sd-financial-metrics-bar">
+        <div className="sd-fmetric-card">
+          <span className="sd-fmetric-icon">💰</span>
+          <div>
+            <div className="sd-fmetric-label">Outstanding Balance</div>
+            <div className="sd-fmetric-val" style={{ color: totalOutstanding > 0 ? '#BC6D61' : '#557E6D' }}>
+              ₹{totalOutstanding.toLocaleString('en-IN')}
+            </div>
+            <div className="sd-fmetric-sub">{bills.filter(b => b.status === 'unpaid').length} Invoices Pending</div>
+          </div>
+        </div>
+
+        <div className="sd-fmetric-card">
+          <span className="sd-fmetric-icon">🧾</span>
+          <div>
+            <div className="sd-fmetric-label">Total Cleared Fees</div>
+            <div className="sd-fmetric-val" style={{ color: '#557E6D' }}>
+              ₹{totalPaid.toLocaleString('en-IN')}
+            </div>
+            <div className="sd-fmetric-sub">Paid this Academic Term</div>
+          </div>
+        </div>
+
+        <div className="sd-fmetric-card">
+          <span className="sd-fmetric-icon">📅</span>
+          <div>
+            <div className="sd-fmetric-label">Next Due Date</div>
+            <div className="sd-fmetric-val" style={{ color: '#162F44' }}>
+              25 May 2026
+            </div>
+            <div className="sd-fmetric-sub">Semester Exam Fee</div>
+          </div>
+        </div>
+
+        <div className="sd-fmetric-card">
+          <span className="sd-fmetric-icon">🛡️</span>
+          <div>
+            <div className="sd-fmetric-label">Account Clearance</div>
+            <div className="sd-fmetric-val" style={{ color: '#B5822C' }}>
+              Partial Pending
+            </div>
+            <div className="sd-fmetric-sub">Exam Hall Ticket Active</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Category Filters ────────────────────────────────── */}
+      <div className="sd-asgn-toolbar">
+        <div className="sd-filter-pills">
+          {[
+            { id: 'all', label: 'All Invoices' },
+            { id: 'academic', label: '🎓 Academic' },
+            { id: 'hostel', label: '🏢 Hostel & Mess' },
+            { id: 'exams', label: '📝 Examination' },
+            { id: 'library', label: '📚 Library & Fines' },
+          ].map(f => (
+            <button
+              key={f.id}
+              type="button"
+              className={`sd-pill ${filterCat === f.id ? 'active' : ''}`}
+              onClick={() => setFilterCat(f.id)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Bills Grid ──────────────────────────────────────── */}
       <div className="sd-bill-grid">
-        {bills.map(b => (
+        {filteredBills.map(b => (
           <div key={b.id} className="sd-bill-card">
             <div className="sd-bill-header">
               <span className="sd-bill-icon">{b.icon}</span>
-              <span className={`sd-bill-badge ${b.status}`}>{b.status}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {b.invoiceNo && (
+                  <span className="sd-inv-tag">{b.invoiceNo}</span>
+                )}
+                <span className={`sd-bill-badge ${b.status}`}>{b.status}</span>
+              </div>
             </div>
             
             <div>
-              <div style={{fontSize:'0.75rem', fontWeight:600, color:'var(--sd-accent,#a78bfa)', textTransform:'uppercase', letterSpacing:'1px'}}>{b.category}</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#557E6D', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {b.category}
+              </div>
               <h3 className="sd-bill-title">{b.title}</h3>
               <p className="sd-bill-description">{b.description}</p>
             </div>
 
+            <div className="sd-bill-meta-chips">
+              <span className="sd-bill-due-chip">
+                📅 Due: {new Date(b.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            </div>
+
             <div className="sd-bill-amount-row">
               <div>
-                <div style={{fontSize:'0.72rem', color:'var(--sd-muted,#888)'}}>Amount Due</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--sd-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Total Fee
+                </div>
                 <div className="sd-bill-amount">₹{b.amount.toLocaleString('en-IN')}</div>
               </div>
               
               {b.status === 'unpaid' ? (
-                <button className="sd-primary-btn" onClick={() => openPayment(b)}>💳 Pay Now</button>
+                <button className="sd-primary-btn" onClick={() => openPayment(b)}>
+                  💳 Pay Now
+                </button>
               ) : (
-                <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:'0.75rem', color:'#34d399', fontWeight:700}}>✅ Paid via {b.method}</div>
-                  <div style={{fontSize:'0.68rem', color:'var(--sd-muted)'}}>{new Date(b.paidOn).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                  <div style={{ fontSize: '0.78rem', color: '#557E6D', fontWeight: 700 }}>
+                    ✅ Paid via {b.method}
+                  </div>
+                  <button
+                    type="button"
+                    className="sd-receipt-btn"
+                    onClick={() => setReceiptBill(b)}
+                  >
+                    📄 View Receipt
+                  </button>
                 </div>
               )}
             </div>
@@ -2064,7 +3052,92 @@ function TabBills() {
         ))}
       </div>
 
-      {/* Payment Gateway Modal */}
+      {/* ── Official Payment Receipt Modal ──────────────────── */}
+      {receiptBill && (
+        <div className="sd-pay-overlay">
+          <div className="sd-pay-modal sd-receipt-modal">
+            <button className="sd-pay-close" onClick={() => setReceiptBill(null)}>✕</button>
+
+            <div className="sd-receipt-content" id="printable-receipt">
+              <div className="sd-receipt-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: '1.8rem' }}>🏛️</span>
+                  <div>
+                    <h3 style={{ fontFamily: 'var(--sd-font-serif)', fontSize: '1.15rem', color: '#162F44', margin: 0 }}>
+                      Attentify University ERP
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--sd-text-secondary)', margin: 0 }}>
+                      Official Electronic Fee Receipt & Clearance Record
+                    </p>
+                  </div>
+                </div>
+                <span className="sd-badge sd-badge-present">PAID & VERIFIED</span>
+              </div>
+
+              <div className="sd-receipt-divider" />
+
+              <div className="sd-receipt-grid">
+                <div>
+                  <div className="sd-rcpt-lbl">Receipt Number</div>
+                  <div className="sd-rcpt-val">REC-2026-{(receiptBill.id.slice(-4) + '8941').toUpperCase()}</div>
+                </div>
+                <div>
+                  <div className="sd-rcpt-lbl">Payment Date</div>
+                  <div className="sd-rcpt-val">
+                    {receiptBill.paidOn ? new Date(receiptBill.paidOn).toLocaleString('en-IN') : '12 May 2026, 02:32 PM'}
+                  </div>
+                </div>
+                <div>
+                  <div className="sd-rcpt-lbl">Student Name</div>
+                  <div className="sd-rcpt-val">{user?.name || 'Arjun Sharma'}</div>
+                </div>
+                <div>
+                  <div className="sd-rcpt-lbl">Student ID / Roll No</div>
+                  <div className="sd-rcpt-val">21CS028</div>
+                </div>
+              </div>
+
+              <div className="sd-receipt-item-table">
+                <div className="sd-rcpt-item-row header">
+                  <span>Fee Description</span>
+                  <span>Amount</span>
+                </div>
+                <div className="sd-rcpt-item-row">
+                  <div>
+                    <strong>{receiptBill.title}</strong>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--sd-text-secondary)' }}>
+                      Category: {receiptBill.category} · Invoice Ref: {receiptBill.invoiceNo || 'INV-2026'}
+                    </div>
+                  </div>
+                  <strong>₹{receiptBill.amount.toLocaleString('en-IN')}</strong>
+                </div>
+                <div className="sd-rcpt-item-row total">
+                  <span>Total Amount Paid</span>
+                  <span style={{ color: '#557E6D', fontSize: '1.1rem' }}>₹{receiptBill.amount.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              <div className="sd-receipt-footer">
+                <div>
+                  <span className="sd-method-badge">Payment Channel: {receiptBill.method || 'UPI Transfer'}</span>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--sd-text-secondary)', marginTop: 4 }}>
+                    Transaction ID: <code style={{ fontFamily: 'monospace' }}>TXN-984210459</code>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="sd-primary-btn"
+                  onClick={() => window.print()}
+                >
+                  🖨️ Print Receipt
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Payment Gateway Modal ────────────────────────────── */}
       {activeBill && (
         <div className="sd-pay-overlay">
           <div className="sd-pay-modal">
@@ -2075,15 +3148,19 @@ function TabBills() {
             {paymentState === 'idle' && (
               <>
                 <div>
-                  <h2 style={{fontFamily:'var(--font-serif)', fontSize:'1.25rem', fontWeight:700}}>Secure Payment Checkout</h2>
-                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted,#888)', marginTop:'0.25rem'}}>
+                  <h2 style={{ fontFamily: 'var(--sd-font-serif)', fontSize: '1.25rem', fontWeight: 700, color: '#162F44' }}>
+                    Institutional Payment Checkout
+                  </h2>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--sd-text-secondary)', marginTop: '0.25rem' }}>
                     Paying for: <strong>{activeBill.title}</strong>
                   </p>
                 </div>
 
-                <div style={{background:'rgba(255,255,255,0.03)', padding:'0.85rem', borderRadius:12, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <span style={{fontSize:'0.85rem', fontWeight:600}}>Total Outstanding Amount:</span>
-                  <span style={{fontSize:'1.3rem', fontWeight:850, color:'var(--theme-accent,#a78bfa)', fontFamily:'monospace'}}>₹{activeBill.amount.toLocaleString('en-IN')}</span>
+                <div style={{ background: '#F7F6F2', border: '1px solid var(--sd-border)', padding: '0.85rem', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#162F44' }}>Total Payable Amount:</span>
+                  <span style={{ fontSize: '1.3rem', fontWeight: 800, color: '#557E6D', fontFamily: 'monospace' }}>
+                    ₹{activeBill.amount.toLocaleString('en-IN')}
+                  </span>
                 </div>
 
                 {/* Tab select payment method */}
@@ -2093,20 +3170,19 @@ function TabBills() {
                   <button className={`pay-method-btn ${payMethod === 'net' ? 'active' : ''}`} onClick={() => setPayMethod('net')}>🏦 NetBanking</button>
                 </div>
 
-                <form onSubmit={handlePaySubmit} style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
+                <form onSubmit={handlePaySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {/* CARD METHOD */}
                   {payMethod === 'card' && (
-                    <div style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
-                      {/* Glass Card preview */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <div className="glass-card-wrapper">
                         <div className="glass-credit-card">
-                          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div className="card-chip"></div>
-                            <span style={{fontSize:'1.1rem', fontWeight:900, fontStyle:'italic', opacity:0.8}}>VISA</span>
+                            <span style={{ fontSize: '1.1rem', fontWeight: 900, fontStyle: 'italic', opacity: 0.85 }}>VISA</span>
                           </div>
                           <div className="card-num">{cardNum || '•••• •••• •••• ••••'}</div>
                           <div className="card-bottom">
-                            <div className="card-holder">{cardName || 'CARDHOLDER NAME'}</div>
+                            <div className="card-holder">{cardName || (user?.name || 'STUDENT NAME').toUpperCase()}</div>
                             <div className="card-expiry-wrap">
                               <div className="card-expiry-lbl">VALID THRU</div>
                               <div className="card-expiry-val">{cardExpiry || 'MM/YY'}</div>
@@ -2115,11 +3191,10 @@ function TabBills() {
                         </div>
                       </div>
 
-                      {/* Card Inputs */}
-                      <div style={{display:'grid', gridTemplateColumns:'1fr', gap:'0.75rem'}}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
                         <input className="sd-input" placeholder="Card Number (16-Digit)" value={cardNum} onChange={e => setCardNum(formatCardNum(e.target.value))} maxLength={19} required />
                         <input className="sd-input" placeholder="Cardholder Name" value={cardName} onChange={e => setCardName(e.target.value.toUpperCase())} maxLength={26} required />
-                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem'}}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                           <input className="sd-input" placeholder="MM/YY" value={cardExpiry} onChange={e => setCardExpiry(formatExpiry(e.target.value))} maxLength={5} required />
                           <input className="sd-input" type="password" placeholder="CVV" value={cardCvv} onChange={e => setCardCvv(e.target.value.replace(/\D/g, ''))} maxLength={3} required />
                         </div>
@@ -2129,39 +3204,30 @@ function TabBills() {
 
                   {/* UPI METHOD */}
                   {payMethod === 'upi' && (
-                    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'1rem', padding:'0.5rem 0'}}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0' }}>
                       <div style={{
                         width: '140px', height: '140px',
                         background: '#fff', padding: '10px',
                         borderRadius: '12px', display: 'flex',
                         alignItems: 'center', justifyContent: 'center',
                         position: 'relative', overflow: 'hidden',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+                        boxShadow: '0 8px 24px rgba(22,47,68,0.12)',
+                        border: '1px solid var(--sd-border)'
                       }}>
-                        {/* Mock QR Code graphic */}
-                        <div style={{width:'100%', height:'100%', border:'2px dashed #000', display:'flex', flexWrap:'wrap', opacity:0.85}}>
-                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
-                          <div style={{flex:1}}></div>
-                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
-                          <div style={{width:'100%', flex:1, display:'flex', justifyContent:'center', alignItems:'center', fontSize:'1.4rem'}}>📱</div>
-                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
+                        <div style={{ width: '100%', height: '100%', border: '2px dashed #162F44', display: 'flex', flexWrap: 'wrap', opacity: 0.85 }}>
+                          <div style={{ width: '40px', height: '40px', background: '#162F44', margin: '2px' }}></div>
+                          <div style={{ flex: 1 }}></div>
+                          <div style={{ width: '40px', height: '40px', background: '#162F44', margin: '2px' }}></div>
+                          <div style={{ width: '100%', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.4rem' }}>📱</div>
+                          <div style={{ width: '40px', height: '40px', background: '#162F44', margin: '2px' }}></div>
                         </div>
-                        {/* Dynamic rotating scanner laser bar */}
-                        <div style={{
-                          position: 'absolute', left: 0, right: 0,
-                          height: '2px', background: 'var(--theme-accent,#34d399)',
-                          animation: 'slideUp 1.5s ease-in-out infinite alternate',
-                          boxShadow: '0 0 8px var(--theme-accent)'
-                        }}></div>
                       </div>
-                      <p style={{fontSize:'0.78rem', color:'var(--theme-muted)', textAlign:'center'}}>
-                        Scan the dynamic QR code above with any UPI app (GPay, PhonePe, Paytm, BHIM) to make a secure direct transfer.
+                      <p style={{ fontSize: '0.78rem', color: 'var(--sd-text-secondary)', textAlign: 'center' }}>
+                        Scan QR code with GPay, PhonePe, Paytm, or BHIM to pay instantly.
                       </p>
 
-                      <div style={{width:'100%', height:'1px', background:'rgba(255,255,255,0.08)'}}></div>
-
-                      <div style={{width:'100%', display:'flex', flexDirection:'column', gap:'0.4rem'}}>
-                        <label style={{fontSize:'0.75rem', fontWeight:600, color:'var(--theme-muted)'}}>OR ENTER YOUR UPI ID</label>
+                      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--sd-text-secondary)' }}>OR ENTER YOUR UPI VPA ID</label>
                         <input className="sd-input" placeholder="e.g. username@upi" value={upiId} onChange={e => setUpiId(e.target.value)} required={payMethod === 'upi'} />
                       </div>
                     </div>
@@ -2169,8 +3235,8 @@ function TabBills() {
 
                   {/* NET BANKING */}
                   {payMethod === 'net' && (
-                    <div style={{display:'flex', flexDirection:'column', gap:'0.5rem', padding:'1rem 0'}}>
-                      <label style={{fontSize:'0.78rem', fontWeight:600, color:'var(--theme-muted)'}}>Select Your Bank</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.75rem 0' }}>
+                      <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#162F44' }}>Select Institutional Bank</label>
                       <select className="sd-select" value={bank} onChange={e => setBank(e.target.value)}>
                         <option value="HDFC Bank">HDFC Bank</option>
                         <option value="State Bank of India">State Bank of India (SBI)</option>
@@ -2178,14 +3244,14 @@ function TabBills() {
                         <option value="Axis Bank">Axis Bank</option>
                         <option value="Punjab National Bank">Punjab National Bank</option>
                       </select>
-                      <p style={{fontSize:'0.75rem', color:'var(--theme-muted)', marginTop:'0.5rem'}}>
-                        You will be redirected to your bank's secure page to complete the transaction authorization.
+                      <p style={{ fontSize: '0.75rem', color: 'var(--sd-text-secondary)', marginTop: '0.25rem' }}>
+                        You will be routed to your bank's 2-Factor NetBanking gateway.
                       </p>
                     </div>
                   )}
 
-                  <button type="submit" className="sd-primary-btn sd-btn-full" style={{marginTop:'0.5rem'}}>
-                    🔒 Authorize & Pay ₹{activeBill.amount.toLocaleString('en-IN')}
+                  <button type="submit" className="sd-primary-btn sd-btn-full" style={{ marginTop: '0.5rem' }}>
+                    🔒 Confirm & Pay ₹{activeBill.amount.toLocaleString('en-IN')}
                   </button>
                 </form>
               </>
@@ -2195,8 +3261,8 @@ function TabBills() {
               <div className="pay-loader">
                 <div className="pay-spinner"></div>
                 <div>
-                  <h3 style={{fontSize:'1.1rem', fontWeight:700}}>Processing Secure Payment</h3>
-                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted)', marginTop:4}}>Do not close this window or reload the page.</p>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#162F44' }}>Processing Payment</h3>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--sd-text-secondary)', marginTop: 4 }}>Authenticating with banking servers. Please do not close.</p>
                 </div>
               </div>
             )}
@@ -2205,9 +3271,9 @@ function TabBills() {
               <div className="pay-loader">
                 <div className="pay-success-tick">✓</div>
                 <div>
-                  <h3 style={{fontSize:'1.25rem', fontWeight:700, color:'#34d399'}}>Payment Successful!</h3>
-                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted)', marginTop:4}}>
-                    Transaction ref: <code style={{fontFamily:'monospace', color:'var(--theme-accent,#a78bfa)'}}>TXN-{Math.random().toString(36).substr(2, 9).toUpperCase()}</code>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#557E6D' }}>Payment Authorized!</h3>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--sd-text-secondary)', marginTop: 4 }}>
+                    Receipt generated for <code style={{ fontFamily: 'monospace', color: '#162F44' }}>₹{activeBill.amount.toLocaleString('en-IN')}</code>
                   </p>
                 </div>
               </div>
@@ -2220,11 +3286,12 @@ function TabBills() {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  TAB: LOGS
+//  TAB: LOGS (Advanced Search, Filters & CSV Export)
 // ═══════════════════════════════════════════════════════════
 function TabLogs({ attData }) {
   const [filterCourse, setFilterCourse] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterMethod, setFilterMethod] = useState('all')
   const [searchQ,      setSearchQ]      = useState('')
 
   const rawLogs = (attData?.logs && attData.logs.length > 0) ? attData.logs : LOGS
@@ -2235,89 +3302,182 @@ function TabLogs({ attData }) {
     date: l.date || (l.timestamp ? new Date(l.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent'),
     course: l.course_id || l.course || 'CS101',
     method: l.method || 'QR Code + Face',
-    status: l.status || 'present'
+    status: l.status || 'present',
+    timestamp: l.timestamp || new Date().toISOString()
   }))
 
   const filtered = formattedLogs.filter(l => {
     const matchCourse = filterCourse === 'all' || l.course === filterCourse
     const matchStatus = filterStatus === 'all' || l.status === filterStatus
+    const matchMethod = filterMethod === 'all' || 
+      (filterMethod === 'qr' && l.method.toLowerCase().includes('qr')) ||
+      (filterMethod === 'face' && l.method.toLowerCase().includes('face'))
     const matchSearch = (l.date || '').toLowerCase().includes(searchQ.toLowerCase()) ||
                         (l.course || '').toLowerCase().includes(searchQ.toLowerCase()) ||
                         (l.method || '').toLowerCase().includes(searchQ.toLowerCase())
-    return matchCourse && matchStatus && matchSearch
+    return matchCourse && matchStatus && matchMethod && matchSearch
   })
+
+  // Export filtered logs to CSV
+  const handleExportCSV = () => {
+    if (filtered.length === 0) return
+    const headers = ['Record ID', 'Date & Time', 'Course ID', 'Verification Method', 'Attendance Status']
+    const rows = filtered.map((l, idx) => [
+      idx + 1,
+      `"${l.date}"`,
+      `"${l.course}"`,
+      `"${l.method}"`,
+      `"${l.status.toUpperCase()}"`
+    ])
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `attentify_attendance_logs_${new Date().toISOString().slice(0,10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const presentCount = formattedLogs.filter(l => l.status === 'present').length
+  const absentCount  = formattedLogs.filter(l => l.status === 'absent').length
+  const lateCount    = formattedLogs.filter(l => l.status === 'late').length
 
   return (
     <div className="sd-tab-content">
+      {/* ── Section Header ─────────────────────────────────── */}
       <div className="sd-section-header">
         <div>
-          <h2 className="sd-section-title">🗒️ Attendance Logs</h2>
-          <p className="sd-section-sub">Full history of your attendance records</p>
+          <h2 className="sd-section-title">🗒️ Attendance Verification Logs</h2>
+          <p className="sd-section-sub">Chronological audit trail of biometric and session QR attendance events</p>
         </div>
+        <button
+          type="button"
+          className="sd-secondary-btn"
+          onClick={handleExportCSV}
+          title="Download CSV Spreadsheet"
+        >
+          📥 Export CSV
+        </button>
       </div>
 
-      <div className="sd-filters">
-        <input
-          id="log-search"
-          className="sd-input sd-input-search"
-          placeholder="🔍 Search logs…"
-          value={searchQ}
-          onChange={e => setSearchQ(e.target.value)}
-        />
+      {/* ── Metric Summary Pills ────────────────────────────── */}
+      <div className="sd-log-summary">
+        <span className="sd-log-sum-pill" style={{ color: '#557E6D', borderColor: '#557E6D33' }}>
+          ✅ Present: <strong>{presentCount}</strong>
+        </span>
+        <span className="sd-log-sum-pill" style={{ color: '#BC6D61', borderColor: '#BC6D6133' }}>
+          ❌ Absent: <strong>{absentCount}</strong>
+        </span>
+        <span className="sd-log-sum-pill" style={{ color: '#B5822C', borderColor: '#B5822C33' }}>
+          ⏰ Late: <strong>{lateCount}</strong>
+        </span>
+        <span className="sd-log-sum-pill" style={{ color: '#162F44', borderColor: '#162F4433' }}>
+          📋 Total Records: <strong>{formattedLogs.length}</strong>
+        </span>
+      </div>
+
+      {/* ── Toolbar with Filters ─────────────────────────────── */}
+      <div className="sd-filters sd-log-toolbar">
+        <div className="sd-asgn-search-box" style={{ flex: '1 1 240px' }}>
+          <input
+            id="log-search"
+            className="sd-input sd-input-search"
+            placeholder="🔍 Search by date, course, or verification method…"
+            value={searchQ}
+            onChange={e => setSearchQ(e.target.value)}
+          />
+          {searchQ && (
+            <button className="sd-search-clear" onClick={() => setSearchQ('')}>✕</button>
+          )}
+        </div>
+
         <select id="log-course-filter" className="sd-select" value={filterCourse} onChange={e => setFilterCourse(e.target.value)}>
           <option value="all">All Courses</option>
-          {coursesList.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
+          {coursesList.map(c => <option key={c.id} value={c.id}>{c.id} — {c.name}</option>)}
         </select>
+
         <select id="log-status-filter" className="sd-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="all">All Statuses</option>
-          <option value="present">Present</option>
-          <option value="absent">Absent</option>
-          <option value="late">Late</option>
+          <option value="present">Present (✅)</option>
+          <option value="late">Late (⏰)</option>
+          <option value="absent">Absent (❌)</option>
+        </select>
+
+        <select id="log-method-filter" className="sd-select" value={filterMethod} onChange={e => setFilterMethod(e.target.value)}>
+          <option value="all">All Verification Methods</option>
+          <option value="face">👁️ Face Recognition</option>
+          <option value="qr">🔲 QR Code Scan</option>
         </select>
       </div>
 
-      {/* Summary pills */}
-      <div className="sd-log-summary">
-        <span className="sd-log-sum-pill" style={{ color: '#34d399' }}>✅ Present: {formattedLogs.filter(l=>l.status==='present').length}</span>
-        <span className="sd-log-sum-pill" style={{ color: '#f87171' }}>❌ Absent: {formattedLogs.filter(l=>l.status==='absent').length}</span>
-        <span className="sd-log-sum-pill" style={{ color: '#fbbf24' }}>⏰ Late: {formattedLogs.filter(l=>l.status==='late').length}</span>
-        <span className="sd-log-sum-pill" style={{ color: 'var(--sd-muted)' }}>📋 Total: {formattedLogs.length}</span>
-      </div>
-
+      {/* ── Modern Table ─────────────────────────────────────── */}
       <div className="sd-card sd-table-wrap">
         <table className="sd-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Date & Time</th>
-              <th>Course</th>
-              <th>Method</th>
+              <th style={{ width: '50px' }}>#</th>
+              <th>Date & Timestamp</th>
+              <th>Course / Subject</th>
+              <th>Verification Mode</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && (
-              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', opacity: 0.4 }}>No records found</td></tr>
-            )}
-            {filtered.map((l, i) => (
-              <tr key={l.id}>
-                <td className="sd-td-num">{i + 1}</td>
-                <td className="sd-td-date">{l.date}</td>
-                <td><span className="sd-course-code-sm">{l.course}</span></td>
-                <td className="sd-td-method">
-                  <span className="sd-method-badge">
-                    {l.method === 'QR Code' ? '🔲' : l.method === 'Face Recognition' ? '👁️' : '✍️'} {l.method}
-                  </span>
-                </td>
-                <td>
-                  <span className={`sd-badge sd-badge-${l.status}`}>
-                    {l.status === 'present' ? '✅' : l.status === 'late' ? '⏰' : '❌'} {l.status}
-                  </span>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: 4 }}>🔍</div>
+                  <div style={{ color: 'var(--sd-text-secondary)', fontSize: '0.9rem' }}>No attendance log records match this query.</div>
+                  <button
+                    className="sd-secondary-btn"
+                    style={{ marginTop: 8 }}
+                    onClick={() => { setFilterCourse('all'); setFilterStatus('all'); setFilterMethod('all'); setSearchQ('') }}
+                  >
+                    Clear Filters
+                  </button>
                 </td>
               </tr>
-            ))}
+            ) : (
+              filtered.map((l, i) => (
+                <tr key={l.id}>
+                  <td className="sd-td-num">{i + 1}</td>
+                  <td className="sd-td-date">
+                    <strong>{l.date}</strong>
+                  </td>
+                  <td>
+                    <span className="sd-course-tag" style={{ background: '#E8ECE8', color: '#162F44' }}>
+                      {l.course}
+                    </span>
+                  </td>
+                  <td className="sd-td-method">
+                    <span className="sd-method-badge">
+                      {l.method.includes('Face') && l.method.includes('QR')
+                        ? '🔲👁️ Face & Session QR'
+                        : l.method.includes('QR')
+                          ? '🔲 Session QR'
+                          : l.method.includes('Face')
+                            ? '👁️ Face Recognition'
+                            : '✍️ Manual Verification'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`sd-badge sd-badge-${l.status}`}>
+                      {l.status === 'present' ? '✅ Present' : l.status === 'late' ? '⏰ Late' : '❌ Absent'}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
+
+        {filtered.length > 0 && (
+          <div className="sd-table-footer">
+            <span>Showing {filtered.length} of {formattedLogs.length} verified records</span>
+            <span style={{ color: 'var(--sd-text-secondary)' }}>Automated biometrics audit log</span>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -2670,7 +3830,7 @@ export default function StudentDashboardPage() {
           {activeTab === 'classes'    && <TabClasses attData={attData} />}
           {activeTab === 'timetable'   && <TabTimetable />}
           {activeTab === 'assignments'  && <TabStudentAssignments />}
-          {activeTab === 'bills'        && <TabBills />}
+          {activeTab === 'bills'        && <TabBills user={user} />}
           {activeTab === 'logs'         && <TabLogs attData={attData} />}
           {activeTab === 'settings'     && <TabSettings user={user} />}
         </main>
