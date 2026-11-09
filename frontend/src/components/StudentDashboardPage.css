@@ -22,8 +22,8 @@
   --sd-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Dimensions */
-  --sd-sidebar-width: 237px;
-  --sd-topbar-height: 80px;
+  --sd-sidebar-width: 195px;
+  --sd-topbar-height: 52px;
 
   /* Verification Tokens */
   --sd-error: #C3665B;
@@ -261,14 +261,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
+  padding: 0 20px;
   flex-shrink: 0;
+  z-index: 20;
 }
 
 .sd-topbar-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex: 1;
 }
 
 .sd-hamburger {
@@ -288,6 +290,38 @@
   background-color: var(--sd-nav-active);
 }
 
+.sd-topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  width: 290px;
+  max-width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sd-topbar-search:focus-within {
+  border-color: var(--sd-navy);
+  box-shadow: 0 0 0 2px rgba(22, 47, 68, 0.08);
+}
+
+.sd-topbar-search-input {
+  border: none;
+  background: transparent;
+  font-family: var(--sd-font-sans);
+  font-size: 13px;
+  color: var(--sd-text-primary);
+  width: 100%;
+  outline: none;
+}
+
+.sd-topbar-search-input::placeholder {
+  color: var(--sd-text-secondary);
+}
+
 .sd-topbar-title {
   font-family: var(--sd-font-sans);
   font-size: 14.5px;
@@ -299,11 +333,57 @@
 .sd-topbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+}
+
+.sd-topbar-icon-btn {
+  position: relative;
+  background: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--sd-navy);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.sd-topbar-icon-btn:hover {
+  background-color: var(--sd-nav-active);
+  border-color: #BAC2BC;
+}
+
+.sd-topbar-badge-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--sd-risk);
+  border: 1px solid var(--sd-card-bg);
+}
+
+.sd-topbar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sd-navy);
+  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(22, 47, 68, 0.2);
 }
 
 .sd-topbar-date {
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--sd-text-secondary);
   font-weight: 400;
 }
@@ -312,11 +392,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   background-color: var(--sd-card-bg);
   border: 1px solid var(--sd-border);
-  border-radius: 5px;
-  font-size: 13px;
+  border-radius: 6px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--sd-success);
 }
@@ -1460,4 +1540,1071 @@
   background-color: rgba(22, 47, 68, 0.35);
   backdrop-filter: blur(2px);
   z-index: 40;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ATTENDIFY STUDENT ATTENDANCE SESSIONS DASHBOARD
+   Pixel-accurate structure & Attendify Brand Identity
+   ═══════════════════════════════════════════════════════════════ */
+
+.sd-att-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Section 5: Header Section ─────────────────────────────── */
+.sd-att-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 2px 0 4px 0;
+}
+
+.sd-att-header-left {
+  flex: 1;
+  min-width: 280px;
+}
+
+.sd-att-title {
+  font-family: var(--sd-font-serif);
+  font-size: 27px;
+  font-weight: 400;
+  color: var(--sd-navy);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0 0 4px 0;
+}
+
+.sd-att-subtitle {
+  font-size: 12.5px;
+  color: var(--sd-text-secondary);
+  line-height: 1.45;
+  max-width: 720px;
+  margin: 0;
+}
+
+.sd-att-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sd-att-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sd-text-primary);
+  white-space: nowrap;
+}
+
+.sd-att-select {
+  padding: 6px 10px;
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--sd-font-sans);
+  color: var(--sd-navy);
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.sd-att-select:focus {
+  border-color: var(--sd-navy);
+}
+
+.sd-att-btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--sd-navy);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.sd-att-btn-export:hover {
+  background-color: #0d2030;
+}
+
+.sd-att-btn-export:active {
+  transform: scale(0.98);
+}
+
+.sd-att-toast {
+  background-color: #E8F2EC;
+  border: 1px solid #B8DAC0;
+  color: #276749;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ── Section 6: Attendance KPI Cards ───────────────────────── */
+.sd-att-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.sd-att-kpi-card {
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 104px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.sd-att-kpi-card:hover {
+  border-color: #C2CAC3;
+  box-shadow: 0 2px 8px rgba(22, 47, 68, 0.04);
+}
+
+.sd-att-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.sd-att-kpi-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--sd-text-secondary);
+}
+
+.sd-att-kpi-icon-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sd-att-kpi-val-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 3px 0;
+}
+
+.sd-att-kpi-value {
+  font-family: var(--sd-font-serif);
+  font-size: 29px;
+  font-weight: 400;
+  color: var(--sd-navy);
+  line-height: 1;
+}
+
+.sd-att-kpi-ring-wrap {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.sd-att-kpi-ring-wrap svg {
+  transform: rotate(-90deg);
+}
+
+.sd-att-kpi-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--sd-text-secondary);
+}
+
+.sd-att-kpi-sub {
+  font-size: 11px;
+  color: var(--sd-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-att-kpi-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ── Section 7: Attendance Health Banner ─────────────────────── */
+.sd-att-health-banner {
+  background: linear-gradient(135deg, #FAFDFB 0%, #F1F7F3 100%);
+  border: 1px solid #C4DFC9;
+  border-radius: 10px;
+  padding: 9px 16px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sd-att-health-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sd-att-health-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background-color: #E2EFE6;
+  border: 1px solid #B8DAC0;
+  color: var(--sd-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sd-att-health-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sd-att-health-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--sd-navy);
+}
+
+.sd-att-health-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #276749;
+  background-color: #E2EFE6;
+  border: 1px solid #B8DAC0;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.sd-att-health-desc {
+  font-size: 11.5px;
+  color: var(--sd-text-secondary);
+  margin-top: 1px;
+}
+
+.sd-att-health-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #C4DFC9;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sd-success);
+  white-space: nowrap;
+}
+
+.sd-att-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--sd-success);
+  box-shadow: 0 0 0 3px rgba(85, 126, 109, 0.2);
+}
+
+/* ── Section 8 & 9: Analytics Grids (2 Columns) ─────────────── */
+.sd-att-analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.sd-att-card {
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sd-att-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sd-att-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sd-navy);
+  letter-spacing: -0.01em;
+}
+
+.sd-att-card-sub {
+  font-size: 11.5px;
+  color: var(--sd-text-secondary);
+  margin-top: 1px;
+}
+
+.sd-att-card-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sd-navy);
+  background-color: var(--sd-bg);
+  border: 1px solid var(--sd-border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.sd-att-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--sd-text-secondary);
+  font-weight: 500;
+}
+
+.sd-att-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sd-att-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sd-att-legend-line {
+  width: 14px;
+  height: 2px;
+  border-top: 2px dashed #B5822C;
+}
+
+/* Chart SVGs */
+.sd-att-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* Doughnut & Ratio layout */
+.sd-att-ratio-body {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 4px 0;
+}
+
+.sd-att-doughnut-wrap {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  flex-shrink: 0;
+}
+
+.sd-att-doughnut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.sd-att-doughnut-pct {
+  font-family: var(--sd-font-serif);
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--sd-navy);
+  line-height: 1;
+}
+
+.sd-att-doughnut-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sd-text-secondary);
+  margin-top: 2px;
+}
+
+.sd-att-ratio-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.sd-att-ratio-data-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--sd-border);
+  border-radius: 7px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sd-att-ratio-card-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sd-att-ratio-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.sd-att-ratio-card-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sd-navy);
+}
+
+.sd-att-ratio-card-sub {
+  font-size: 10.5px;
+  color: var(--sd-text-secondary);
+}
+
+.sd-att-ratio-card-right {
+  text-align: right;
+}
+
+.sd-att-ratio-card-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sd-navy);
+}
+
+.sd-att-ratio-card-pct {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sd-text-secondary);
+}
+
+.sd-att-card-footer-note {
+  font-size: 11px;
+  color: var(--sd-text-secondary);
+  border-top: 1px solid #ECEEEA;
+  padding-top: 6px;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* Heatmap styles */
+.sd-att-heatmap-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 5px;
+  margin: 4px 0;
+}
+
+.sd-att-heatmap-th {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sd-text-secondary);
+  text-align: center;
+  padding: 2px;
+}
+
+.sd-att-heatmap-row-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sd-text-secondary);
+  text-align: right;
+  padding-right: 6px;
+  white-space: nowrap;
+}
+
+.sd-att-heat-cell {
+  height: 28px;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  display: table-cell;
+  vertical-align: middle;
+  transition: transform 0.1s ease;
+  user-select: none;
+}
+
+.sd-att-heat-cell:hover {
+  transform: scale(1.08);
+}
+
+.sd-att-heat-p {
+  background-color: #E8F2EC;
+  border: 1px solid #C6DEC9;
+  color: #276749;
+}
+
+.sd-att-heat-a {
+  background-color: #FBEBE8;
+  border: 1px solid #F2CAC4;
+  color: #BC6D61;
+}
+
+.sd-att-heat-empty {
+  background-color: #EFF1EC;
+  border: 1px solid #D9DEDA;
+  color: #8A969E;
+}
+
+/* ── Section 10: Course Performance Breakdown Table ─────────── */
+.sd-att-table-card {
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sd-att-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sd-att-table-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sd-att-table-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--sd-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.sd-att-table-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12px;
+  font-family: var(--sd-font-sans);
+  color: var(--sd-text-primary);
+  width: 170px;
+}
+
+.sd-att-filter-tabs {
+  display: inline-flex;
+  background-color: var(--sd-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.sd-att-tab-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  font-family: var(--sd-font-sans);
+  font-weight: 500;
+  color: var(--sd-text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sd-att-tab-btn.active {
+  background-color: var(--sd-card-bg);
+  color: var(--sd-navy);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sd-att-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.sd-att-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.sd-att-table th {
+  padding: 8px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sd-text-secondary);
+  border-bottom: 1px solid var(--sd-border);
+  background-color: #F8F7F4;
+  white-space: nowrap;
+}
+
+.sd-att-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #ECEFEA;
+  color: var(--sd-text-primary);
+  vertical-align: middle;
+}
+
+.sd-att-table tr:hover td {
+  background-color: #F8F9F5;
+}
+
+.sd-att-course-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sd-att-course-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.sd-att-course-name {
+  font-weight: 600;
+  color: var(--sd-navy);
+  font-size: 12px;
+}
+
+.sd-att-course-meta {
+  font-size: 10.5px;
+  color: var(--sd-text-secondary);
+}
+
+.sd-att-faculty-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sd-att-faculty-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #E2E6E2;
+  color: var(--sd-navy);
+  font-size: 9.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sd-att-progress-bar-wrap {
+  width: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sd-att-progress-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--sd-track);
+  overflow: visible;
+}
+
+.sd-att-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+
+.sd-att-progress-min-line {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background-color: #B5822C;
+  border-radius: 1px;
+}
+
+.sd-att-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.sd-att-status-safe {
+  background-color: #E8F2EC;
+  border: 1px solid #C6DEC9;
+  color: #276749;
+}
+
+.sd-att-status-warning {
+  background-color: #FEF3C7;
+  border: 1px solid #FDE68A;
+  color: #B45309;
+}
+
+.sd-att-status-risk {
+  background-color: #FBEBE8;
+  border: 1px solid #F2CAC4;
+  color: #BC6D61;
+}
+
+.sd-att-btn-history {
+  padding: 4px 8px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--sd-border);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--sd-font-sans);
+  font-weight: 600;
+  color: var(--sd-navy);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sd-att-btn-history:hover {
+  background-color: var(--sd-nav-active);
+  border-color: #BAC2BC;
+}
+
+/* ── Section 11: Session Activity Logs Table ─────────────────── */
+.sd-att-logs-card {
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sd-att-logs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sd-att-logs-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sd-att-status-pill-btn {
+  border: 1px solid var(--sd-border);
+  background-color: var(--sd-bg);
+  padding: 4px 9px;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-family: var(--sd-font-sans);
+  font-weight: 500;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sd-att-status-pill-btn.active {
+  background-color: var(--sd-card-bg);
+  color: var(--sd-navy);
+  font-weight: 600;
+  border-color: var(--sd-navy);
+}
+
+.sd-att-pill-count {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background-color: #E2E6E2;
+  color: var(--sd-navy);
+}
+
+.sd-att-verification-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: var(--sd-text-secondary);
+  margin-top: 2px;
+}
+
+.sd-att-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid #ECEFEA;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sd-att-page-info {
+  font-size: 11.5px;
+  color: var(--sd-text-secondary);
+}
+
+.sd-att-page-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sd-att-page-btn {
+  border: 1px solid var(--sd-border);
+  background-color: var(--sd-card-bg);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--sd-navy);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sd-att-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sd-att-page-btn:not(:disabled):hover {
+  background-color: var(--sd-nav-active);
+}
+
+.sd-att-page-num {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  color: var(--sd-text-secondary);
+}
+
+.sd-att-page-num.active {
+  background-color: var(--sd-navy);
+  color: #FFFFFF;
+}
+
+.sd-att-btn-view-all {
+  border: none;
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sd-navy);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+/* ── Section 12: Bottom Attendance Action Panel ──────────────── */
+.sd-att-action-panel {
+  background: linear-gradient(135deg, #162F44 0%, #1A3750 100%);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #FFFFFF;
+  margin-top: 2px;
+}
+
+.sd-att-action-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sd-att-action-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #FFFFFF;
+}
+
+.sd-att-action-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 2px;
+}
+
+.sd-att-action-sub {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 600px;
+}
+
+.sd-att-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sd-att-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background-color: var(--sd-success);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.sd-att-btn-primary:hover {
+  opacity: 0.92;
+}
+
+.sd-att-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.sd-att-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.sd-att-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Responsive Rules for Attendance Dashboard ──────────────── */
+@media (max-width: 1100px) {
+  .sd-att-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sd-att-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sd-att-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .sd-att-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sd-att-header-controls {
+    width: 100%;
+  }
+  .sd-att-action-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sd-att-action-btns {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .sd-att-ratio-body {
+    flex-direction: column;
+  }
 }
