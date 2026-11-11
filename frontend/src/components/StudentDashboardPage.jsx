@@ -41,6 +41,13 @@ import {
   ListIcon,
   GraduationCapIcon,
   ArrowLeftIcon,
+  UserIcon,
+  KeyIcon,
+  AwardIcon,
+  SunIcon,
+  MoonIcon,
+  MonitorIcon,
+  BuildingIcon,
 } from './StudentDashboardIcons'
 import './StudentDashboardPage.css'
 
@@ -3538,108 +3545,377 @@ function TabTimetable() {
 // ═══════════════════════════════════════════════════════════
 //  TAB: ASSIGNMENTS (read-only — posted by faculty)
 // ═══════════════════════════════════════════════════════════
-function TabStudentAssignments() {
-  const API = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'
+function TabStudentAssignments({ topbarSearch = '' }) {
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading]         = useState(true)
   const [filter, setFilter]           = useState('all')
+  const [courseFilter, setCourseFilter] = useState('all')
+  const [sortBy, setSortBy]           = useState('due')
+  const [searchQ, setSearchQ]         = useState('')
+  const [selectedAsg, setSelectedAsg] = useState(null)
 
-  useEffect(() => {
-    fetch(`${API}/assignments/`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setAssignments(data))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+  const loadAssignments = useCallback(async () => {
+    setLoading(true)
+    try {
+      const apiBase = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000'
+      const res = await fetch(`${apiBase}/assignments/`)
+      const data = res.ok ? await res.json() : []
+      setAssignments(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error('Failed to load assignments:', err)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
+  useEffect(() => {
+    loadAssignments()
+  }, [loadAssignments])
+
   const now = new Date()
-  const filtered = assignments.filter(a => {
-    const due = a.due_date || a.dueDate
-    if (filter === 'active') return !due || new Date(due) >= now
-    if (filter === 'past')   return due && new Date(due) < now
-    return true
-  })
-  const isOverdue = (a) => { const d = a.due_date || a.dueDate; return d && new Date(d) < now }
+  const isOverdue = (a) => {
+    const d = a.due_date || a.dueDate
+    return Boolean(d && new Date(d) < now)
+  }
+
+  const courseOptions = Array.from(
+    new Set([
+      ...BASE_ENROLLED_COURSES.map(c => c.id),
+      ...assignments.map(a => a.course).filter(Boolean),
+    ])
+  )
+
+  const activeCount = assignments.filter(a => !isOverdue(a)).length
+  const pastCount = assignments.filter(a => isOverdue(a)).length
+  const totalMarks = assignments.reduce((acc, a) => acc + (Number(a.marks) || 0), 0)
+  const combinedQuery = (searchQ || topbarSearch || '').trim().toLowerCase()
+
+  const filtered = assignments
+    .filter(a => {
+      const due = a.due_date || a.dueDate
+      if (filter === 'active' && !(!due || new Date(due) >= now)) return false
+      if (filter === 'past' && !(due && new Date(due) < now)) return false
+      if (courseFilter !== 'all' && a.course !== courseFilter) return false
+      if (combinedQuery) {
+        const hay = `${a.title || ''} ${a.course || ''} ${a.faculty || ''} ${a.description || ''}`.toLowerCase()
+        if (!hay.includes(combinedQuery)) return false
+      }
+      return true
+    })
+    .sort((a, b) => {
+      if (sortBy === 'course') return (a.course || '').localeCompare(b.course || '')
+      if (sortBy === 'marks') return (Number(b.marks) || 0) - (Number(a.marks) || 0)
+      const da = new Date(a.due_date || a.dueDate || '9999-12-31').getTime()
+      const db = new Date(b.due_date || b.dueDate || '9999-12-31').getTime()
+      return da - db
+    })
+
+  const getCourseBadgeStyle = (code) => {
+    const found = BASE_ENROLLED_COURSES.find(c => c.id === code)
+    const color = found ? found.color : '#8B5CF6'
+    return {
+      backgroundColor: `${color}1C`,
+      color: color === '#34d399' ? '#276749' : color === '#a78bfa' ? '#6D28D9' : '#1D4ED8',
+      border: `1px solid ${color}40`,
+    }
+  }
 
   return (
-    <div className="sd-tab-content">
-      <div className="sd-section-header">
+    <div className="sd-cls-view">
+      {/* Header */}
+      <div className="sd-cls-header">
         <div>
-          <h2 className="sd-section-title">📝 Assignments</h2>
-          <p className="sd-section-sub">Assignments posted by your faculty</p>
+          <div className="sd-cls-title-row">
+            <h1 className="sd-cls-title">Assignments</h1>
+            <span className="sd-cls-count-badge">{assignments.length} Posted</span>
+          </div>
+          <p className="sd-cls-subtitle">
+            Track coursework, submission deadlines, and faculty instructions across your courses.
+          </p>
         </div>
-        <div className="sd-filter-pills">
-          {['all','active','past'].map(f => (
-            <button key={f} id={`asgn-filter-${f}`}
-              className={`sd-pill ${filter === f ? 'active' : ''}`}
-              onClick={() => setFilter(f)}>
-              {f === 'all' ? 'All' : f === 'active' ? '✅ Active' : '⏰ Past Due'}
-            </button>
-          ))}
+
+        <div className="sd-cls-header-controls">
+          <select
+            className="sd-cls-select"
+            value={courseFilter}
+            onChange={e => setCourseFilter(e.target.value)}
+            aria-label="Filter assignments by course"
+          >
+            <option value="all">All Courses</option>
+            {courseOptions.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            className="sd-sub-btn-outline"
+            onClick={loadAssignments}
+            disabled={loading}
+          >
+            <RefreshIcon size={14} />
+            <span>{loading ? 'Refreshing…' : 'Refresh'}</span>
+          </button>
         </div>
       </div>
 
-      {loading && <p style={{color:'var(--sd-muted)', padding:'1rem 0'}}>Loading assignments…</p>}
-
-      {!loading && assignments.length === 0 && (
-        <div className="sd-card" style={{textAlign:'center', padding:'3rem'}}>
-          <div style={{fontSize:'3rem', marginBottom:'0.75rem'}}>📭</div>
-          <p style={{color:'var(--sd-muted)'}}>No assignments yet. Your faculty hasn't posted any.</p>
+      {/* 3 Equal KPI Summary Cards */}
+      <div className="sd-cls-kpi-grid">
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">TOTAL ASSIGNMENTS</div>
+            <div className="sd-cls-kpi-value">{assignments.length} Tasks</div>
+            <div className="sd-cls-kpi-sub">Synced with faculty portal</div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#EDF1F5', color: '#162F44' }}>
+            <FilePenIcon size={19} color="#162F44" />
+          </div>
         </div>
-      )}
 
-      {!loading && filtered.length === 0 && assignments.length > 0 && (
-        <div className="sd-card" style={{textAlign:'center', padding:'2rem', color:'var(--sd-muted)'}}>
-          No assignments match this filter.
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">ACTIVE &amp; UPCOMING</div>
+            <div className="sd-cls-kpi-value">{activeCount} Open</div>
+            <div className="sd-cls-kpi-sub">Ready for submission</div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#E8F2EC', color: '#557E6D' }}>
+            <CheckCircleIcon size={19} color="#557E6D" />
+          </div>
         </div>
-      )}
 
-      <div style={{display:'grid', gap:'1rem'}}>
-        {filtered.map(a => {
-          const due    = a.due_date || a.dueDate
-          const posted = a.created_at || a.createdAt
-          const overdue = isOverdue(a)
-          return (
-            <div key={a._id} className="sd-card" style={{
-              borderLeft: `4px solid ${overdue ? '#f87171' : '#34d399'}`,
-              padding: '1.25rem'
-            }}>
-              <div style={{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'0.5rem', marginBottom:'0.5rem'}}>
-                <div style={{display:'flex', gap:'0.5rem', alignItems:'center', flexWrap:'wrap'}}>
-                  <span style={{background:'rgba(167,139,250,0.15)', color:'#a78bfa', borderRadius:6, padding:'2px 10px', fontSize:'0.8rem', fontWeight:700}}>{a.course}</span>
-                  {overdue
-                    ? <span style={{background:'rgba(248,113,113,0.15)', color:'#f87171', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>⏰ PAST DUE</span>
-                    : due
-                      ? <span style={{background:'rgba(52,211,153,0.15)', color:'#34d399', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>✅ ACTIVE</span>
-                      : <span style={{background:'rgba(96,165,250,0.15)', color:'#60a5fa', borderRadius:6, padding:'2px 8px', fontSize:'0.75rem', fontWeight:600}}>📌 ONGOING</span>
-                  }
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">PAST DUE</div>
+            <div className="sd-cls-kpi-value">{pastCount} Closed</div>
+            <div className="sd-cls-kpi-sub">
+              {totalMarks > 0 ? `${totalMarks} total graded marks` : 'Stay ahead of deadlines'}
+            </div>
+          </div>
+          <div
+            className="sd-cls-kpi-icon-box"
+            style={{
+              backgroundColor: pastCount > 0 ? '#FBEBE8' : '#FBF4E6',
+              color: pastCount > 0 ? '#BC6D61' : '#B5822C',
+            }}
+          >
+            <ClockIcon size={19} color={pastCount > 0 ? '#BC6D61' : '#B5822C'} />
+          </div>
+        </div>
+      </div>
+
+      {/* Toolbar & Cards Section */}
+      <div className="sd-cls-section-block">
+        <div className="sd-cls-toolbar-row">
+          <div className="sd-sub-pills" role="tablist" aria-label="Assignment status filter">
+            {[
+              { key: 'all', label: `All (${assignments.length})` },
+              { key: 'active', label: `Active (${activeCount})` },
+              { key: 'past', label: `Past Due (${pastCount})` },
+            ].map(f => (
+              <button
+                key={f.key}
+                id={`asgn-filter-${f.key}`}
+                type="button"
+                className={`sd-sub-pill ${filter === f.key ? 'active' : ''}`}
+                onClick={() => setFilter(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="sd-cls-toolbar">
+            <div className="sd-cls-search-box">
+              <SearchIcon size={14} color="#758087" />
+              <input
+                type="text"
+                placeholder="Search title, course, faculty..."
+                value={searchQ}
+                onChange={e => setSearchQ(e.target.value)}
+                aria-label="Search assignments"
+              />
+            </div>
+
+            <select
+              className="sd-cls-select"
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              aria-label="Sort assignments"
+            >
+              <option value="due">Sort: Due Date</option>
+              <option value="course">Sort: Course Code</option>
+              <option value="marks">Sort: Highest Marks</option>
+            </select>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="sd-sub-empty-card">
+            <ClockIcon size={28} color="#758087" />
+            <h3 className="sd-sub-empty-title">Loading assignments…</h3>
+            <p className="sd-sub-empty-desc">Fetching latest coursework posted by your instructors.</p>
+          </div>
+        ) : assignments.length === 0 ? (
+          <div className="sd-sub-empty-card">
+            <div className="sd-sub-empty-icon">
+              <FilePenIcon size={24} color="#162F44" />
+            </div>
+            <h3 className="sd-sub-empty-title">No assignments posted yet</h3>
+            <p className="sd-sub-empty-desc">
+              Your faculty hasn&apos;t published any coursework yet. Check back soon or refresh to sync.
+            </p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="sd-sub-empty-card">
+            <div className="sd-sub-empty-icon">
+              <SearchIcon size={22} color="#162F44" />
+            </div>
+            <h3 className="sd-sub-empty-title">No matching assignments</h3>
+            <p className="sd-sub-empty-desc">
+              Adjust your course filter, status tab, or search term to view other coursework.
+            </p>
+            <button
+              type="button"
+              className="sd-sub-btn-outline"
+              onClick={() => {
+                setFilter('all')
+                setCourseFilter('all')
+                setSearchQ('')
+              }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="sd-asg-grid">
+            {filtered.map((a, idx) => {
+              const due = a.due_date || a.dueDate
+              const posted = a.created_at || a.createdAt
+              const overdue = isOverdue(a)
+              const accentColor = overdue ? '#BC6D61' : due ? '#557E6D' : '#162F44'
+              return (
+                <div
+                  key={a._id || idx}
+                  className="sd-asg-card"
+                  style={{ borderTop: `3px solid ${accentColor}` }}
+                  onClick={() => setSelectedAsg(a)}
+                >
+                  <div className="sd-asg-card-top">
+                    <div className="sd-cls-card-badges">
+                      <span className="sd-cls-code-badge" style={getCourseBadgeStyle(a.course)}>
+                        {a.course || 'COURSE'}
+                      </span>
+                      <span
+                        className={`sd-cls-status-pill ${
+                          overdue ? 'sd-cls-status-cancelled' : due ? 'sd-cls-status-completed' : 'sd-cls-status-upcoming'
+                        }`}
+                      >
+                        {overdue ? 'Past Due' : due ? 'Active' : 'Ongoing'}
+                      </span>
+                    </div>
+
+                    {a.marks && (
+                      <span className="sd-asg-marks-badge">
+                        <AwardIcon size={13} color="#B5822C" />
+                        <span>{a.marks} Marks</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="sd-asg-title">{a.title}</h3>
+                    <p className="sd-asg-desc">
+                      {a.description || 'Follow standard course submission instructions provided during lecture.'}
+                    </p>
+                  </div>
+
+                  <div className="sd-asg-meta-footer">
+                    <div className="sd-asg-meta-items">
+                      {due && (
+                        <span className="sd-asg-meta-chip" style={{ color: overdue ? '#BC6D61' : 'var(--sd-text-primary)' }}>
+                          <CalendarIcon size={13} color={overdue ? '#BC6D61' : '#758087'} />
+                          <span>
+                            Due {new Date(due).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                        </span>
+                      )}
+                      {a.faculty && (
+                        <span className="sd-asg-meta-chip">
+                          <GraduationCapIcon size={13} color="#758087" />
+                          <span>{a.faculty}</span>
+                        </span>
+                      )}
+                      {posted && (
+                        <span className="sd-asg-meta-chip">
+                          <ClockIcon size={13} color="#758087" />
+                          <span>
+                            Posted {new Date(posted).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                {a.marks && (
-                  <span style={{fontWeight:700, color:'#fbbf24'}}>🏆 {a.marks} Marks</span>
-                )}
-              </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
-              <h3 style={{margin:'0 0 0.4rem', fontSize:'1.05rem', fontWeight:700}}>{a.title}</h3>
-
-              {a.description && (
-                <p style={{fontSize:'0.88rem', color:'var(--sd-muted)', margin:'0 0 0.75rem', lineHeight:1.5}}>
-                  {a.description}
-                </p>
-              )}
-
-              <div style={{display:'flex', gap:'1.5rem', fontSize:'0.82rem', color:'var(--sd-muted)', flexWrap:'wrap'}}>
-                {due && (
-                  <span style={{color: overdue ? '#f87171' : 'inherit'}}>
-                    📅 Due: <strong>{new Date(due).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong>
+      {/* Assignment Detail Modal */}
+      {selectedAsg && (
+        <div className="sd-bill-overlay" onClick={() => setSelectedAsg(null)}>
+          <div className="sd-bill-modal" onClick={e => e.stopPropagation()} role="dialog" aria-label="Assignment details">
+            <div className="sd-bill-modal-header">
+              <div className="sd-cls-card-badges">
+                <span className="sd-cls-code-badge" style={getCourseBadgeStyle(selectedAsg.course)}>
+                  {selectedAsg.course}
+                </span>
+                {selectedAsg.marks && (
+                  <span className="sd-asg-marks-badge">
+                    <AwardIcon size={13} color="#B5822C" />
+                    <span>{selectedAsg.marks} Marks</span>
                   </span>
                 )}
-                {a.faculty && <span>👨‍🏫 By: <strong>{a.faculty}</strong></span>}
-                {posted && <span>🕒 Posted: {new Date(posted).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>}
+              </div>
+              <button type="button" className="sd-bill-close" onClick={() => setSelectedAsg(null)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+
+            <h2 className="sd-bill-modal-title">{selectedAsg.title}</h2>
+            <p className="sd-asg-modal-desc">
+              {selectedAsg.description || 'No detailed rubric attached. Please coordinate with your course instructor during lab or lecture hours.'}
+            </p>
+
+            <div className="sd-cls-drawer-section">
+              <div className="sd-cls-drawer-sec-title">Submission Metadata</div>
+              <div className="sd-asg-detail-grid">
+                <div>
+                  <span className="sd-cls-info-sub">Instructor</span>
+                  <strong>{selectedAsg.faculty || 'Course Faculty'}</strong>
+                </div>
+                <div>
+                  <span className="sd-cls-info-sub">Due Date</span>
+                  <strong>
+                    {selectedAsg.due_date || selectedAsg.dueDate
+                      ? new Date(selectedAsg.due_date || selectedAsg.dueDate).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : 'Ongoing'}
+                  </strong>
+                </div>
               </div>
             </div>
-          )
-        })}
-      </div>
+
+            <button type="button" className="sd-sub-btn-primary" onClick={() => setSelectedAsg(null)}>
+              Close Details
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -3647,25 +3923,31 @@ function TabStudentAssignments() {
 // ═══════════════════════════════════════════════════════════
 //  TAB: BILLS & PAYMENTS
 // ═══════════════════════════════════════════════════════════
-function TabBills() {
+function TabBills({ topbarSearch = '' }) {
   const [bills, setBills] = useState(() => {
     try {
       const saved = localStorage.getItem('sd_student_bills')
       if (saved) return JSON.parse(saved)
-    } catch (e) {}
-    
-    // Default seeded bills
+    } catch (err) {
+      console.error('Failed to read saved bills:', err)
+    }
+
     return [
-      { id: 'tuition_2026', title: 'Tuition Fee (Spring Semester 2026)', category: 'Academic', amount: 75000, status: 'unpaid', icon: '🎓', dueDate: '2026-06-15', description: 'Regular academic tuition fees for computer science courses.' },
-      { id: 'hostel_2026', title: 'Hostel Rent & Mess Charges', category: 'Hostel', amount: 32000, status: 'unpaid', icon: '🏢', dueDate: '2026-06-01', description: 'Accommodation charges including high-speed internet & mess meal plans.' },
-      { id: 'exam_2026', title: 'Semester Examination Registration Fee', category: 'Exams', amount: 4500, status: 'unpaid', icon: '📝', dueDate: '2026-05-25', description: 'Registration fees for final end-semester theoretical & lab examinations.' },
-      { id: 'lib_fine_2026', title: 'Library Late Book Return Fine', category: 'Library', amount: 350, status: 'paid', icon: '📚', dueDate: '2026-05-10', description: 'Overdue charges for "Introduction to Algorithms" book kept for 14 extra days.', paidOn: '2026-05-12T14:32:00Z', method: 'UPI' }
+      { id: 'tuition_2026', title: 'Tuition Fee (Spring Semester 2026)', category: 'Academic', amount: 75000, status: 'unpaid', icon: 'graduation', dueDate: '2026-06-15', description: 'Regular academic tuition fees for computer science courses.' },
+      { id: 'hostel_2026', title: 'Hostel Rent & Mess Charges', category: 'Hostel', amount: 32000, status: 'unpaid', icon: 'building', dueDate: '2026-06-01', description: 'Accommodation charges including high-speed internet & mess meal plans.' },
+      { id: 'exam_2026', title: 'Semester Examination Registration Fee', category: 'Exams', amount: 4500, status: 'unpaid', icon: 'exam', dueDate: '2026-05-25', description: 'Registration fees for final end-semester theoretical & lab examinations.' },
+      { id: 'lib_fine_2026', title: 'Library Late Book Return Fine', category: 'Library', amount: 350, status: 'paid', icon: 'book', dueDate: '2026-05-10', description: 'Overdue charges for "Introduction to Algorithms" book kept for 14 extra days.', paidOn: '2026-05-12T14:32:00Z', method: 'UPI' }
     ]
   })
 
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [searchQ, setSearchQ] = useState('')
   const [activeBill, setActiveBill] = useState(null)
-  const [payMethod, setPayMethod]   = useState('card') // 'card' | 'upi' | 'net'
+  const [receiptBill, setReceiptBill] = useState(null)
+  const [payMethod, setPayMethod] = useState('card') // 'card' | 'upi' | 'net'
   const [paymentState, setPaymentState] = useState('idle') // 'idle' | 'processing' | 'success'
+  const [lastTxnRef, setLastTxnRef] = useState('')
 
   // Card form fields
   const [cardNum, setCardNum] = useState('')
@@ -3673,19 +3955,52 @@ function TabBills() {
   const [cardExpiry, setCardExpiry] = useState('')
   const [cardCvv, setCardCvv] = useState('')
 
-  // UPI fields
+  // UPI & NetBanking fields
   const [upiId, setUpiId] = useState('')
-
-  // Net Banking fields
   const [bank, setBank] = useState('HDFC Bank')
 
   useEffect(() => {
-    localStorage.setItem('sd_student_bills', JSON.stringify(bills))
+    try {
+      localStorage.setItem('sd_student_bills', JSON.stringify(bills))
+    } catch (err) {
+      console.error('Failed to persist bills:', err)
+    }
   }, [bills])
+
+  const unpaidBills = bills.filter(b => b.status === 'unpaid')
+  const paidBills = bills.filter(b => b.status === 'paid')
+  const totalOutstanding = unpaidBills.reduce((s, b) => s + Number(b.amount || 0), 0)
+  const totalPaid = paidBills.reduce((s, b) => s + Number(b.amount || 0), 0)
+  const nextDue = unpaidBills
+    .map(b => b.dueDate)
+    .filter(Boolean)
+    .sort((a, b) => new Date(a) - new Date(b))[0]
+
+  const categories = Array.from(new Set(bills.map(b => b.category).filter(Boolean)))
+  const query = (searchQ || topbarSearch || '').trim().toLowerCase()
+
+  const filteredBills = bills.filter(b => {
+    if (statusFilter !== 'all' && b.status !== statusFilter) return false
+    if (categoryFilter !== 'all' && b.category !== categoryFilter) return false
+    if (query) {
+      const hay = `${b.title} ${b.category} ${b.description}`.toLowerCase()
+      if (!hay.includes(query)) return false
+    }
+    return true
+  })
+
+  const renderCategoryIcon = (b) => {
+    const key = b.icon || b.category
+    if (key === 'building' || key === 'Hostel') return <BuildingIcon size={18} color="#162F44" />
+    if (key === 'exam' || key === 'Exams') return <FilePenIcon size={18} color="#162F44" />
+    if (key === 'book' || key === 'Library') return <BookOpenIcon size={18} color="#557E6D" />
+    return <GraduationCapIcon size={18} color="#162F44" />
+  }
 
   const openPayment = (bill) => {
     setActiveBill(bill)
     setPaymentState('idle')
+    setLastTxnRef('')
     setCardNum('')
     setCardName('')
     setCardExpiry('')
@@ -3702,8 +4017,9 @@ function TabBills() {
   const handlePaySubmit = (e) => {
     e.preventDefault()
     setPaymentState('processing')
+    const txnRef = `TXN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+    setLastTxnRef(txnRef)
 
-    // Simulate secure mock bank transaction processing
     setTimeout(() => {
       setPaymentState('success')
       setTimeout(() => {
@@ -3711,12 +4027,13 @@ function TabBills() {
           ...b,
           status: 'paid',
           paidOn: new Date().toISOString(),
-          method: payMethod.toUpperCase()
+          method: payMethod === 'net' ? 'NET BANKING' : payMethod.toUpperCase(),
+          txnRef,
         } : b))
         setPaymentState('idle')
         setActiveBill(null)
-      }, 1800)
-    }, 2200)
+      }, 1500)
+    }, 1800)
   }
 
   const formatCardNum = (val) => {
@@ -3728,199 +4045,447 @@ function TabBills() {
   const formatExpiry = (val) => {
     const clear = val.replace(/\D/g, '')
     if (clear.length >= 2) {
-      return `${clear.slice(0,2)}/${clear.slice(2,4)}`
+      return `${clear.slice(0, 2)}/${clear.slice(2, 4)}`
     }
     return clear
   }
 
+  const exportStatement = () => {
+    const headers = ['Invoice', 'Category', 'Amount (INR)', 'Due Date', 'Status', 'Payment Method']
+    const rows = bills.map(b => [
+      `"${(b.title || '').replace(/"/g, '""')}"`,
+      b.category,
+      b.amount,
+      b.dueDate,
+      b.status.toUpperCase(),
+      b.method || '-',
+    ])
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'attentify_fee_statement.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
-    <div className="sd-tab-content">
-      <div className="sd-section-header">
+    <div className="sd-cls-view">
+      {/* Page Header */}
+      <div className="sd-cls-header">
         <div>
-          <h2 className="sd-section-title">💳 Fees, Bills & Payments</h2>
-          <p className="sd-section-sub">Pay tuition fees, exam fees, hostel charges, and clear fines securely</p>
+          <div className="sd-cls-title-row">
+            <h1 className="sd-cls-title">Bills &amp; Fees</h1>
+            <span className="sd-cls-count-badge">
+              {unpaidBills.length > 0 ? `${unpaidBills.length} Pending` : 'All Settled'}
+            </span>
+          </div>
+          <p className="sd-cls-subtitle">
+            Manage tuition fees, hostel charges, exam registrations, and payment receipts securely.
+          </p>
+        </div>
+
+        <div className="sd-cls-header-controls">
+          <select
+            className="sd-cls-select"
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            aria-label="Filter bills by category"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+
+          <button type="button" className="sd-sub-btn-outline" onClick={exportStatement}>
+            <DownloadIcon size={14} />
+            <span>Export Statement</span>
+          </button>
         </div>
       </div>
 
-      <div className="sd-bill-grid">
-        {bills.map(b => (
-          <div key={b.id} className="sd-bill-card">
-            <div className="sd-bill-header">
-              <span className="sd-bill-icon">{b.icon}</span>
-              <span className={`sd-bill-badge ${b.status}`}>{b.status}</span>
-            </div>
-            
-            <div>
-              <div style={{fontSize:'0.75rem', fontWeight:600, color:'var(--sd-accent,#a78bfa)', textTransform:'uppercase', letterSpacing:'1px'}}>{b.category}</div>
-              <h3 className="sd-bill-title">{b.title}</h3>
-              <p className="sd-bill-description">{b.description}</p>
-            </div>
+      {/* 3 Equal KPI Summary Cards */}
+      <div className="sd-cls-kpi-grid">
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">TOTAL OUTSTANDING</div>
+            <div className="sd-cls-kpi-value">₹{totalOutstanding.toLocaleString('en-IN')}</div>
+            <div className="sd-cls-kpi-sub">{unpaidBills.length} unpaid invoice{unpaidBills.length === 1 ? '' : 's'}</div>
+          </div>
+          <div
+            className="sd-cls-kpi-icon-box"
+            style={{
+              backgroundColor: totalOutstanding > 0 ? '#FBEBE8' : '#E8F2EC',
+              color: totalOutstanding > 0 ? '#BC6D61' : '#557E6D',
+            }}
+          >
+            <CreditCardIcon size={19} color={totalOutstanding > 0 ? '#BC6D61' : '#557E6D'} />
+          </div>
+        </div>
 
-            <div className="sd-bill-amount-row">
-              <div>
-                <div style={{fontSize:'0.72rem', color:'var(--sd-muted,#888)'}}>Amount Due</div>
-                <div className="sd-bill-amount">₹{b.amount.toLocaleString('en-IN')}</div>
-              </div>
-              
-              {b.status === 'unpaid' ? (
-                <button className="sd-primary-btn" onClick={() => openPayment(b)}>💳 Pay Now</button>
-              ) : (
-                <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:'0.75rem', color:'#34d399', fontWeight:700}}>✅ Paid via {b.method}</div>
-                  <div style={{fontSize:'0.68rem', color:'var(--sd-muted)'}}>{new Date(b.paidOn).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})}</div>
-                </div>
-              )}
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">TOTAL PAID (AY 2026)</div>
+            <div className="sd-cls-kpi-value">₹{totalPaid.toLocaleString('en-IN')}</div>
+            <div className="sd-cls-kpi-sub">{paidBills.length} settled transaction{paidBills.length === 1 ? '' : 's'}</div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#E8F2EC', color: '#557E6D' }}>
+            <CheckCircleIcon size={19} color="#557E6D" />
+          </div>
+        </div>
+
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">NEXT DUE DATE</div>
+            <div className="sd-cls-kpi-value">
+              {nextDue
+                ? new Date(nextDue).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                : 'All Clear'}
+            </div>
+            <div className="sd-cls-kpi-sub">
+              {nextDue ? 'Upcoming fee deadline' : 'No pending dues remaining'}
             </div>
           </div>
-        ))}
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#EDF1F5', color: '#162F44' }}>
+            <CalendarIcon size={19} color="#162F44" />
+          </div>
+        </div>
       </div>
 
-      {/* Payment Gateway Modal */}
+      {/* Toolbar & Invoice Cards */}
+      <div className="sd-cls-section-block">
+        <div className="sd-cls-toolbar-row">
+          <div className="sd-sub-pills">
+            {[
+              { key: 'all', label: `All (${bills.length})` },
+              { key: 'unpaid', label: `Pending (${unpaidBills.length})` },
+              { key: 'paid', label: `Paid (${paidBills.length})` },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                type="button"
+                className={`sd-sub-pill ${statusFilter === tab.key ? 'active' : ''}`}
+                onClick={() => setStatusFilter(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="sd-cls-search-box">
+            <SearchIcon size={14} color="#758087" />
+            <input
+              type="text"
+              placeholder="Search fee title, category..."
+              value={searchQ}
+              onChange={e => setSearchQ(e.target.value)}
+              aria-label="Search bills and fees"
+            />
+          </div>
+        </div>
+
+        {filteredBills.length === 0 ? (
+          <div className="sd-sub-empty-card">
+            <div className="sd-sub-empty-icon">
+              <CreditCardIcon size={22} color="#162F44" />
+            </div>
+            <h3 className="sd-sub-empty-title">No fee invoices match your filter</h3>
+            <p className="sd-sub-empty-desc">Try switching the status tab or clearing your search filter.</p>
+          </div>
+        ) : (
+          <div className="sd-bill-grid">
+            {filteredBills.map(b => {
+              const isPaid = b.status === 'paid'
+              return (
+                <div key={b.id} className="sd-bill-card">
+                  <div className="sd-bill-header">
+                    <div className="sd-cls-card-badges">
+                      <div
+                        className="sd-bill-icon-box"
+                        style={{ backgroundColor: isPaid ? '#E8F2EC' : '#EDF1F5' }}
+                      >
+                        {renderCategoryIcon(b)}
+                      </div>
+                      <span className="sd-bill-category-pill">{b.category}</span>
+                    </div>
+                    <span className={`sd-bill-badge ${b.status}`}>
+                      {isPaid ? 'Paid' : 'Due'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="sd-bill-title">{b.title}</h3>
+                    <p className="sd-bill-description">{b.description}</p>
+                    {b.dueDate && (
+                      <div className="sd-bill-due-row">
+                        <CalendarIcon size={12} color="#758087" />
+                        <span>
+                          Due {new Date(b.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="sd-bill-amount-row">
+                    <div>
+                      <div className="sd-bill-amount-label">{isPaid ? 'Amount Paid' : 'Amount Due'}</div>
+                      <div className="sd-bill-amount">₹{Number(b.amount).toLocaleString('en-IN')}</div>
+                    </div>
+
+                    {!isPaid ? (
+                      <button type="button" className="sd-sub-btn-primary" onClick={() => openPayment(b)}>
+                        <CreditCardIcon size={14} color="#FFFFFF" />
+                        <span>Pay Now</span>
+                      </button>
+                    ) : (
+                      <div className="sd-bill-paid-actions">
+                        <div className="sd-bill-paid-meta">
+                          <span className="sd-bill-paid-tag">Paid via {b.method || 'UPI'}</span>
+                          <span className="sd-bill-paid-date">
+                            {b.paidOn
+                              ? new Date(b.paidOn).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                              : 'Settled'}
+                          </span>
+                        </div>
+                        <button type="button" className="sd-sub-btn-outline" onClick={() => setReceiptBill(b)}>
+                          Receipt
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Receipt Preview Modal */}
+      {receiptBill && (
+        <div className="sd-bill-overlay" onClick={() => setReceiptBill(null)}>
+          <div className="sd-bill-modal" onClick={e => e.stopPropagation()} role="dialog" aria-label="Payment receipt">
+            <div className="sd-bill-modal-header">
+              <span className="sd-bill-badge paid">Verified Receipt</span>
+              <button type="button" className="sd-bill-close" onClick={() => setReceiptBill(null)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+            <h2 className="sd-bill-modal-title">{receiptBill.title}</h2>
+            <div className="sd-cls-drawer-section">
+              <div className="sd-asg-detail-grid">
+                <div>
+                  <span className="sd-cls-info-sub">Amount Settled</span>
+                  <strong>₹{Number(receiptBill.amount).toLocaleString('en-IN')}</strong>
+                </div>
+                <div>
+                  <span className="sd-cls-info-sub">Payment Method</span>
+                  <strong>{receiptBill.method || 'UPI'}</strong>
+                </div>
+                <div>
+                  <span className="sd-cls-info-sub">Paid Date</span>
+                  <strong>
+                    {receiptBill.paidOn
+                      ? new Date(receiptBill.paidOn).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : 'Verified'}
+                  </strong>
+                </div>
+                <div>
+                  <span className="sd-cls-info-sub">Reference ID</span>
+                  <strong>{receiptBill.txnRef || `ATT-${receiptBill.id.toUpperCase()}`}</strong>
+                </div>
+              </div>
+            </div>
+            <button type="button" className="sd-sub-btn-primary" onClick={() => setReceiptBill(null)}>
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Checkout Modal */}
       {activeBill && (
-        <div className="sd-pay-overlay">
-          <div className="sd-pay-modal">
-            {paymentState !== 'processing' && paymentState !== 'success' && (
-              <button className="sd-pay-close" onClick={closePayment}>✕</button>
-            )}
+        <div className="sd-bill-overlay" onClick={closePayment}>
+          <div className="sd-bill-modal" onClick={e => e.stopPropagation()} role="dialog" aria-label="Secure payment checkout">
+            <div className="sd-bill-modal-header">
+              <div>
+                <h2 className="sd-bill-modal-title">Secure Payment Checkout</h2>
+                <p className="sd-cls-subtitle" style={{ marginTop: '2px' }}>
+                  Paying for: <strong>{activeBill.title}</strong>
+                </p>
+              </div>
+              {paymentState === 'idle' && (
+                <button type="button" className="sd-bill-close" onClick={closePayment} aria-label="Close">
+                  ✕
+                </button>
+              )}
+            </div>
 
             {paymentState === 'idle' && (
               <>
-                <div>
-                  <h2 style={{fontFamily:'var(--font-serif)', fontSize:'1.25rem', fontWeight:700}}>Secure Payment Checkout</h2>
-                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted,#888)', marginTop:'0.25rem'}}>
-                    Paying for: <strong>{activeBill.title}</strong>
-                  </p>
+                <div className="sd-bill-summary-strip">
+                  <span>Total Payable</span>
+                  <strong>₹{Number(activeBill.amount).toLocaleString('en-IN')}</strong>
                 </div>
 
-                <div style={{background:'rgba(255,255,255,0.03)', padding:'0.85rem', borderRadius:12, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <span style={{fontSize:'0.85rem', fontWeight:600}}>Total Outstanding Amount:</span>
-                  <span style={{fontSize:'1.3rem', fontWeight:850, color:'var(--theme-accent,#a78bfa)', fontFamily:'monospace'}}>₹{activeBill.amount.toLocaleString('en-IN')}</span>
+                <div className="sd-bill-methods">
+                  <button
+                    type="button"
+                    className={`sd-bill-method-btn ${payMethod === 'card' ? 'active' : ''}`}
+                    onClick={() => setPayMethod('card')}
+                  >
+                    <CreditCardIcon size={14} />
+                    <span>Card</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`sd-bill-method-btn ${payMethod === 'upi' ? 'active' : ''}`}
+                    onClick={() => setPayMethod('upi')}
+                  >
+                    <ScanFrameIcon size={14} />
+                    <span>UPI</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`sd-bill-method-btn ${payMethod === 'net' ? 'active' : ''}`}
+                    onClick={() => setPayMethod('net')}
+                  >
+                    <BuildingIcon size={14} />
+                    <span>NetBanking</span>
+                  </button>
                 </div>
 
-                {/* Tab select payment method */}
-                <div className="pay-methods">
-                  <button className={`pay-method-btn ${payMethod === 'card' ? 'active' : ''}`} onClick={() => setPayMethod('card')}>💳 Card</button>
-                  <button className={`pay-method-btn ${payMethod === 'upi' ? 'active' : ''}`} onClick={() => setPayMethod('upi')}>📱 UPI</button>
-                  <button className={`pay-method-btn ${payMethod === 'net' ? 'active' : ''}`} onClick={() => setPayMethod('net')}>🏦 NetBanking</button>
-                </div>
-
-                <form onSubmit={handlePaySubmit} style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
-                  {/* CARD METHOD */}
+                <form onSubmit={handlePaySubmit} className="sd-bill-form">
                   {payMethod === 'card' && (
-                    <div style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
-                      {/* Glass Card preview */}
-                      <div className="glass-card-wrapper">
-                        <div className="glass-credit-card">
-                          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                            <div className="card-chip"></div>
-                            <span style={{fontSize:'1.1rem', fontWeight:900, fontStyle:'italic', opacity:0.8}}>VISA</span>
+                    <>
+                      <div className="sd-bill-virtual-card">
+                        <div className="sd-bill-vc-top">
+                          <div className="sd-bill-vc-chip" />
+                          <span>VISA</span>
+                        </div>
+                        <div className="sd-bill-vc-num">{cardNum || '•••• •••• •••• ••••'}</div>
+                        <div className="sd-bill-vc-bottom">
+                          <div>
+                            <span className="sd-bill-vc-lbl">CARDHOLDER</span>
+                            <div>{cardName || 'STUDENT NAME'}</div>
                           </div>
-                          <div className="card-num">{cardNum || '•••• •••• •••• ••••'}</div>
-                          <div className="card-bottom">
-                            <div className="card-holder">{cardName || 'CARDHOLDER NAME'}</div>
-                            <div className="card-expiry-wrap">
-                              <div className="card-expiry-lbl">VALID THRU</div>
-                              <div className="card-expiry-val">{cardExpiry || 'MM/YY'}</div>
-                            </div>
+                          <div>
+                            <span className="sd-bill-vc-lbl">VALID THRU</span>
+                            <div>{cardExpiry || 'MM/YY'}</div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Card Inputs */}
-                      <div style={{display:'grid', gridTemplateColumns:'1fr', gap:'0.75rem'}}>
-                        <input className="sd-input" placeholder="Card Number (16-Digit)" value={cardNum} onChange={e => setCardNum(formatCardNum(e.target.value))} maxLength={19} required />
-                        <input className="sd-input" placeholder="Cardholder Name" value={cardName} onChange={e => setCardName(e.target.value.toUpperCase())} maxLength={26} required />
-                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem'}}>
-                          <input className="sd-input" placeholder="MM/YY" value={cardExpiry} onChange={e => setCardExpiry(formatExpiry(e.target.value))} maxLength={5} required />
-                          <input className="sd-input" type="password" placeholder="CVV" value={cardCvv} onChange={e => setCardCvv(e.target.value.replace(/\D/g, ''))} maxLength={3} required />
-                        </div>
+                      <input
+                        className="sd-form-input"
+                        placeholder="Card Number (16 digits)"
+                        value={cardNum}
+                        onChange={e => setCardNum(formatCardNum(e.target.value))}
+                        maxLength={19}
+                        required
+                      />
+                      <input
+                        className="sd-form-input"
+                        placeholder="Cardholder Name"
+                        value={cardName}
+                        onChange={e => setCardName(e.target.value.toUpperCase())}
+                        maxLength={26}
+                        required
+                      />
+                      <div className="sd-bill-form-row">
+                        <input
+                          className="sd-form-input"
+                          placeholder="MM/YY"
+                          value={cardExpiry}
+                          onChange={e => setCardExpiry(formatExpiry(e.target.value))}
+                          maxLength={5}
+                          required
+                        />
+                        <input
+                          className="sd-form-input"
+                          type="password"
+                          placeholder="CVV"
+                          value={cardCvv}
+                          onChange={e => setCardCvv(e.target.value.replace(/\D/g, ''))}
+                          maxLength={3}
+                          required
+                        />
                       </div>
-                    </div>
+                    </>
                   )}
 
-                  {/* UPI METHOD */}
                   {payMethod === 'upi' && (
-                    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'1rem', padding:'0.5rem 0'}}>
-                      <div style={{
-                        width: '140px', height: '140px',
-                        background: '#fff', padding: '10px',
-                        borderRadius: '12px', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center',
-                        position: 'relative', overflow: 'hidden',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
-                      }}>
-                        {/* Mock QR Code graphic */}
-                        <div style={{width:'100%', height:'100%', border:'2px dashed #000', display:'flex', flexWrap:'wrap', opacity:0.85}}>
-                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
-                          <div style={{flex:1}}></div>
-                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
-                          <div style={{width:'100%', flex:1, display:'flex', justifyContent:'center', alignItems:'center', fontSize:'1.4rem'}}>📱</div>
-                          <div style={{width:'40px', height:'40px', background:'#000', margin:'2px'}}></div>
+                    <div className="sd-bill-upi-box">
+                      <div className="sd-bill-qr-frame">
+                        <div className="sd-bill-qr-inner">
+                          <ScanFrameIcon size={36} color="#162F44" />
                         </div>
-                        {/* Dynamic rotating scanner laser bar */}
-                        <div style={{
-                          position: 'absolute', left: 0, right: 0,
-                          height: '2px', background: 'var(--theme-accent,#34d399)',
-                          animation: 'slideUp 1.5s ease-in-out infinite alternate',
-                          boxShadow: '0 0 8px var(--theme-accent)'
-                        }}></div>
+                        <div className="sd-bill-qr-scanline" />
                       </div>
-                      <p style={{fontSize:'0.78rem', color:'var(--theme-muted)', textAlign:'center'}}>
-                        Scan the dynamic QR code above with any UPI app (GPay, PhonePe, Paytm, BHIM) to make a secure direct transfer.
+                      <p className="sd-bill-upi-hint">
+                        Scan with any UPI app (GPay, PhonePe, Paytm, BHIM) or enter your UPI ID below.
                       </p>
-
-                      <div style={{width:'100%', height:'1px', background:'rgba(255,255,255,0.08)'}}></div>
-
-                      <div style={{width:'100%', display:'flex', flexDirection:'column', gap:'0.4rem'}}>
-                        <label style={{fontSize:'0.75rem', fontWeight:600, color:'var(--theme-muted)'}}>OR ENTER YOUR UPI ID</label>
-                        <input className="sd-input" placeholder="e.g. username@upi" value={upiId} onChange={e => setUpiId(e.target.value)} required={payMethod === 'upi'} />
+                      <div className="sd-set-field" style={{ width: '100%' }}>
+                        <label htmlFor="bill-upi-input">UPI ID</label>
+                        <input
+                          id="bill-upi-input"
+                          className="sd-form-input"
+                          placeholder="username@upi"
+                          value={upiId}
+                          onChange={e => setUpiId(e.target.value)}
+                          required={payMethod === 'upi'}
+                        />
                       </div>
                     </div>
                   )}
 
-                  {/* NET BANKING */}
                   {payMethod === 'net' && (
-                    <div style={{display:'flex', flexDirection:'column', gap:'0.5rem', padding:'1rem 0'}}>
-                      <label style={{fontSize:'0.78rem', fontWeight:600, color:'var(--theme-muted)'}}>Select Your Bank</label>
-                      <select className="sd-select" value={bank} onChange={e => setBank(e.target.value)}>
+                    <div className="sd-set-field">
+                      <label htmlFor="bill-bank-select">Select Your Bank</label>
+                      <select
+                        id="bill-bank-select"
+                        className="sd-form-input"
+                        value={bank}
+                        onChange={e => setBank(e.target.value)}
+                      >
                         <option value="HDFC Bank">HDFC Bank</option>
                         <option value="State Bank of India">State Bank of India (SBI)</option>
                         <option value="ICICI Bank">ICICI Bank</option>
                         <option value="Axis Bank">Axis Bank</option>
                         <option value="Punjab National Bank">Punjab National Bank</option>
                       </select>
-                      <p style={{fontSize:'0.75rem', color:'var(--theme-muted)', marginTop:'0.5rem'}}>
-                        You will be redirected to your bank's secure page to complete the transaction authorization.
+                      <p className="sd-bill-upi-hint" style={{ textAlign: 'left', marginTop: '4px' }}>
+                        You will be guided through your bank&apos;s verification step to authorize payment.
                       </p>
                     </div>
                   )}
 
-                  <button type="submit" className="sd-primary-btn sd-btn-full" style={{marginTop:'0.5rem'}}>
-                    🔒 Authorize & Pay ₹{activeBill.amount.toLocaleString('en-IN')}
+                  <button type="submit" className="sd-sub-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                    <LockIcon size={14} color="#FFFFFF" />
+                    <span>Authorize &amp; Pay ₹{Number(activeBill.amount).toLocaleString('en-IN')}</span>
                   </button>
                 </form>
               </>
             )}
 
             {paymentState === 'processing' && (
-              <div className="pay-loader">
-                <div className="pay-spinner"></div>
-                <div>
-                  <h3 style={{fontSize:'1.1rem', fontWeight:700}}>Processing Secure Payment</h3>
-                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted)', marginTop:4}}>Do not close this window or reload the page.</p>
-                </div>
+              <div className="sd-bill-state-box">
+                <div className="sd-bill-spinner" />
+                <h3>Processing Secure Payment</h3>
+                <p>Verifying authorization with your financial institution…</p>
               </div>
             )}
 
             {paymentState === 'success' && (
-              <div className="pay-loader">
-                <div className="pay-success-tick">✓</div>
-                <div>
-                  <h3 style={{fontSize:'1.25rem', fontWeight:700, color:'#34d399'}}>Payment Successful!</h3>
-                  <p style={{fontSize:'0.82rem', color:'var(--theme-muted)', marginTop:4}}>
-                    Transaction ref: <code style={{fontFamily:'monospace', color:'var(--theme-accent,#a78bfa)'}}>TXN-{Math.random().toString(36).substr(2, 9).toUpperCase()}</code>
-                  </p>
+              <div className="sd-bill-state-box">
+                <div className="sd-bill-success-ring">
+                  <CheckCircleIcon size={28} color="#557E6D" />
                 </div>
+                <h3 style={{ color: '#557E6D' }}>Payment Successful</h3>
+                <p>
+                  Transaction reference: <code>{lastTxnRef}</code>
+                </p>
               </div>
             )}
           </div>
@@ -3933,102 +4498,280 @@ function TabBills() {
 // ═══════════════════════════════════════════════════════════
 //  TAB: LOGS
 // ═══════════════════════════════════════════════════════════
-function TabLogs({ attData }) {
+function TabLogs({ attData, onNav, topbarSearch = '' }) {
   const [filterCourse, setFilterCourse] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [searchQ,      setSearchQ]      = useState('')
+  const [searchQ, setSearchQ]           = useState('')
+  const [page, setPage]                 = useState(1)
+  const pageSize = 10
 
   const rawLogs = (attData?.logs && attData.logs.length > 0) ? attData.logs : LOGS
   const coursesList = attData?.courses || COURSES
 
   const formattedLogs = rawLogs.map((l, idx) => ({
     id: l._id || l.id || `log-${idx}`,
-    date: l.date || (l.timestamp ? new Date(l.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent'),
+    date: l.date || (l.timestamp
+      ? `${new Date(l.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, ${new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      : 'Recent Session'),
     course: l.course_id || l.course || 'CS101',
     method: l.method || 'QR Code + Face',
-    status: l.status || 'present'
+    status: l.status || 'present',
   }))
 
+  const presentCount = formattedLogs.filter(l => l.status === 'present').length
+  const absentCount = formattedLogs.filter(l => l.status === 'absent').length
+  const lateCount = formattedLogs.filter(l => l.status === 'late').length
+  const presentPct = formattedLogs.length > 0 ? Math.round((presentCount / formattedLogs.length) * 100) : 100
+
+  const query = (searchQ || topbarSearch || '').trim().toLowerCase()
   const filtered = formattedLogs.filter(l => {
     const matchCourse = filterCourse === 'all' || l.course === filterCourse
     const matchStatus = filterStatus === 'all' || l.status === filterStatus
-    const matchSearch = (l.date || '').toLowerCase().includes(searchQ.toLowerCase()) ||
-                        (l.course || '').toLowerCase().includes(searchQ.toLowerCase()) ||
-                        (l.method || '').toLowerCase().includes(searchQ.toLowerCase())
+    const matchSearch = !query ||
+      (l.date || '').toLowerCase().includes(query) ||
+      (l.course || '').toLowerCase().includes(query) ||
+      (l.method || '').toLowerCase().includes(query) ||
+      (l.status || '').toLowerCase().includes(query)
     return matchCourse && matchStatus && matchSearch
   })
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const pagedLogs = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
+
+  const handleExportCsv = () => {
+    const headers = ['#', 'Date & Time', 'Course', 'Method', 'Status']
+    const rows = filtered.map((l, i) => [
+      i + 1,
+      `"${(l.date || '').replace(/"/g, '""')}"`,
+      l.course,
+      `"${(l.method || '').replace(/"/g, '""')}"`,
+      l.status,
+    ])
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'attentify_attendance_logs.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const renderMethodIcon = (method = '') => {
+    const m = method.toLowerCase()
+    if (m.includes('qr')) return <ScanFrameIcon size={13} color="#162F44" />
+    if (m.includes('face') || m.includes('biometric')) return <EyeIcon size={13} color="#162F44" />
+    return <FilePenIcon size={13} color="#162F44" />
+  }
+
   return (
-    <div className="sd-tab-content">
-      <div className="sd-section-header">
+    <div className="sd-cls-view">
+      {/* Page Header */}
+      <div className="sd-cls-header">
         <div>
-          <h2 className="sd-section-title">🗒️ Attendance Logs</h2>
-          <p className="sd-section-sub">Full history of your attendance records</p>
+          <div className="sd-cls-title-row">
+            <h1 className="sd-cls-title">Attendance Logs</h1>
+            <span className="sd-cls-count-badge">{formattedLogs.length} Records</span>
+          </div>
+          <p className="sd-cls-subtitle">
+            Complete audit history of verified QR check-ins, biometric scans, and classroom sessions.
+          </p>
+        </div>
+
+        <div className="sd-cls-header-controls">
+          <button type="button" className="sd-sub-btn-outline" onClick={handleExportCsv}>
+            <DownloadIcon size={14} />
+            <span>Export CSV</span>
+          </button>
+          {onNav && (
+            <button type="button" className="sd-sub-btn-primary" onClick={() => onNav('scanner')}>
+              <CameraIcon size={14} color="#FFFFFF" />
+              <span>Open Scanner</span>
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="sd-filters">
-        <input
-          id="log-search"
-          className="sd-input sd-input-search"
-          placeholder="🔍 Search logs…"
-          value={searchQ}
-          onChange={e => setSearchQ(e.target.value)}
-        />
-        <select id="log-course-filter" className="sd-select" value={filterCourse} onChange={e => setFilterCourse(e.target.value)}>
-          <option value="all">All Courses</option>
-          {coursesList.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
-        </select>
-        <select id="log-status-filter" className="sd-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-          <option value="all">All Statuses</option>
-          <option value="present">Present</option>
-          <option value="absent">Absent</option>
-          <option value="late">Late</option>
-        </select>
+      {/* 4 Compact Summary KPI Cards */}
+      <div className="sd-logs-kpi-grid">
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">TOTAL LOGGED</div>
+            <div className="sd-cls-kpi-value">{formattedLogs.length} Entries</div>
+            <div className="sd-cls-kpi-sub">Tracked activity log</div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#EDF1F5', color: '#162F44' }}>
+            <ClipboardListIcon size={18} color="#162F44" />
+          </div>
+        </div>
+
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">PRESENT</div>
+            <div className="sd-cls-kpi-value">{presentCount} Verified</div>
+            <div className="sd-cls-kpi-sub">{presentPct}% of recorded logs</div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#E8F2EC', color: '#557E6D' }}>
+            <CheckCircleIcon size={18} color="#557E6D" />
+          </div>
+        </div>
+
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">LATE ENTRIES</div>
+            <div className="sd-cls-kpi-value">{lateCount} Flagged</div>
+            <div className="sd-cls-kpi-sub">Grace-period check-ins</div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#FBF4E6', color: '#B5822C' }}>
+            <ClockIcon size={18} color="#B5822C" />
+          </div>
+        </div>
+
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">ABSENT</div>
+            <div className="sd-cls-kpi-value">{absentCount} Missed</div>
+            <div className="sd-cls-kpi-sub">Unattended sessions</div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#FBEBE8', color: '#BC6D61' }}>
+            <XCircleIcon size={18} color="#BC6D61" />
+          </div>
+        </div>
       </div>
 
-      {/* Summary pills */}
-      <div className="sd-log-summary">
-        <span className="sd-log-sum-pill" style={{ color: '#34d399' }}>✅ Present: {formattedLogs.filter(l=>l.status==='present').length}</span>
-        <span className="sd-log-sum-pill" style={{ color: '#f87171' }}>❌ Absent: {formattedLogs.filter(l=>l.status==='absent').length}</span>
-        <span className="sd-log-sum-pill" style={{ color: '#fbbf24' }}>⏰ Late: {formattedLogs.filter(l=>l.status==='late').length}</span>
-        <span className="sd-log-sum-pill" style={{ color: 'var(--sd-muted)' }}>📋 Total: {formattedLogs.length}</span>
-      </div>
+      {/* Filters + Full-Width Audit Table */}
+      <div className="sd-logs-card">
+        <div className="sd-cls-toolbar-row">
+          <div>
+            <h2 className="sd-cls-section-heading">Session Verification Audit</h2>
+            <p className="sd-cls-subtitle" style={{ marginTop: '2px' }}>
+              Showing {filtered.length} of {formattedLogs.length} session logs
+            </p>
+          </div>
 
-      <div className="sd-card sd-table-wrap">
-        <table className="sd-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Date & Time</th>
-              <th>Course</th>
-              <th>Method</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', opacity: 0.4 }}>No records found</td></tr>
-            )}
-            {filtered.map((l, i) => (
-              <tr key={l.id}>
-                <td className="sd-td-num">{i + 1}</td>
-                <td className="sd-td-date">{l.date}</td>
-                <td><span className="sd-course-code-sm">{l.course}</span></td>
-                <td className="sd-td-method">
-                  <span className="sd-method-badge">
-                    {l.method === 'QR Code' ? '🔲' : l.method === 'Face Recognition' ? '👁️' : '✍️'} {l.method}
-                  </span>
-                </td>
-                <td>
-                  <span className={`sd-badge sd-badge-${l.status}`}>
-                    {l.status === 'present' ? '✅' : l.status === 'late' ? '⏰' : '❌'} {l.status}
-                  </span>
-                </td>
+          <div className="sd-cls-toolbar">
+            <div className="sd-cls-search-box">
+              <SearchIcon size={14} color="#758087" />
+              <input
+                id="log-search"
+                type="text"
+                placeholder="Search date, course, method..."
+                value={searchQ}
+                onChange={e => { setSearchQ(e.target.value); setPage(1) }}
+                aria-label="Search attendance logs"
+              />
+            </div>
+
+            <select
+              id="log-course-filter"
+              className="sd-cls-select"
+              value={filterCourse}
+              onChange={e => { setFilterCourse(e.target.value); setPage(1) }}
+              aria-label="Filter logs by course"
+            >
+              <option value="all">All Courses</option>
+              {coursesList.map(c => (
+                <option key={c.id} value={c.id}>{c.id} — {c.name}</option>
+              ))}
+            </select>
+
+            <select
+              id="log-status-filter"
+              className="sd-cls-select"
+              value={filterStatus}
+              onChange={e => { setFilterStatus(e.target.value); setPage(1) }}
+              aria-label="Filter logs by status"
+            >
+              <option value="all">All Statuses</option>
+              <option value="present">Present</option>
+              <option value="late">Late</option>
+              <option value="absent">Absent</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="sd-logs-table-wrap">
+          <table className="sd-logs-table">
+            <thead>
+              <tr>
+                <th style={{ width: '56px' }}>#</th>
+                <th>Date &amp; Time</th>
+                <th>Course</th>
+                <th>Verification Method</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pagedLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--sd-text-secondary)' }}>
+                    {formattedLogs.length === 0
+                      ? 'No live scan logs recorded yet. Scan a classroom QR code to create your first entry.'
+                      : 'No attendance logs match the active search or filters.'}
+                  </td>
+                </tr>
+              ) : (
+                pagedLogs.map((l, i) => (
+                  <tr key={l.id}>
+                    <td className="sd-logs-td-num">{(safePage - 1) * pageSize + i + 1}</td>
+                    <td className="sd-logs-td-date">{l.date}</td>
+                    <td>
+                      <span className="sd-logs-course-pill">{l.course}</span>
+                    </td>
+                    <td>
+                      <span className="sd-logs-method-pill">
+                        {renderMethodIcon(l.method)}
+                        <span>{l.method}</span>
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`sd-cls-status-pill ${
+                          l.status === 'present'
+                            ? 'sd-cls-status-completed'
+                            : l.status === 'late'
+                            ? 'sd-logs-status-late'
+                            : 'sd-cls-status-cancelled'
+                        }`}
+                      >
+                        {l.status === 'present' ? '✓ Present' : l.status === 'late' ? '▲ Late' : '✕ Absent'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {filtered.length > pageSize && (
+          <div className="sd-logs-pagination">
+            <span className="sd-cls-subtitle">
+              Page {safePage} of {totalPages}
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                type="button"
+                className="sd-sub-btn-outline"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+              >
+                <ChevronLeftIcon size={14} />
+                <span>Previous</span>
+              </button>
+              <button
+                type="button"
+                className="sd-sub-btn-outline"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+              >
+                <span>Next</span>
+                <ChevronRightIcon size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -4038,150 +4781,318 @@ function TabLogs({ attData }) {
 //  TAB: SETTINGS
 // ═══════════════════════════════════════════════════════════
 function TabSettings({ user }) {
-  const [profile, setProfile] = useState({
-    name:      user?.name  || '',
-    email:     user?.email || '',
-    rollNo:    '21CS028',
-    dept:      'Computer Science',
-    semester:  '4th Semester',
-    phone:     '+91 98765 43210',
+  const [profile, setProfile] = useState(() => {
+    let savedPhone = '+91 98765 43210'
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('sd_student_phone')
+        if (stored) savedPhone = stored
+      } catch (err) {
+        console.error('Failed to load phone setting:', err)
+      }
+    }
+    return {
+      name: user?.name || 'Student',
+      email: user?.email || '',
+      rollNo: '21CS028',
+      dept: user?.dept || user?.department || 'B.Tech CSE',
+      semester: user?.academicInfo || 'Year 3 • Sem 5',
+      phone: savedPhone,
+    }
   })
-  const [notif, setNotif] = useState({
-    absent:  true,
-    late:    false,
-    qr:      true,
-    weekly:  true,
-    email:   true,
-    browser: true,
-  })
-  const { theme, setTheme } = useTheme()
-  const [saved,   setSaved]   = useState(false)
 
-  const save = () => { setSaved(true); setTimeout(() => setSaved(false), 2000) }
+  const [notif, setNotif] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedPrefs = localStorage.getItem('sd_student_notif_prefs')
+        if (savedPrefs) return JSON.parse(savedPrefs)
+      } catch (err) {
+        console.error('Failed to load notification prefs:', err)
+      }
+    }
+    return {
+      absent: true,
+      late: false,
+      qr: true,
+      weekly: true,
+      email: true,
+      browser: true,
+    }
+  })
+
+  const { theme, setTheme } = useTheme()
+  const [saved, setSaved] = useState(false)
+  const [curPass, setCurPass] = useState('')
+  const [newPass, setNewPass] = useState('')
+  const [confPass, setConfPass] = useState('')
+  const [passFeedback, setPassFeedback] = useState(null)
+
+  const save = () => {
+    try {
+      localStorage.setItem('sd_student_notif_prefs', JSON.stringify(notif))
+      localStorage.setItem('sd_student_phone', profile.phone)
+    } catch (err) {
+      console.error('Failed to persist settings:', err)
+    }
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2400)
+  }
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault()
+    if (!curPass.trim() || !newPass.trim() || !confPass.trim()) {
+      setPassFeedback({ type: 'error', text: 'Please fill in all three password fields.' })
+      return
+    }
+    if (newPass.length < 6) {
+      setPassFeedback({ type: 'error', text: 'New password must be at least 6 characters.' })
+      return
+    }
+    if (newPass !== confPass) {
+      setPassFeedback({ type: 'error', text: 'New password and confirmation do not match.' })
+      return
+    }
+    setCurPass('')
+    setNewPass('')
+    setConfPass('')
+    setPassFeedback({
+      type: 'info',
+      text: 'Password validated. Self-service credential changes are managed through your institutional administrator.',
+    })
+  }
+
+  const initials = (profile.name || 'S')
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 
   return (
-    <div className="sd-tab-content">
-      <div className="sd-section-header">
+    <div className="sd-cls-view">
+      {/* Page Header */}
+      <div className="sd-cls-header">
         <div>
-          <h2 className="sd-section-title">⚙️ Settings</h2>
-          <p className="sd-section-sub">Manage your profile and preferences</p>
+          <div className="sd-cls-title-row">
+            <h1 className="sd-cls-title">Account Settings</h1>
+            <span className="sd-cls-count-badge">Student Profile</span>
+          </div>
+          <p className="sd-cls-subtitle">
+            Manage your academic profile details, alert preferences, display theme, and security.
+          </p>
         </div>
-        <button id="save-settings-btn" className={`sd-primary-btn ${saved ? 'btn-success' : ''}`} onClick={save}>
-          {saved ? '✅ Saved!' : '💾 Save Changes'}
+
+        <button
+          id="save-settings-btn"
+          type="button"
+          className={`sd-sub-btn-primary ${saved ? 'is-saved' : ''}`}
+          onClick={save}
+        >
+          <CheckCircleIcon size={15} color="#FFFFFF" />
+          <span>{saved ? 'Changes Saved' : 'Save Changes'}</span>
         </button>
       </div>
 
-      <div className="sd-settings-grid">
-        {/* Profile */}
-        <div className="sd-card">
-          <h3 className="sd-card-title">👤 Profile</h3>
-          <div className="sd-profile-row">
-            <div className="sd-avatar-lg">
-              {profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+      {/* Main 2-Column Settings Grid */}
+      <div className="sd-set-grid">
+        {/* Left: Academic Profile Card */}
+        <div className="sd-set-card">
+          <div className="sd-set-card-head">
+            <div className="sd-set-card-icon">
+              <UserIcon size={16} color="#162F44" />
             </div>
             <div>
-              <p className="sd-avatar-name">{profile.name}</p>
-              <p className="sd-avatar-sub">{profile.rollNo} · {profile.dept}</p>
-              <p className="sd-avatar-sub">{profile.semester}</p>
+              <h2 className="sd-cls-section-heading">Academic Profile</h2>
+              <p className="sd-cls-subtitle">Verified student identity and enrollment details</p>
             </div>
           </div>
 
-          <div className="sd-form-grid">
+          <div className="sd-set-profile-banner">
+            <div className="sd-set-avatar-lg">{initials}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="sd-set-profile-name">{profile.name}</div>
+              <div className="sd-set-profile-meta">
+                {profile.rollNo} · {profile.dept}
+              </div>
+              <div className="sd-set-profile-meta">{profile.semester}</div>
+            </div>
+            <span className="sd-cls-status-pill sd-cls-status-completed">Active Student</span>
+          </div>
+
+          <div className="sd-set-form-grid">
             {[
-              { id: 'set-name',  label: 'Full Name',   key: 'name',     type: 'text'  },
-              { id: 'set-email', label: 'Email',        key: 'email',    type: 'email' },
-              { id: 'set-roll',  label: 'Roll Number',  key: 'rollNo',   type: 'text'  },
-              { id: 'set-dept',  label: 'Department',   key: 'dept',     type: 'text'  },
-              { id: 'set-sem',   label: 'Semester',     key: 'semester', type: 'text'  },
-              { id: 'set-phone', label: 'Phone',        key: 'phone',    type: 'tel'   },
+              { id: 'set-name', label: 'Full Name', key: 'name', type: 'text', editable: false },
+              { id: 'set-email', label: 'Institutional Email', key: 'email', type: 'email', editable: false },
+              { id: 'set-roll', label: 'Roll Number', key: 'rollNo', type: 'text', editable: false },
+              { id: 'set-dept', label: 'Department', key: 'dept', type: 'text', editable: false },
+              { id: 'set-sem', label: 'Academic Term', key: 'semester', type: 'text', editable: false },
+              { id: 'set-phone', label: 'Contact Phone', key: 'phone', type: 'tel', editable: true },
             ].map(f => (
-              <div key={f.id} className="sd-form-group">
-                <label htmlFor={f.id}>{f.label}</label>
+              <div key={f.id} className="sd-set-field">
+                <label htmlFor={f.id}>
+                  <span>{f.label}</span>
+                  {!f.editable && <LockIcon size={11} color="#758087" />}
+                </label>
                 <input
                   id={f.id}
-                  className="sd-input"
+                  className={`sd-form-input ${!f.editable ? 'is-readonly' : ''}`}
                   type={f.type}
                   value={profile[f.key]}
-                  readOnly
+                  readOnly={!f.editable}
+                  onChange={
+                    f.editable
+                      ? e => setProfile(prev => ({ ...prev, [f.key]: e.target.value }))
+                      : undefined
+                  }
                 />
               </div>
             ))}
           </div>
-
-
         </div>
 
-        <div>
-          {/* Notifications */}
-          <div className="sd-card" style={{ marginBottom: '1.25rem' }}>
-            <h3 className="sd-card-title">🔔 Notifications</h3>
-            <div className="sd-toggle-list">
+        {/* Right Stack: Notifications + Appearance */}
+        <div className="sd-set-right-stack">
+          <div className="sd-set-card">
+            <div className="sd-set-card-head">
+              <div className="sd-set-card-icon">
+                <BellIcon size={16} color="#162F44" />
+              </div>
+              <div>
+                <h2 className="sd-cls-section-heading">Notifications</h2>
+                <p className="sd-cls-subtitle">Choose when Attendify notifies you</p>
+              </div>
+            </div>
+
+            <div className="sd-set-toggle-list">
               {[
-                { id: 'n-absent',  key: 'absent',  label: 'Absent Alerts',         desc: 'When you are marked absent'          },
-                { id: 'n-late',    key: 'late',    label: 'Late Arrival Alerts',    desc: 'When you are marked late'            },
-                { id: 'n-qr',      key: 'qr',      label: 'QR Session Started',     desc: 'When faculty starts a QR session'   },
-                { id: 'n-weekly',  key: 'weekly',  label: 'Weekly Summary',         desc: 'Weekly attendance report via email' },
-                { id: 'n-email',   key: 'email',   label: 'Email Notifications',    desc: 'Receive alerts via email'           },
-                { id: 'n-browser', key: 'browser', label: 'Browser Notifications',  desc: 'Push alerts in browser'             },
-              ].map(n => (
-                <div key={n.id} className="sd-toggle-row">
-                  <div>
-                    <span className="sd-toggle-label">{n.label}</span>
-                    <span className="sd-toggle-desc">{n.desc}</span>
+                { id: 'n-absent', key: 'absent', label: 'Absent Alerts', desc: 'Alert when marked absent for a class' },
+                { id: 'n-late', key: 'late', label: 'Late Arrival Alerts', desc: 'Notify on grace-window check-ins' },
+                { id: 'n-qr', key: 'qr', label: 'QR Session Started', desc: 'Instant prompt when faculty opens a scan' },
+                { id: 'n-weekly', key: 'weekly', label: 'Weekly Summary', desc: 'Weekly participation recap email' },
+                { id: 'n-email', key: 'email', label: 'Email Notifications', desc: 'Deliver announcements via email' },
+                { id: 'n-browser', key: 'browser', label: 'Browser Notifications', desc: 'Desktop push alerts in browser' },
+              ].map(n => {
+                const isOn = Boolean(notif[n.key])
+                return (
+                  <div key={n.id} className="sd-set-toggle-row">
+                    <div>
+                      <div className="sd-set-toggle-label">{n.label}</div>
+                      <div className="sd-set-toggle-desc">{n.desc}</div>
+                    </div>
+                    <button
+                      id={n.id}
+                      type="button"
+                      className={`sd-set-switch ${isOn ? 'on' : ''}`}
+                      onClick={() => setNotif(p => ({ ...p, [n.key]: !p[n.key] }))}
+                      aria-pressed={isOn}
+                      aria-label={n.label}
+                    >
+                      <span className="sd-set-switch-thumb" />
+                    </button>
                   </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="sd-set-card">
+            <div className="sd-set-card-head">
+              <div className="sd-set-card-icon">
+                <SettingsIcon size={16} color="#162F44" />
+              </div>
+              <div>
+                <h2 className="sd-cls-section-heading">Appearance</h2>
+                <p className="sd-cls-subtitle">Select your preferred display mode</p>
+              </div>
+            </div>
+
+            <div className="sd-set-theme-row">
+              {[
+                { id: 'light', label: 'Light', icon: SunIcon },
+                { id: 'dark', label: 'Dark', icon: MoonIcon },
+                { id: 'system', label: 'System', icon: MonitorIcon },
+              ].map(item => {
+                const IconComp = item.icon
+                return (
                   <button
-                    id={n.id}
-                    className={`sd-switch ${notif[n.key] ? 'on' : ''}`}
-                    onClick={() => setNotif(p => ({ ...p, [n.key]: !p[n.key] }))}
-                    aria-pressed={notif[n.key]}
+                    key={item.id}
+                    id={`theme-${item.id}`}
+                    type="button"
+                    className={`sd-set-theme-btn ${theme === item.id ? 'active' : ''}`}
+                    onClick={() => setTheme(item.id)}
                   >
-                    <span className="sd-switch-thumb" />
+                    <IconComp size={15} />
+                    <span>{item.label}</span>
                   </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Appearance */}
-          <div className="sd-card">
-            <h3 className="sd-card-title">🎨 Appearance</h3>
-            <div className="sd-theme-row">
-              {['dark', 'light', 'system'].map(t => (
-                <button
-                  key={t}
-                  id={`theme-${t}`}
-                  className={`sd-theme-btn ${theme === t ? 'active' : ''}`}
-                  onClick={() => setTheme(t)}
-                >
-                  {t === 'dark' ? '🌙' : t === 'light' ? '☀️' : '💻'} {t.charAt(0).toUpperCase() + t.slice(1)}
-                </button>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Change password */}
-      <div className="sd-card">
-        <h3 className="sd-card-title">🔑 Change Password</h3>
-        <div className="sd-form-grid-3">
-          <div className="sd-form-group">
+      {/* Bottom Full-Width Security Card */}
+      <form className="sd-set-card" onSubmit={handlePasswordSubmit}>
+        <div className="sd-set-card-head">
+          <div className="sd-set-card-icon">
+            <KeyIcon size={16} color="#162F44" />
+          </div>
+          <div>
+            <h2 className="sd-cls-section-heading">Security &amp; Password</h2>
+            <p className="sd-cls-subtitle">Verify or update your account access credentials</p>
+          </div>
+        </div>
+
+        <div className="sd-set-pass-grid">
+          <div className="sd-set-field">
             <label htmlFor="cur-pass">Current Password</label>
-            <input id="cur-pass" className="sd-input" type="password" placeholder="••••••••" />
+            <input
+              id="cur-pass"
+              className="sd-form-input"
+              type="password"
+              placeholder="Enter current password"
+              value={curPass}
+              onChange={e => { setCurPass(e.target.value); setPassFeedback(null) }}
+            />
           </div>
-          <div className="sd-form-group">
+          <div className="sd-set-field">
             <label htmlFor="new-pass">New Password</label>
-            <input id="new-pass" className="sd-input" type="password" placeholder="••••••••" />
+            <input
+              id="new-pass"
+              className="sd-form-input"
+              type="password"
+              placeholder="Minimum 6 characters"
+              value={newPass}
+              onChange={e => { setNewPass(e.target.value); setPassFeedback(null) }}
+            />
           </div>
-          <div className="sd-form-group">
+          <div className="sd-set-field">
             <label htmlFor="conf-pass">Confirm Password</label>
-            <input id="conf-pass" className="sd-input" type="password" placeholder="••••••••" />
+            <input
+              id="conf-pass"
+              className="sd-form-input"
+              type="password"
+              placeholder="Repeat new password"
+              value={confPass}
+              onChange={e => { setConfPass(e.target.value); setPassFeedback(null) }}
+            />
           </div>
         </div>
-        <button id="change-pass-btn" className="sd-outline-btn" style={{ marginTop: '0.75rem' }}>
-          🔒 Update Password
-        </button>
-      </div>
+
+        {passFeedback && (
+          <div className={`sd-set-feedback ${passFeedback.type}`}>
+            {passFeedback.text}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+          <button id="change-pass-btn" type="submit" className="sd-sub-btn-outline">
+            <LockIcon size={14} />
+            <span>Update Password</span>
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
@@ -4389,16 +5300,24 @@ export default function StudentDashboardPage() {
           </div>
         </header>
 
-        <main className={`sd-content ${activeTab === 'attendance' ? 'sd-att-mode' : activeTab === 'classes' ? 'sd-cls-mode' : ''}`}>
-          {activeTab === 'overview'   && <TabOverview   user={user} onNav={handleNav} attData={attData} />}
-          {activeTab === 'attendance' && <TabAttendance attData={attData} user={user} onNav={handleNav} topbarSearch={topbarSearch} />}
-          {activeTab === 'scanner'    && <TabScanner user={user} attData={attData} onNav={handleNav} />}
-          {activeTab === 'classes'    && <TabClasses attData={attData} onNav={handleNav} topbarSearch={topbarSearch} />}
+        <main
+          className={`sd-content ${
+            activeTab === 'attendance'
+              ? 'sd-att-mode'
+              : ['classes', 'assignments', 'bills', 'logs', 'settings'].includes(activeTab)
+              ? 'sd-cls-mode'
+              : ''
+          }`}
+        >
+          {activeTab === 'overview'    && <TabOverview   user={user} onNav={handleNav} attData={attData} />}
+          {activeTab === 'attendance'  && <TabAttendance attData={attData} user={user} onNav={handleNav} topbarSearch={topbarSearch} />}
+          {activeTab === 'scanner'     && <TabScanner user={user} attData={attData} onNav={handleNav} />}
+          {activeTab === 'classes'     && <TabClasses attData={attData} onNav={handleNav} topbarSearch={topbarSearch} />}
           {activeTab === 'timetable'   && <TabTimetable />}
-          {activeTab === 'assignments'  && <TabStudentAssignments />}
-          {activeTab === 'bills'        && <TabBills />}
-          {activeTab === 'logs'         && <TabLogs attData={attData} />}
-          {activeTab === 'settings'     && <TabSettings user={user} />}
+          {activeTab === 'assignments' && <TabStudentAssignments topbarSearch={topbarSearch} />}
+          {activeTab === 'bills'       && <TabBills topbarSearch={topbarSearch} />}
+          {activeTab === 'logs'        && <TabLogs attData={attData} onNav={handleNav} topbarSearch={topbarSearch} />}
+          {activeTab === 'settings'    && <TabSettings user={user} />}
         </main>
       </div>
     </div>
