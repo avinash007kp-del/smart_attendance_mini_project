@@ -1934,7 +1934,7 @@ function RemoveFacultyModal({ faculty, onClose, onConfirm }) {
           <button
             type="button"
             className="ad-btn-primary"
-            style={{ backgroundColor: 'var(--ad-error)' }}
+            style={{ backgroundColor: 'var(--ad-error)', borderColor: 'var(--ad-error)' }}
             onClick={onConfirm}
           >
             <TrashIcon size={15} />
