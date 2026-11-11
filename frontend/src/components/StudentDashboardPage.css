@@ -2608,3 +2608,962 @@
     flex-direction: column;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ATTENDIFY MY CLASSES — STUDENT COURSE MANAGEMENT DASHBOARD
+   ═══════════════════════════════════════════════════════════════ */
+
+.sd-content.sd-cls-mode {
+  padding: 20px 24px 36px;
+}
+
+.sd-cls-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.sd-cls-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sd-cls-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.sd-cls-title {
+  font-family: var(--sd-font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--sd-navy);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.sd-cls-count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  background-color: var(--sd-nav-active);
+  border: 1px solid var(--sd-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sd-navy);
+}
+
+.sd-cls-subtitle {
+  font-size: 13px;
+  color: var(--sd-text-secondary);
+  margin: 0;
+}
+
+.sd-cls-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sd-cls-select {
+  padding: 6px 10px;
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--sd-font-sans);
+  color: var(--sd-navy);
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+
+.sd-cls-select:focus {
+  border-color: var(--sd-navy);
+}
+
+.sd-cls-btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--sd-navy);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.sd-cls-btn-add:hover {
+  background-color: #0d2030;
+}
+
+/* ── Course Summary Cards (3 equal columns) ─────────────────── */
+.sd-cls-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.sd-cls-kpi-card {
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 92px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.sd-cls-kpi-card:hover {
+  border-color: #C2CAC3;
+  box-shadow: 0 3px 10px rgba(22, 47, 68, 0.04);
+}
+
+.sd-cls-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--sd-text-secondary);
+  margin-bottom: 4px;
+}
+
+.sd-cls-kpi-value {
+  font-family: var(--sd-font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--sd-navy);
+  line-height: 1.05;
+}
+
+.sd-cls-kpi-sub {
+  font-size: 11.5px;
+  color: var(--sd-text-secondary);
+  margin-top: 4px;
+}
+
+.sd-cls-kpi-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Enrolled Courses Section & Toolbar ────────────────────── */
+.sd-cls-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sd-cls-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sd-cls-section-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sd-navy);
+  letter-spacing: -0.01em;
+}
+
+.sd-cls-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sd-cls-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  width: 220px;
+}
+
+.sd-cls-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12px;
+  font-family: var(--sd-font-sans);
+  color: var(--sd-text-primary);
+  width: 100%;
+}
+
+.sd-cls-view-toggle {
+  display: inline-flex;
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.sd-cls-toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--sd-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.sd-cls-toggle-btn.active {
+  background-color: var(--sd-nav-active);
+  color: var(--sd-navy);
+}
+
+/* ── Course Card Grid ──────────────────────────────────────── */
+.sd-cls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.sd-cls-grid.list-view {
+  grid-template-columns: 1fr;
+}
+
+.sd-cls-card {
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.sd-cls-card:hover {
+  border-color: #B4BDB7;
+  box-shadow: 0 4px 14px rgba(22, 47, 68, 0.05);
+  transform: translateY(-1px);
+}
+
+.sd-cls-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sd-cls-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sd-cls-code-badge {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.sd-cls-cat-tag {
+  font-size: 11px;
+  color: var(--sd-text-secondary);
+  font-weight: 500;
+}
+
+.sd-cls-menu-wrap {
+  position: relative;
+}
+
+.sd-cls-menu-btn {
+  background: transparent;
+  border: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.sd-cls-menu-btn:hover {
+  background-color: var(--sd-nav-active);
+  color: var(--sd-navy);
+}
+
+.sd-cls-dropdown {
+  position: absolute;
+  top: 28px;
+  right: 0;
+  width: 160px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(22, 47, 68, 0.12);
+  padding: 4px;
+  z-index: 30;
+}
+
+.sd-cls-dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--sd-navy);
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: var(--sd-font-sans);
+}
+
+.sd-cls-dropdown-item:hover {
+  background-color: var(--sd-nav-active);
+}
+
+.sd-cls-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sd-cls-course-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sd-navy);
+  line-height: 1.25;
+  margin: 0;
+}
+
+.sd-cls-faculty-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--sd-text-secondary);
+  font-weight: 500;
+}
+
+.sd-cls-faculty-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--sd-nav-active);
+  color: var(--sd-navy);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sd-cls-att-block {
+  background-color: #F7F6F2;
+  border: 1px solid #E5E8E3;
+  border-radius: 8px;
+  padding: 9px 11px;
+  margin-top: 2px;
+}
+
+.sd-cls-att-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.sd-cls-att-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sd-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sd-cls-att-pct {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--sd-font-serif);
+  line-height: 1;
+}
+
+.sd-cls-progress-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background-color: var(--sd-track);
+  border-radius: 3px;
+  overflow: visible;
+}
+
+.sd-cls-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.25s ease;
+}
+
+.sd-cls-progress-min {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 75%;
+  width: 2px;
+  background-color: #B5822C;
+  border-radius: 1px;
+}
+
+.sd-cls-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 10px;
+  padding-top: 4px;
+  border-top: 1px solid #ECEFEA;
+}
+
+.sd-cls-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--sd-text-primary);
+  line-height: 1.35;
+}
+
+.sd-cls-info-sub {
+  font-size: 10.5px;
+  color: var(--sd-text-secondary);
+  display: block;
+}
+
+.sd-cls-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #ECEFEA;
+}
+
+.sd-cls-btn-details {
+  flex: 1;
+  padding: 6px 10px;
+  background-color: var(--sd-navy);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: center;
+}
+
+.sd-cls-btn-details:hover {
+  background-color: #0d2030;
+}
+
+.sd-cls-btn-attendance {
+  flex: 1;
+  padding: 6px 10px;
+  background-color: #FFFFFF;
+  color: var(--sd-navy);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  text-align: center;
+}
+
+.sd-cls-btn-attendance:hover {
+  background-color: var(--sd-nav-active);
+  border-color: #B4BDB7;
+}
+
+/* List View overrides */
+.sd-cls-grid.list-view .sd-cls-card {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 14px 18px;
+}
+
+.sd-cls-grid.list-view .sd-cls-card-main {
+  flex: 1.5;
+  min-width: 220px;
+}
+
+.sd-cls-grid.list-view .sd-cls-info-grid {
+  flex: 1.5;
+  border-top: none;
+  padding-top: 0;
+  min-width: 240px;
+}
+
+.sd-cls-grid.list-view .sd-cls-card-footer {
+  border-top: none;
+  padding-top: 0;
+  width: 220px;
+}
+
+/* ── Today's Timetable & Weekly Schedule Card ──────────────── */
+.sd-cls-schedule-card {
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sd-cls-sched-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sd-cls-sched-tabs {
+  display: inline-flex;
+  background-color: var(--sd-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.sd-cls-sched-tab {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sd-text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sd-cls-sched-tab.active {
+  background-color: var(--sd-card-bg);
+  color: var(--sd-navy);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sd-cls-link-btn {
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sd-success);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sd-cls-link-btn:hover {
+  text-decoration: underline;
+}
+
+/* Vertical Timeline Layout */
+.sd-cls-timeline {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.sd-cls-tl-item {
+  display: flex;
+  gap: 16px;
+  position: relative;
+}
+
+.sd-cls-tl-time-col {
+  width: 90px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-top: 12px;
+}
+
+.sd-cls-tl-start {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--sd-navy);
+}
+
+.sd-cls-tl-end {
+  font-size: 11px;
+  color: var(--sd-text-secondary);
+  margin-top: 1px;
+}
+
+.sd-cls-tl-axis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.sd-cls-tl-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 15px;
+  flex-shrink: 0;
+  border: 2px solid var(--sd-card-bg);
+  box-shadow: 0 0 0 2px currentColor;
+  z-index: 2;
+}
+
+.sd-cls-tl-dot.ongoing {
+  animation: sdPulse 1.8s infinite;
+}
+
+.sd-cls-tl-line {
+  width: 2px;
+  flex: 1;
+  background-color: var(--sd-border);
+  margin: 4px 0;
+}
+
+.sd-cls-tl-content {
+  flex: 1;
+  background-color: #FFFFFF;
+  border: 1px solid var(--sd-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sd-cls-tl-content.ongoing {
+  border-color: var(--sd-success);
+  background: linear-gradient(to right, #F5FAF7, #FFFFFF);
+  box-shadow: 0 2px 10px rgba(85, 126, 109, 0.08);
+}
+
+.sd-cls-tl-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sd-cls-tl-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sd-navy);
+}
+
+.sd-cls-tl-meta {
+  font-size: 12px;
+  color: var(--sd-text-secondary);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sd-cls-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sd-cls-status-completed {
+  background-color: #E8F2EC;
+  color: #276749;
+  border: 1px solid #C6DEC9;
+}
+
+.sd-cls-status-ongoing {
+  background-color: #162F44;
+  color: #FFFFFF;
+}
+
+.sd-cls-status-upcoming {
+  background-color: #F0F2EF;
+  color: var(--sd-navy);
+  border: 1px solid var(--sd-border);
+}
+
+.sd-cls-status-cancelled {
+  background-color: #FBEBE8;
+  color: #BC6D61;
+  border: 1px solid #F2CAC4;
+}
+
+/* Weekly Schedule Preview Grid */
+.sd-cls-weekly-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.sd-cls-day-col {
+  background-color: #FFFFFF;
+  border: 1px solid var(--sd-border);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 145px;
+}
+
+.sd-cls-day-col.today {
+  border-color: var(--sd-success);
+  background-color: #F6FAF7;
+}
+
+.sd-cls-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ECEFEA;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sd-navy);
+}
+
+.sd-cls-today-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  background-color: var(--sd-success);
+  color: #FFFFFF;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.sd-cls-slot-card {
+  background-color: var(--sd-bg);
+  border: 1px solid #E5E8E3;
+  border-radius: 7px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sd-cls-slot-time {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sd-text-secondary);
+}
+
+.sd-cls-slot-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sd-navy);
+  line-height: 1.2;
+}
+
+.sd-cls-slot-room {
+  font-size: 10.5px;
+  color: var(--sd-text-secondary);
+}
+
+/* ── Course Detail Side Panel (Section 7) ──────────────────── */
+.sd-cls-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(22, 47, 68, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 80;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sd-cls-drawer {
+  width: 520px;
+  max-width: 100vw;
+  height: 100vh;
+  background-color: var(--sd-card-bg);
+  border-left: 1px solid var(--sd-border);
+  box-shadow: -8px 0 32px rgba(22, 47, 68, 0.14);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideLeftIn 0.2s ease-out;
+}
+
+@keyframes slideLeftIn {
+  from { transform: translateX(30px); opacity: 0.7; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+.sd-cls-drawer-topbar {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--sd-border);
+  background-color: var(--sd-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sd-cls-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sd-navy);
+  cursor: pointer;
+}
+
+.sd-cls-back-btn:hover {
+  text-decoration: underline;
+}
+
+.sd-cls-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sd-cls-drawer-body > .sd-cls-btn-details {
+  flex: 0 0 auto;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.sd-cls-drawer-section {
+  background-color: #FFFFFF;
+  border: 1px solid var(--sd-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sd-cls-drawer-sec-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sd-text-secondary);
+}
+
+/* ── Add Class Modal ───────────────────────────────────────── */
+.sd-cls-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(22, 47, 68, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.sd-cls-modal-card {
+  width: 440px;
+  max-width: 100%;
+  background-color: var(--sd-card-bg);
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 12px 36px rgba(22, 47, 68, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Responsive Rules for My Classes ───────────────────────── */
+@media (max-width: 1150px) {
+  .sd-cls-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sd-cls-weekly-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sd-cls-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .sd-cls-grid {
+    grid-template-columns: 1fr;
+  }
+  .sd-cls-weekly-grid {
+    grid-template-columns: 1fr;
+  }
+  .sd-cls-tl-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sd-cls-tl-time-col {
+    text-align: left;
+    width: auto;
+  }
+  .sd-cls-tl-axis {
+    display: none;
+  }
+}
+

@@ -36,6 +36,11 @@ import {
   TrendingUpIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  DotsVerticalIcon,
+  MapPinIcon,
+  ListIcon,
+  GraduationCapIcon,
+  ArrowLeftIcon,
 } from './StudentDashboardIcons'
 import './StudentDashboardPage.css'
 
@@ -2694,96 +2699,780 @@ function ScannerFaceContent({ user, onVerified }) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  TAB: CLASSES
+//  TAB: CLASSES (Student Course Management Dashboard)
 // ═══════════════════════════════════════════════════════════
-function TabClasses({ attData }) {
-  const [selected, setSelected] = useState(null)
-  const coursesList = attData?.courses || COURSES
-  const scheduleList = attData?.todaySchedule || TODAY_SCHEDULE
+function TabClasses({ attData, onNav, topbarSearch = '' }) {
+  const [semester, setSemester] = useState('Fall 2024 (Sem 5)')
+  const [academicYear, setAcademicYear] = useState('AY 2024-25')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('name')
+  const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
+  const [scheduleView, setScheduleView] = useState('today') // 'today' | 'weekly'
+  const [openMenuId, setOpenMenuId] = useState(null)
+  const [detailCourse, setDetailCourse] = useState(null)
+  const [toastMsg, setToastMsg] = useState(null)
+
+  const baseCourses = attData?.courses || COURSES
+  const rawSchedule = attData?.todaySchedule || TODAY_SCHEDULE
+
+  // Enrich courses with metadata consistent with the app's existing courses & faculty
+  const COURSE_META = {
+    CS101: {
+      category: 'Core • 4 Credits',
+      endTime: '10:30 AM',
+      nextClass: 'Mon, Wed, Fri • 9:00 AM',
+      office: 'Block A, Room 204',
+      syllabus: 'Arrays, linked lists, trees, balanced search trees, graphs, sorting, hashing, and algorithm complexity.',
+      assignments: [
+        { title: 'Assignment 3: AVL & Red-Black Tree Rotations', due: 'Nov 18', status: 'Pending' },
+        { title: 'Lab 4: Dijkstra Shortest Path Implementation', due: 'Nov 05', status: 'Submitted' },
+      ],
+    },
+    CS205: {
+      category: 'Core • 4 Credits',
+      endTime: '12:30 PM',
+      nextClass: 'Tue, Thu • 11:00 AM',
+      office: 'Block B, Room 112',
+      syllabus: 'Process management, CPU scheduling, concurrency, deadlocks, memory paging, virtual memory, and file systems.',
+      assignments: [
+        { title: 'Assignment 2: Multi-threaded Producer-Consumer Sync', due: 'Nov 20', status: 'In Progress' },
+        { title: 'Lab 3: Virtual Memory Page Replacement Simulator', due: 'Nov 02', status: 'Graded (92%)' },
+      ],
+    },
+    CS312: {
+      category: 'Core • 3 Credits',
+      endTime: '3:30 PM',
+      nextClass: 'Mon, Wed • 2:00 PM',
+      office: 'Block A, Room 308',
+      syllabus: 'ER modeling, relational algebra, SQL optimization, normalization (BCNF/3NF), ACID transactions, and B+ tree indexing.',
+      assignments: [
+        { title: 'Project Milestone 2: E-Commerce Schema & Triggers', due: 'Nov 22', status: 'Pending' },
+        { title: 'Assignment 1: Relational Algebra & Normalization', due: 'Oct 28', status: 'Graded (96%)' },
+      ],
+    },
+  }
+
+  const enrichedCourses = baseCourses.map(c => {
+    const meta = COURSE_META[c.id] || {
+      category: 'Core Subject',
+      endTime: '10:30 AM',
+      nextClass: c.schedule || 'Scheduled Weekly',
+      office: 'Academic Block',
+      syllabus: 'Semester coursework, lectures, and practical laboratory modules.',
+      assignments: [],
+    }
+    const p = pct(c)
+    return {
+      ...c,
+      ...meta,
+      pctVal: p,
+    }
+  })
+
+  // Summary metrics
+  const totalCourses = enrichedCourses.length
+  const totalAttended = enrichedCourses.reduce((s, c) => s + (c.attended || 0), 0)
+  const totalClasses = enrichedCourses.reduce((s, c) => s + (c.total || 0), 0)
+  const avgAttendance = totalClasses > 0 ? Math.round((totalAttended / totalClasses) * 100) : 87
+
+  // Enrich Today's schedule with faculty and status types (Completed, Ongoing, Upcoming, Cancelled)
+  const enrichedSchedule = rawSchedule.map((s, idx) => {
+    const courseObj = enrichedCourses.find(c => c.id === s.course)
+    const endMap = { '9:00 AM': '10:30 AM', '11:00 AM': '12:30 PM', '2:00 PM': '3:30 PM' }
+    let statusType = 'upcoming'
+    if (s.status === 'done') statusType = 'completed'
+    else if (idx === 0 || (idx === 1 && rawSchedule[0]?.status === 'done')) statusType = 'ongoing'
+
+    return {
+      ...s,
+      startTime: s.time,
+      endTime: endMap[s.time] || '10:30 AM',
+      faculty: courseObj?.faculty || 'Faculty',
+      color: courseObj?.color || '#557E6D',
+      statusType,
+    }
+  })
+
+  // Filter & Sort Enrolled Courses
+  const activeQuery = (searchQuery || topbarSearch).trim().toLowerCase()
+  const filteredCourses = enrichedCourses
+    .filter(c => {
+      if (statusFilter === 'safe' && c.pctVal < 85) return false
+      if (statusFilter === 'warning' && c.pctVal >= 85) return false
+      if (activeQuery) {
+        return (
+          c.id.toLowerCase().includes(activeQuery) ||
+          c.name.toLowerCase().includes(activeQuery) ||
+          c.faculty.toLowerCase().includes(activeQuery) ||
+          c.room.toLowerCase().includes(activeQuery)
+        )
+      }
+      return true
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name)
+      if (sortBy === 'attendance') return b.pctVal - a.pctVal
+      if (sortBy === 'code') return a.id.localeCompare(b.id)
+      return 0
+    })
+
+  // Weekly Schedule Preview Grid Data (Monday to Saturday)
+  const currentDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+  const WEEKLY_DAYS = [
+    {
+      day: 'Monday',
+      slots: [
+        { time: '9:00 AM – 10:30 AM', code: 'CS101', name: 'Data Structures', room: 'Lab 3', color: '#8B5CF6' },
+        { time: '2:00 PM – 3:30 PM', code: 'CS312', name: 'Database Systems', room: 'Room 7', color: '#34D399' },
+      ],
+    },
+    {
+      day: 'Tuesday',
+      slots: [
+        { time: '11:00 AM – 12:30 PM', code: 'CS205', name: 'Operating Systems', room: 'Room 12', color: '#60A5FA' },
+      ],
+    },
+    {
+      day: 'Wednesday',
+      slots: [
+        { time: '9:00 AM – 10:30 AM', code: 'CS101', name: 'Data Structures', room: 'Lab 3', color: '#8B5CF6' },
+        { time: '2:00 PM – 3:30 PM', code: 'CS312', name: 'Database Systems', room: 'Room 7', color: '#34D399' },
+      ],
+    },
+    {
+      day: 'Thursday',
+      slots: [
+        { time: '11:00 AM – 12:30 PM', code: 'CS205', name: 'Operating Systems', room: 'Room 12', color: '#60A5FA' },
+      ],
+    },
+    {
+      day: 'Friday',
+      slots: [
+        { time: '9:00 AM – 10:30 AM', code: 'CS101', name: 'Data Structures', room: 'Lab 3', color: '#8B5CF6' },
+      ],
+    },
+    {
+      day: 'Saturday',
+      slots: [],
+    },
+  ]
+
+  const triggerToast = (msg) => {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(null), 3200)
+  }
+
+  const nextUpcoming = enrichedSchedule.find(s => s.statusType === 'ongoing' || s.statusType === 'upcoming')
 
   return (
-    <div className="sd-tab-content">
-      <div className="sd-section-header">
+    <div className="sd-cls-view" onClick={() => openMenuId && setOpenMenuId(null)}>
+      {/* ── Section 2: Page Header ────────────────────────────── */}
+      <div className="sd-cls-header">
         <div>
-          <h2 className="sd-section-title">📚 My Classes</h2>
-          <p className="sd-section-sub">All enrolled courses for this semester</p>
+          <div className="sd-cls-title-row">
+            <h1 className="sd-cls-title">My Classes</h1>
+            <span className="sd-cls-count-badge">{totalCourses} Enrolled</span>
+          </div>
+          <p className="sd-cls-subtitle">All enrolled courses for this semester.</p>
         </div>
-        <span className="sd-role-badge">{coursesList.length} Courses</span>
+
+        <div className="sd-cls-header-controls">
+          <select
+            className="sd-cls-select"
+            value={semester}
+            onChange={e => setSemester(e.target.value)}
+            aria-label="Select Semester"
+          >
+            <option value="Fall 2024 (Sem 5)">Semester 5 (Fall 2024)</option>
+            <option value="Spring 2024 (Sem 4)">Semester 4 (Spring 2024)</option>
+            <option value="Fall 2023 (Sem 3)">Semester 3 (Fall 2023)</option>
+          </select>
+
+          <select
+            className="sd-cls-select"
+            value={academicYear}
+            onChange={e => setAcademicYear(e.target.value)}
+            aria-label="Select Academic Year"
+          >
+            <option value="AY 2024-25">AY 2024-25</option>
+            <option value="AY 2023-24">AY 2023-24</option>
+          </select>
+        </div>
       </div>
 
-      <div className="sd-classes-grid">
-        {coursesList.map(c => {
-          const p = pct(c)
-          const color = pctColor(p)
-          const isSelected = selected === c.id
-          return (
-            <div
-              key={c.id}
-              id={`class-${c.id}`}
-              className={`sd-class-card ${isSelected ? 'selected' : ''}`}
-              style={{ '--ccolor': c.color }}
-              onClick={() => setSelected(isSelected ? null : c.id)}
+      {toastMsg && (
+        <div className="sd-att-toast" role="status">
+          <span>{toastMsg}</span>
+          <button
+            onClick={() => setToastMsg(null)}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#276749', fontWeight: 'bold' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* ── Section 3: Course Summary Cards ───────────────────── */}
+      <div className="sd-cls-kpi-grid">
+        {/* Card 1: Total Courses */}
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">TOTAL COURSES</div>
+            <div className="sd-cls-kpi-value">{totalCourses} Courses</div>
+            <div className="sd-cls-kpi-sub">Active semester enrollment</div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#EDF1F5', color: '#162F44' }}>
+            <GraduationCapIcon size={20} color="#162F44" />
+          </div>
+        </div>
+
+        {/* Card 2: Average Attendance */}
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">AVERAGE ATTENDANCE</div>
+            <div className="sd-cls-kpi-value">{avgAttendance}%</div>
+            <div className="sd-cls-kpi-sub">{totalAttended} / {totalClasses} sessions attended</div>
+          </div>
+          <div style={{ position: 'relative', width: '44px', height: '44px', flexShrink: 0 }}>
+            <svg width="44" height="44" viewBox="0 0 44 44" style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx="22" cy="22" r="18" fill="none" stroke="#E7E8E2" strokeWidth="4" />
+              <circle
+                cx="22" cy="22" r="18" fill="none"
+                stroke={avgAttendance >= 75 ? '#557E6D' : '#BC6D61'}
+                strokeWidth="4"
+                strokeDasharray={`${2 * Math.PI * 18}`}
+                strokeDashoffset={`${2 * Math.PI * 18 * (1 - avgAttendance / 100)}`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center',
+              justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: '#162F44'
+            }}>
+              {avgAttendance}%
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Today's Classes */}
+        <div className="sd-cls-kpi-card">
+          <div>
+            <div className="sd-cls-kpi-label">TODAY&apos;S CLASSES</div>
+            <div className="sd-cls-kpi-value">{enrichedSchedule.length} Scheduled</div>
+            <div className="sd-cls-kpi-sub">
+              {nextUpcoming ? `Next: ${nextUpcoming.course} at ${nextUpcoming.startTime}` : 'All sessions completed today'}
+            </div>
+          </div>
+          <div className="sd-cls-kpi-icon-box" style={{ backgroundColor: '#E8F2EC', color: '#557E6D' }}>
+            <CalendarIcon size={20} color="#557E6D" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section 4: Enrolled Courses Section & Toolbar ─────── */}
+      <div className="sd-cls-section-block">
+        <div className="sd-cls-toolbar-row">
+          <h2 className="sd-cls-section-heading">Enrolled Courses</h2>
+
+          <div className="sd-cls-toolbar">
+            <div className="sd-cls-search-box">
+              <SearchIcon size={13} color="#758087" />
+              <input
+                type="text"
+                placeholder="Search courses, faculty..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <select
+              className="sd-cls-select"
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              aria-label="Filter courses"
             >
-              <div className="sd-class-card-header">
-                <div className="sd-class-dot" style={{ background: c.color }} />
-                <span className="sd-course-code" style={{ color: c.color }}>{c.id}</span>
-                <span className={`sd-badge sd-badge-${p >= 85 ? 'present' : p >= 75 ? 'late' : 'absent'}`}>{p}%</span>
-              </div>
-              <h4 className="sd-class-name">{c.name}</h4>
-              <p className="sd-class-faculty">👨‍🏫 {c.faculty}</p>
-              <p className="sd-class-schedule">🕐 {c.schedule}</p>
-              <p className="sd-class-room">📍 {c.room}</p>
+              <option value="all">Semester: All ({totalCourses})</option>
+              <option value="safe">Safe Standing (≥85%)</option>
+              <option value="warning">Needs Attention (&lt;85%)</option>
+            </select>
 
-              <div className="sd-class-progress-wrap">
-                <div className="sd-mini-bar-track">
-                  <div className="sd-mini-bar-fill" style={{ width: `${p}%`, background: color }} />
-                </div>
-                <span style={{ fontSize: '0.75rem', color }}>{c.attended}/{c.total} classes</span>
-              </div>
+            <select
+              className="sd-cls-select"
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              aria-label="Sort courses"
+            >
+              <option value="name">Sort: Course Name</option>
+              <option value="code">Sort: Course Code</option>
+              <option value="attendance">Sort: Attendance %</option>
+            </select>
 
-              {isSelected && (
-                <div className="sd-class-detail-expand">
-                  <div className="sd-class-detail-row"><span>Attended</span><strong>{c.attended}</strong></div>
-                  <div className="sd-class-detail-row"><span>Total</span><strong>{c.total}</strong></div>
-                  <div className="sd-class-detail-row"><span>Absent</span><strong>{c.total - c.attended}</strong></div>
-                  <div className="sd-class-detail-row">
-                    <span>Status</span>
-                    <strong style={{ color }}>
-                      {p >= 85 ? '✅ Safe' : p >= 75 ? '⚠️ Warning' : '🚨 At Risk'}
-                    </strong>
+            <div className="sd-cls-view-toggle" role="group" aria-label="View mode toggle">
+              <button
+                className={`sd-cls-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                onClick={() => setViewMode('grid')}
+                title="Grid View"
+                aria-label="Grid View"
+              >
+                <GridIcon size={15} />
+              </button>
+              <button
+                className={`sd-cls-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => setViewMode('list')}
+                title="List View"
+                aria-label="List View"
+              >
+                <ListIcon size={15} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Responsive Course Cards Grid */}
+        {filteredCourses.length === 0 ? (
+          <div className="sd-cls-schedule-card" style={{ textAlign: 'center', padding: '32px' }}>
+            <p style={{ color: 'var(--sd-text-secondary)', fontSize: '13.5px' }}>
+              No enrolled courses match your current search or filter criteria.
+            </p>
+          </div>
+        ) : (
+          <div className={`sd-cls-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
+            {filteredCourses.map(c => {
+              const p = c.pctVal
+              const barColor = pctColor(p)
+              const isMenuOpen = openMenuId === c.id
+
+              return (
+                <div
+                  key={c.id}
+                  id={`class-${c.id}`}
+                  className="sd-cls-card"
+                  onClick={() => setDetailCourse(c)}
+                >
+                  {/* Top Section */}
+                  <div className="sd-cls-card-top">
+                    <div className="sd-cls-card-badges">
+                      <span
+                        className="sd-cls-code-badge"
+                        style={{
+                          backgroundColor: `${c.color}1C`,
+                          color: c.color === '#34d399' ? '#276749' : c.color,
+                          border: `1px solid ${c.color}40`,
+                        }}
+                      >
+                        {c.id}
+                      </span>
+                      <span className="sd-cls-cat-tag">{c.category}</span>
+                    </div>
+
+                    <div className="sd-cls-menu-wrap" onClick={e => e.stopPropagation()}>
+                      <button
+                        className="sd-cls-menu-btn"
+                        onClick={() => setOpenMenuId(isMenuOpen ? null : c.id)}
+                        title="Course options"
+                        aria-label={`Options for ${c.id}`}
+                      >
+                        <DotsVerticalIcon size={15} />
+                      </button>
+                      {isMenuOpen && (
+                        <div className="sd-cls-dropdown">
+                          <button
+                            className="sd-cls-dropdown-item"
+                            onClick={() => { setOpenMenuId(null); setDetailCourse(c); }}
+                          >
+                            View Course Details
+                          </button>
+                          <button
+                            className="sd-cls-dropdown-item"
+                            onClick={() => { setOpenMenuId(null); onNav && onNav('attendance'); }}
+                          >
+                            View Attendance Logs
+                          </button>
+                          <button
+                            className="sd-cls-dropdown-item"
+                            onClick={() => {
+                              setOpenMenuId(null)
+                              if (navigator?.clipboard) navigator.clipboard.writeText(c.id)
+                              triggerToast(`📋 Copied course code "${c.id}" to clipboard.`)
+                            }}
+                          >
+                            Copy Course Code
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Main Section */}
+                  <div className="sd-cls-card-main">
+                    <h3 className="sd-cls-course-name">{c.name}</h3>
+                    <div className="sd-cls-faculty-row">
+                      <div className="sd-cls-faculty-avatar">
+                        {c.faculty.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                      </div>
+                      <span>{c.faculty}</span>
+                    </div>
+
+                    <div className="sd-cls-att-block">
+                      <div className="sd-cls-att-row">
+                        <span className="sd-cls-att-lbl">Attendance</span>
+                        <span className="sd-cls-att-pct" style={{ color: barColor }}>{p}%</span>
+                      </div>
+                      <div className="sd-cls-progress-track">
+                        <div
+                          className="sd-cls-progress-fill"
+                          style={{ width: `${p}%`, backgroundColor: barColor }}
+                        />
+                        <div className="sd-cls-progress-min" title="75% Institutional Minimum" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Information Section */}
+                  <div className="sd-cls-info-grid">
+                    <div className="sd-cls-info-item">
+                      <CheckCircleIcon size={13} color="#557E6D" />
+                      <div>
+                        <strong>{c.attended}/{c.total} Classes</strong>
+                        <span className="sd-cls-info-sub">Attended</span>
+                      </div>
+                    </div>
+                    <div className="sd-cls-info-item">
+                      <MapPinIcon size={13} color="#758087" />
+                      <div>
+                        <strong>{c.room}</strong>
+                        <span className="sd-cls-info-sub">Location</span>
+                      </div>
+                    </div>
+                    <div className="sd-cls-info-item" style={{ gridColumn: '1 / -1' }}>
+                      <ClockIcon size={13} color="#758087" />
+                      <div>
+                        <strong>{c.schedule}</strong>
+                        <span className="sd-cls-info-sub">Next Scheduled: {c.nextClass}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Section */}
+                  <div className="sd-cls-card-footer" onClick={e => e.stopPropagation()}>
+                    <button
+                      className="sd-cls-btn-details"
+                      onClick={() => setDetailCourse(c)}
+                    >
+                      View Details
+                    </button>
+                    <button
+                      className="sd-cls-btn-attendance"
+                      onClick={() => onNav && onNav('attendance')}
+                    >
+                      View Attendance
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-          )
-        })}
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Today's timetable */}
-      <div className="sd-card">
-        <h3 className="sd-card-title">🗓️ Today's Timetable</h3>
-        <div className="sd-timetable">
-          {scheduleList.map((s, i) => (
-            <div key={i} className={`sd-timetable-row ${s.status}`}>
-              <div className="sd-tt-time">{s.time}</div>
-              <div className="sd-tt-line">
-                <div className="sd-tt-dot" style={{ background: s.status === 'done' ? '#34d399' : '#a78bfa' }} />
-                {i < scheduleList.length - 1 && <div className="sd-tt-vline" />}
-              </div>
-              <div className="sd-tt-body">
-                <span className="sd-tt-name">{s.name}</span>
-                <span className="sd-tt-meta">{s.course} · {s.room}</span>
-              </div>
-              <span className={`sd-badge ${s.status === 'done' ? 'sd-badge-present' : 'sd-badge-upcoming'}`}>
-                {s.status === 'done' ? '✅ Done' : '🕐 Upcoming'}
-              </span>
+      {/* ── Sections 5 & 6: Today's Timetable & Weekly Schedule Preview ─ */}
+      <div className="sd-cls-schedule-card">
+        <div className="sd-cls-sched-header">
+          <div>
+            <h2 className="sd-cls-section-heading">
+              {scheduleView === 'today' ? "Today's Timetable" : 'Weekly Schedule Preview'}
+            </h2>
+            <p className="sd-cls-subtitle" style={{ marginTop: '2px' }}>
+              {scheduleView === 'today'
+                ? 'Your scheduled classes for today.'
+                : 'Monday to Saturday structured class schedule.'}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <div className="sd-cls-sched-tabs" role="tablist">
+              <button
+                className={`sd-cls-sched-tab ${scheduleView === 'today' ? 'active' : ''}`}
+                onClick={() => setScheduleView('today')}
+                role="tab"
+                aria-selected={scheduleView === 'today'}
+              >
+                Today&apos;s Timetable
+              </button>
+              <button
+                className={`sd-cls-sched-tab ${scheduleView === 'weekly' ? 'active' : ''}`}
+                onClick={() => setScheduleView('weekly')}
+                role="tab"
+                aria-selected={scheduleView === 'weekly'}
+              >
+                Weekly Schedule
+              </button>
             </div>
-          ))}
+
+            <button
+              className="sd-cls-link-btn"
+              onClick={() => onNav && onNav('timetable')}
+            >
+              <span>View Full Timetable →</span>
+            </button>
+          </div>
         </div>
+
+        {/* Today's Vertical Timeline Layout */}
+        {scheduleView === 'today' ? (
+          <div className="sd-cls-timeline">
+            {enrichedSchedule.map((s, idx) => {
+              const isOngoing = s.statusType === 'ongoing'
+              const isCompleted = s.statusType === 'completed'
+              const isCancelled = s.statusType === 'cancelled'
+              const dotColor = isCompleted ? '#557E6D' : isOngoing ? '#162F44' : isCancelled ? '#BC6D61' : '#94A3B8'
+
+              return (
+                <div key={idx} className="sd-cls-tl-item">
+                  <div className="sd-cls-tl-time-col">
+                    <div className="sd-cls-tl-start">{s.startTime}</div>
+                    <div className="sd-cls-tl-end">{s.endTime}</div>
+                  </div>
+
+                  <div className="sd-cls-tl-axis">
+                    <div
+                      className={`sd-cls-tl-dot ${isOngoing ? 'ongoing' : ''}`}
+                      style={{ backgroundColor: dotColor, color: dotColor }}
+                    />
+                    {idx < enrichedSchedule.length - 1 && <div className="sd-cls-tl-line" />}
+                  </div>
+
+                  <div className={`sd-cls-tl-content ${isOngoing ? 'ongoing' : ''}`}>
+                    <div>
+                      <div className="sd-cls-tl-title-row">
+                        <span
+                          className="sd-cls-code-badge"
+                          style={{
+                            backgroundColor: `${s.color}1C`,
+                            color: s.color === '#34d399' ? '#276749' : s.color,
+                          }}
+                        >
+                          {s.course}
+                        </span>
+                        <span className="sd-cls-tl-name">{s.name}</span>
+                        {isOngoing && (
+                          <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#557E6D', background: '#E8F2EC', padding: '1px 6px', borderRadius: '4px' }}>
+                            Active Session
+                          </span>
+                        )}
+                      </div>
+                      <div className="sd-cls-tl-meta">
+                        <span>👨‍🏫 {s.faculty}</span>
+                        <span>📍 {s.room}</span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`sd-cls-status-pill ${
+                        isCompleted
+                          ? 'sd-cls-status-completed'
+                          : isOngoing
+                          ? 'sd-cls-status-ongoing'
+                          : isCancelled
+                          ? 'sd-cls-status-cancelled'
+                          : 'sd-cls-status-upcoming'
+                      }`}
+                    >
+                      {isCompleted ? '✓ Completed' : isOngoing ? '● Ongoing' : isCancelled ? '✕ Cancelled' : '○ Upcoming'}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          /* Compact Weekly Schedule Grid (Monday to Saturday) */
+          <div className="sd-cls-weekly-grid">
+            {WEEKLY_DAYS.map(dayObj => {
+              const isToday = dayObj.day === currentDayName
+              return (
+                <div key={dayObj.day} className={`sd-cls-day-col ${isToday ? 'today' : ''}`}>
+                  <div className="sd-cls-day-header">
+                    <span>{dayObj.day}</span>
+                    {isToday && <span className="sd-cls-today-tag">Today</span>}
+                  </div>
+                  {dayObj.slots.length === 0 ? (
+                    <div style={{ fontSize: '11px', color: 'var(--sd-text-secondary)', padding: '14px 4px', textAlign: 'center' }}>
+                      No classes scheduled
+                    </div>
+                  ) : (
+                    dayObj.slots.map((slot, sIdx) => (
+                      <div
+                        key={sIdx}
+                        className="sd-cls-slot-card"
+                        style={{ borderLeft: `3px solid ${slot.color}` }}
+                      >
+                        <span className="sd-cls-slot-time">{slot.time}</span>
+                        <span className="sd-cls-slot-title">{slot.code} – {slot.name}</span>
+                        <span className="sd-cls-slot-room">📍 {slot.room}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
+
+      {/* ── Section 7: Course Detail Side Panel ────────────────── */}
+      {detailCourse && (
+        <div className="sd-cls-drawer-backdrop" onClick={() => setDetailCourse(null)}>
+          <div className="sd-cls-drawer" onClick={e => e.stopPropagation()} role="dialog" aria-label="Course Details">
+            <div className="sd-cls-drawer-topbar">
+              <button className="sd-cls-back-btn" onClick={() => setDetailCourse(null)}>
+                <ArrowLeftIcon size={15} />
+                <span>Back to My Classes</span>
+              </button>
+              <button
+                onClick={() => setDetailCourse(null)}
+                style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#758087' }}
+                aria-label="Close panel"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="sd-cls-drawer-body">
+              {/* Hero Course Info */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span
+                    className="sd-cls-code-badge"
+                    style={{
+                      backgroundColor: `${detailCourse.color}1C`,
+                      color: detailCourse.color === '#34d399' ? '#276749' : detailCourse.color,
+                      border: `1px solid ${detailCourse.color}40`,
+                    }}
+                  >
+                    {detailCourse.id}
+                  </span>
+                  <span className="sd-cls-cat-tag">{detailCourse.category}</span>
+                </div>
+                <h2 style={{ fontFamily: 'var(--sd-font-serif)', fontSize: '26px', color: 'var(--sd-navy)', marginBottom: '6px' }}>
+                  {detailCourse.name}
+                </h2>
+                <p style={{ fontSize: '12.5px', color: 'var(--sd-text-secondary)', lineHeight: 1.5 }}>
+                  {detailCourse.syllabus}
+                </p>
+              </div>
+
+              {/* Attendance Summary Card */}
+              <div className="sd-cls-drawer-section">
+                <div className="sd-cls-drawer-sec-title">Course Attendance Standing</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '4px 0' }}>
+                  <span style={{ fontSize: '28px', fontFamily: 'var(--sd-font-serif)', color: detailCourse.pctVal >= 75 ? '#557E6D' : '#BC6D61' }}>
+                    {detailCourse.pctVal}%
+                  </span>
+                  <span className={`sd-att-status-badge ${detailCourse.pctVal >= 85 ? 'sd-att-status-safe' : detailCourse.pctVal >= 75 ? 'sd-att-status-warning' : 'sd-att-status-risk'}`}>
+                    {detailCourse.pctVal >= 85 ? '● Safe Standing' : detailCourse.pctVal >= 75 ? '▲ Warning Threshold' : '✖ At Risk'}
+                  </span>
+                </div>
+                <div className="sd-cls-progress-track">
+                  <div
+                    className="sd-cls-progress-fill"
+                    style={{
+                      width: `${detailCourse.pctVal}%`,
+                      backgroundColor: detailCourse.pctVal >= 85 ? '#557E6D' : detailCourse.pctVal >= 75 ? '#B5822C' : '#BC6D61',
+                    }}
+                  />
+                  <div className="sd-cls-progress-min" />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--sd-text-secondary)', marginTop: '4px' }}>
+                  <span>Attended: <strong>{detailCourse.attended}</strong></span>
+                  <span>Missed: <strong>{detailCourse.total - detailCourse.attended}</strong></span>
+                  <span>Total: <strong>{detailCourse.total}</strong></span>
+                </div>
+              </div>
+
+              {/* Faculty & Schedule Info */}
+              <div className="sd-cls-drawer-section">
+                <div className="sd-cls-drawer-sec-title">Faculty &amp; Schedule Details</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12.5px' }}>
+                  <div>
+                    <span className="sd-cls-info-sub">Instructor</span>
+                    <strong>{detailCourse.faculty}</strong>
+                  </div>
+                  <div>
+                    <span className="sd-cls-info-sub">Faculty Office</span>
+                    <strong>{detailCourse.office}</strong>
+                  </div>
+                  <div>
+                    <span className="sd-cls-info-sub">Weekly Schedule</span>
+                    <strong>{detailCourse.schedule}</strong>
+                  </div>
+                  <div>
+                    <span className="sd-cls-info-sub">Classroom Location</span>
+                    <strong>{detailCourse.room}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Course Assignments */}
+              <div className="sd-cls-drawer-section">
+                <div className="sd-cls-drawer-sec-title">Course Assignments</div>
+                {detailCourse.assignments && detailCourse.assignments.length > 0 ? (
+                  detailCourse.assignments.map((asg, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '8px 0', borderBottom: idx < detailCourse.assignments.length - 1 ? '1px solid #ECEFEA' : 'none',
+                      fontSize: '12px'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--sd-navy)' }}>{asg.title}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--sd-text-secondary)' }}>Due: {asg.due}</div>
+                      </div>
+                      <span className="sd-cls-count-badge">{asg.status}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ fontSize: '12px', color: 'var(--sd-text-secondary)' }}>No pending assignments for this course.</p>
+                )}
+              </div>
+
+              {/* Recent Attendance History & Upcoming Classes */}
+              <div className="sd-cls-drawer-section">
+                <div className="sd-cls-drawer-sec-title">Recent Attendance History</div>
+                {(() => {
+                  const courseLogs = (attData?.logs || []).filter(l => (l.course_id || l.course) === detailCourse.id)
+                  if (courseLogs.length === 0) {
+                    return (
+                      <div style={{ fontSize: '12px', color: 'var(--sd-text-secondary)' }}>
+                        Recent sessions verified cleanly. Upcoming lecture: <strong>{detailCourse.nextClass}</strong> in <strong>{detailCourse.room}</strong>.
+                      </div>
+                    )
+                  }
+                  return courseLogs.slice(0, 4).map((l, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '4px 0' }}>
+                      <span>{l.timestamp ? new Date(l.timestamp).toLocaleDateString() : 'Recent Session'}</span>
+                      <span style={{ color: l.status === 'present' ? '#557E6D' : '#BC6D61', fontWeight: 600 }}>
+                        {l.status === 'present' ? '✓ Present' : '✕ Absent'}
+                      </span>
+                    </div>
+                  ))
+                })()}
+              </div>
+
+              <button
+                className="sd-cls-btn-details"
+                onClick={() => { setDetailCourse(null); onNav && onNav('attendance'); }}
+              >
+                Open Full Attendance Analytics →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
 
 // ═══════════════════════════════════════════════════════════
 //  TAB: TIMETABLE
@@ -3700,11 +4389,11 @@ export default function StudentDashboardPage() {
           </div>
         </header>
 
-        <main className={`sd-content ${activeTab === 'attendance' ? 'sd-att-mode' : ''}`}>
+        <main className={`sd-content ${activeTab === 'attendance' ? 'sd-att-mode' : activeTab === 'classes' ? 'sd-cls-mode' : ''}`}>
           {activeTab === 'overview'   && <TabOverview   user={user} onNav={handleNav} attData={attData} />}
           {activeTab === 'attendance' && <TabAttendance attData={attData} user={user} onNav={handleNav} topbarSearch={topbarSearch} />}
           {activeTab === 'scanner'    && <TabScanner user={user} attData={attData} onNav={handleNav} />}
-          {activeTab === 'classes'    && <TabClasses attData={attData} />}
+          {activeTab === 'classes'    && <TabClasses attData={attData} onNav={handleNav} topbarSearch={topbarSearch} />}
           {activeTab === 'timetable'   && <TabTimetable />}
           {activeTab === 'assignments'  && <TabStudentAssignments />}
           {activeTab === 'bills'        && <TabBills />}
