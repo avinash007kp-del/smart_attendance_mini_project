@@ -1128,6 +1128,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Mirror front-facing webcam preview naturally without flipping captured canvas frames */
+  transform: scaleX(-1);
 }
 
 .ad-camera-controls {
@@ -1160,6 +1162,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Keep captured preview orientation consistent with mirrored live viewfinder */
+  transform: scaleX(-1);
 }
 
 .ad-face-preview-info {
